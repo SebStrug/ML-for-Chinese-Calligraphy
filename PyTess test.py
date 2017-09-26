@@ -20,6 +20,6 @@ tessdata_dir_config = '--tessdata-dir "C:\Program Files (x86)\Tesseract-OCR"'
 # Example config: '--tessdata-dir "C:\\Program Files (x86)\\Tesseract-OCR\\tessdata"'
 # It's important to add double quotes around the dir path.
 
-pytesseract.image_to_string(Image.open('test-european.jpg'), lang='fra', config=tessdata_dir_config)
+print(pytesseract.image_to_string(Image.open('test-european.jpg'), lang='fra+ita+spa+por', config=tessdata_dir_config))
 
 #print(pytesseract.image_to_string(Image.open('test-european.jpg'), lang='fra'))
