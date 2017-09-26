@@ -10,6 +10,8 @@ except ImportError:
     from PIL import Image
 import pytesseract
 
+import mtranslate as mt
+
 pytesseract.tesseract_cmd = 'C:\\Program Files (x86)\\Tesseract-OCR\\tesseract'
 # Include the above line, if you don't have tesseract executable in your PATH
 # Example tesseract_cmd: 'C:\\Program Files (x86)\\Tesseract-OCR\\tesseract'
@@ -21,6 +23,8 @@ tessdata_dir_config = '--tessdata-dir "C:\Program Files (x86)\Tesseract-OCR"'
 # It's important to add double quotes around the dir path.
 
 print(pytesseract.image_to_string(Image.open('test-european.jpg'), lang='fra+ita+spa+por', config=tessdata_dir_config))
+chiCode = pytesseract.image_to_string(Image.open('caritas.png'), lang='chi_sim+chi_tra', config=tessdata_dir_config)
+print(chiCode)
 
-#print(pytesseract.image_to_string(Image.open('test-european.jpg'), lang='fra'))
-#comment
+line_en = mt.translate(chiCode.encode('utf-8'),"en","auto")
+print(line_en)
