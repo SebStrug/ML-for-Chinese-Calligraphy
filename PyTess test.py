@@ -23,3 +23,4 @@ tessdata_dir_config = '--tessdata-dir "C:\Program Files (x86)\Tesseract-OCR"'
 print(pytesseract.image_to_string(Image.open('test-european.jpg'), lang='fra+ita+spa+por', config=tessdata_dir_config))
 
 #print(pytesseract.image_to_string(Image.open('test-european.jpg'), lang='fra'))
+#comment
