@@ -11,7 +11,7 @@ from collections import namedtuple
 
 def byteToInt(byte,byteOrder='little'):
     return int.from_bytes(byte, byteorder=byteOrder)
-
+#
 #Function that reads the NPZ file 'name' at 'path' and returns the file object
 def readNPZ(path,name,labelName,imageName):
     fullName = f"{path}{name}"
