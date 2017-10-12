@@ -13,22 +13,21 @@ def byteToInt(byte,byteOrder='little'):
     return int.from_bytes(byte, byteorder=byteOrder)
 
 #Function that reads the NPZ file 'name' at 'path' and returns the file object
-def readNPZ(path,name):
+def readNPZ(path,name,labelName,imageName):
     fullName = f"{path}{name}"
-    with open(fullName, 'r') as ifs:
+    with open(fullName, 'rb') as ifs:
         fileNPZ = np.load(ifs)
-    ifs.close
-    return fileNPZ
+        return fileNPZ[labelName],fileNPZ[imageName]
     
 #function that saves a list of arrays 'namedArrays' to the file 'name' at
 #location 'path' with the option of compression 'compressed'      
-def saveNPZ(path,name,compressed=False,*arrays,**namedArrays):
+def saveNPZ(path,name,compressed=False,**namedArrays):
     fullName = f"{path}{name}"
     with open(fullName, 'wb') as ofs:
         if compressed:
-            np.savez_compressed(ofs,arrays,namedArrays)
+            np.savez_compressed(ofs,**namedArrays)
         else:
-            np.savez(ofs,arrays,namedArrays)
+            np.savez(ofs,**namedArrays)
     ofs.close();
     
 
