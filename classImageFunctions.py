@@ -4,7 +4,6 @@ Created on Thu Oct 12 16:38:20 2017
 
 @author: Sebastian
 """
-import os
 import numpy as np
 from PIL import Image
 
@@ -55,7 +54,7 @@ class imageFunc(object):
         """Generates image from an array"""
         #change from array to matrix OR checks it's the right size
         np.reshape(array,(height,width),'C') 
-        print(array.shape,'\n')
+        #print(array.shape,'\n')
         img = Image.fromarray(array); #generates image
         return img;
 

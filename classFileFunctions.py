@@ -7,8 +7,7 @@ Created on Thu Oct 12 16:50:06 2017
 
 import os
 import numpy as np
-from PIL import Image
-from classImageFunctions import imageFunc
+from classImageFunctions import imageFunc as iF
 from collections import namedtuple
 
 class fileFunc(object):
@@ -57,10 +56,41 @@ class fileFunc(object):
             position +=sampleSize;
             print(i)
             print('character',character[i])
-            im = imageFunc.arrayToImage(image,height,width)
-            imResize=imageFunc.resizeImage(im,info.maxWidth,info.maxHeight)
-            images[i] = imageFunc.PIL2array(imResize);
+            im = iF.arrayToImage(image,height,width)
+            imResize=iF.resizeImage(im,info.maxWidth,info.maxHeight)
+            images[i] = iF.PIL2array(imResize);
         return [character,images,info.maxHeight,info.maxWidth]
+    
+    def arraysFromGNT2(fullFile,info):
+        #create arrays to store data read in
+        totalSamples = int(np.sum(info.numSamples));
+        characters = np.zeros(totalSamples,np.unicode);
+        images = np.zeros((totalSamples,info.maxWidth*info.maxHeight))
+        #place data into arrays
+        k=0
+        for j in range(len(info.numSamples)):
+            position = 0;
+            for i in range(int(info.numSamples[j])):
+                sampleSize = fileFunc.byteToInt(fullFile[j][position:position+4]);
+                characters[k] = fullFile[j][position+4:position+6].decode('gb2312');
+                width = fileFunc.byteToInt(fullFile[j][position+6:position+8]);
+                height = fileFunc.byteToInt(fullFile[j][position+8:position+10]);
+                image = np.zeros((height,width))
+                for row in range(0,height):
+                    for column in range(0,width):
+                        image[row][column]=fullFile[j][position+10+row*width+column];
+                position +=sampleSize;
+#               print(i)
+#               print('character',character[i])
+                im = iF.arrayToImage(image,height,width)
+                #print(im)
+                imResize=iF.resizeImage(im,info.maxWidth,info.maxHeight)
+                #print(imResize)
+                images[k] = iF.PIL2array(imResize);
+                #print(images[k],k)
+                k+=1
+        return [characters,images,info.maxHeight,info.maxWidth]
+
 
     def infoGNT(path,name):
         #set path and open file
@@ -85,25 +115,28 @@ class fileFunc(object):
         print (info)
         return info
     
-    def infoGNT2(array):
-        #array = array[0] #must set as this
-        numSamples = 0;
+    #find max width, max height and number of samples from a byte array holding gnt data
+    def infoGNT2(array,totalFiles):
+        #array = array[0] #must set as this;
         totalSize = 0;
         maxWidth=0;
         maxHeight=0;
-        position = 0;
-        while position < len(array):
-            sampleSize = fileFunc.byteToInt(array[position:position+4]);
-            maxWidth = max(fileFunc.byteToInt(array[position+6:position+8]),maxWidth)
-            maxHeight = max(fileFunc.byteToInt(array[position+8:position+10]),maxHeight)
-            numSamples+=1;
-            position += sampleSize
-            totalSize +=sampleSize;
+        numSamples=np.zeros(totalFiles)
+        for i in range (0,totalFiles):
+            position = 0;
+            while position < len(array[i]):
+                sampleSize = fileFunc.byteToInt(array[i][position:position+4]);
+                maxWidth = max(fileFunc.byteToInt(array[i][position+6:position+8]),maxWidth)
+                maxHeight = max(fileFunc.byteToInt(array[i][position+8:position+10]),maxHeight)
+                numSamples[i]+=1;
+                position += sampleSize
+                totalSize +=sampleSize;
+            numSamples[i] =int(numSamples[i]-1);
         infoStruct = namedtuple("myStruct","numSamples maxHeight, maxWidth, totalSize")
         info = infoStruct(numSamples,maxHeight,maxWidth,totalSize)
         print (info)
         return info
-            
+    #function to read several gnt files into an array in byte form    
     def iterateOverFiles(path):
         #path is the folder containing subfolders containing all .gnt files
         totalFiles = 0
@@ -120,4 +153,4 @@ class fileFunc(object):
                 with open(fullpath, 'rb') as openFile:
                     fullFile[filenames.index(file)] = openFile.readlines()[0]
                     openFile.close()
-        return fullFile
+        return fullFile,totalFiles
