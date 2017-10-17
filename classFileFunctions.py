@@ -46,10 +46,10 @@ class fileFunc(object):
         #place data into arrays
         position = 0;
         for i in range(0,info.numSamples-1):
-            sampleSize = byteToInt(fullFile[position:position+4]);
+            sampleSize = fileFunc.byteToInt(fullFile[position:position+4]);
             character[i] = fullFile[position+4:position+6].decode('gb2312');
-            width = byteToInt(fullFile[position+6:position+8]);
-            height = byteToInt(fullFile[position+8:position+10]);
+            width = fileFunc.byteToInt(fullFile[position+6:position+8]);
+            height = fileFunc.byteToInt(fullFile[position+8:position+10]);
             image = np.zeros((height,width))
             for j in range(0,height):
                 for k in range(0,width):
@@ -74,9 +74,9 @@ class fileFunc(object):
         maxHeight=0;
         position = 0;
         while position < len(fullFile):
-            sampleSize = byteToInt(fullFile[position:position+4]);
-            maxWidth = max(byteToInt(fullFile[position+6:position+8]),maxWidth)
-            maxHeight = max(byteToInt(fullFile[position+8:position+10]),maxHeight)
+            sampleSize = fileFunc.byteToInt(fullFile[position:position+4]);
+            maxWidth = max(fileFunc.byteToInt(fullFile[position+6:position+8]),maxWidth)
+            maxHeight = max(fileFunc.byteToInt(fullFile[position+8:position+10]),maxHeight)
             numSamples+=1;
             position += sampleSize
             totalSize +=sampleSize;
@@ -86,8 +86,10 @@ class fileFunc(object):
         return info
     
     def iterateOverFiles(path):
+        #path is the folder containing subfolders containing all .gnt files
         totalFiles = 0
-        source = 'C:/Users/Sebastian/Desktop/MLChinese/CASIA/HWDtest2'
+        source = 'C:/Users/Sebastian/Desktop/MLChinese/CASIA/HWDtest2' #left as example
+        source = path
         for subdir, dirs, filenames in os.walk(source):
             totalFiles += len(filenames)
         print(totalFiles)
