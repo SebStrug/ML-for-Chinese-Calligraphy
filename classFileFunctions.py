@@ -60,7 +60,7 @@ class fileFunc(object):
             im = imageFunc.arrayToImage(image,height,width)
             imResize=imageFunc.resizeImage(im,info.maxWidth,info.maxHeight)
             images[i] = imageFunc.PIL2array(imResize);
-            return [character,images,info.maxHeight,info.maxWidth]
+        return [character,images,info.maxHeight,info.maxWidth]
 
     def infoGNT(path,name):
         #set path and open file
@@ -85,6 +85,25 @@ class fileFunc(object):
         print (info)
         return info
     
+    def infoGNT2(array):
+        #array = array[0] #must set as this
+        numSamples = 0;
+        totalSize = 0;
+        maxWidth=0;
+        maxHeight=0;
+        position = 0;
+        while position < len(array):
+            sampleSize = fileFunc.byteToInt(array[position:position+4]);
+            maxWidth = max(fileFunc.byteToInt(array[position+6:position+8]),maxWidth)
+            maxHeight = max(fileFunc.byteToInt(array[position+8:position+10]),maxHeight)
+            numSamples+=1;
+            position += sampleSize
+            totalSize +=sampleSize;
+        infoStruct = namedtuple("myStruct","numSamples maxHeight, maxWidth, totalSize")
+        info = infoStruct(numSamples,maxHeight,maxWidth,totalSize)
+        print (info)
+        return info
+            
     def iterateOverFiles(path):
         #path is the folder containing subfolders containing all .gnt files
         totalFiles = 0
