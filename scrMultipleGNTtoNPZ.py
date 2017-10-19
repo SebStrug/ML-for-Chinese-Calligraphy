@@ -21,8 +21,8 @@ fileName="1001-c.gnt"
 
 #get info on gnt file
 data,tot = fF.iterateOverFiles(dataPath)
-dataInfo = fF.infoGNT2(data,tot)
-dataForSaving = fF.arraysFromGNT2(data,dataInfo)
+dataInfo = fF.infoGNT(data,tot)
+dataForSaving = fF.arraysFromGNT(data,dataInfo)
 #dataInfo = fF.infoGNT(dataPath,fileName)
 #data=fF.arraysFromGNT(dataPath,fileName,dataInfo)
 #fF.saveNPZ(dataPath,"1001",saveLabels=data[0],saveImages=data[1])

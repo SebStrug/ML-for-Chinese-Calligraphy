@@ -11,7 +11,6 @@ from classImageFunctions import imageFunc as iF
 from collections import namedtuple
 
 class fileFunc(object):
-
     """Class of functions that perform on files"""
     def byteToInt(byte,byteOrder='little'):
         return int.from_bytes(byte, byteorder=byteOrder)
@@ -45,35 +44,8 @@ class fileFunc(object):
             else:
                 np.savez(ofs,**namedArrays)
         ofs.close();
-    
-    def arraysFromGNT(path,name,info):
-        os.chdir(path)
-        with open(name, 'rb') as f:
-            fullFile = f.readlines()[0];
-        f.close();
-        #create arrays to store data read in
-        character = np.zeros(info.numSamples,np.unicode);
-        images = np.zeros((info.numSamples,info.maxWidth*info.maxHeight))
-        #place data into arrays
-        position = 0;
-        for i in range(0,info.numSamples-1):
-            sampleSize = fileFunc.byteToInt(fullFile[position:position+4]);
-            character[i] = fullFile[position+4:position+6].decode('gb2312');
-            width = fileFunc.byteToInt(fullFile[position+6:position+8]);
-            height = fileFunc.byteToInt(fullFile[position+8:position+10]);
-            image = np.zeros((height,width))
-            for j in range(0,height):
-                for k in range(0,width):
-                    image[j][k]=fullFile[position+10+j*width+k];
-            position +=sampleSize;
-            print(i)
-            print('character',character[i])
-            im = iF.arrayToImage(image,height,width)
-            imResize=iF.resizeImage(im,info.maxWidth,info.maxHeight)
-            images[i] = iF.PIL2array(imResize);
-        return [character,images,info.maxHeight,info.maxWidth]
-    
-    def arraysFromGNT2(fullFile,info):
+
+    def arraysFromGNT(fullFile,info):
         #create arrays to store data read in
         totalSamples = int(np.sum(info.numSamples));
         characters = np.zeros(totalSamples,np.unicode);
@@ -103,32 +75,8 @@ class fileFunc(object):
                 k+=1
         return [characters,images,info.maxHeight,info.maxWidth]
 
-
-    def infoGNT(path,name):
-        #set path and open file
-        os.chdir(path)
-        with open(name, 'rb') as f:
-            fullFile = f.readlines()[0];
-        f.close();
-        numSamples = 0;
-        totalSize = 0;
-        maxWidth=0;
-        maxHeight=0;
-        position = 0;
-        while position < len(fullFile):
-            sampleSize = fileFunc.byteToInt(fullFile[position:position+4]);
-            maxWidth = max(fileFunc.byteToInt(fullFile[position+6:position+8]),maxWidth)
-            maxHeight = max(fileFunc.byteToInt(fullFile[position+8:position+10]),maxHeight)
-            numSamples+=1;
-            position += sampleSize
-            totalSize +=sampleSize;
-        infoStruct = namedtuple("myStruct","numSamples maxHeight, maxWidth, totalSize")
-        info = infoStruct(numSamples,maxHeight,maxWidth,totalSize)
-        print (info)
-        return info
-    
     #find max width, max height and number of samples from a byte array holding gnt data
-    def infoGNT2(array,totalFiles):
+    def infoGNT(array,totalFiles):
         #array = array[0] #must set as this;
         totalSize = 0;
         maxWidth=0;
