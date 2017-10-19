@@ -16,6 +16,18 @@ class fileFunc(object):
     def byteToInt(byte,byteOrder='little'):
         return int.from_bytes(byte, byteorder=byteOrder)
     
+    def readByte(name):
+        allBytes = []
+        with open(name, "rb") as f:
+            byte = f.read(1) #read in byte (then move on)
+            allBytes.append(byte) #if we don't include this line, we miss the first byte
+            while byte != b"":
+                # Do stuff with byte.
+                byte = f.read(1)
+                allBytes.append(byte) #creates list of all bytes, each byte has a separate index
+        allBytes = b''.join(map(bytes,allBytes)) #concatenates list of bytes
+        return allBytes
+    
     #Function that reads the NPZ file 'name' at 'path' and returns the file object
     def readNPZ(path,name,labelName,imageName):
         fullName = f"{path}{name}"
@@ -151,6 +163,6 @@ class fileFunc(object):
             for file in filenames:
                 fullpath = os.path.join(subdir, file)
                 with open(fullpath, 'rb') as openFile:
-                    fullFile[filenames.index(file)] = openFile.readlines()[0]
+                    fullFile[filenames.index(file)] = fileFunc.readByte(fullpath)
                     openFile.close()
         return fullFile,totalFiles
