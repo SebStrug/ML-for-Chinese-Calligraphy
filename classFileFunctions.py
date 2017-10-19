@@ -72,7 +72,7 @@ class fileFunc(object):
                 #images[k] = iF.PIL2array(imResize);
                 #print(images[k],k)
                 k+=1
-        return [characters, images, info.maxHeight,info.maxWidth]
+        return [characters, image, width, height, images, info.maxHeight,info.maxWidth]
 
     #find max width, max height and number of samples from a byte array holding gnt data
     def infoGNT(array,totalFiles):

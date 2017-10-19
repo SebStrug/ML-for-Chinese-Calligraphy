@@ -14,12 +14,15 @@ class imageFunc(object):
     def extendArray(array, width, height, maxWidth, maxHeight):
         """Generates a new array of zeros with a size defined by the max height and max width,
         with the original array in question in the centre of that array."""
-        newArray = np.zeros((maxHeight,maxWidth))
-        lowerBound = maxHeight//2 - height//2
-        upperBound = lowerBound+height
-        leftBound = maxWidth//2 - width//2
-        rightBound = leftBound + width
-        newArray[lowerBound:upperBound, leftBound:rightBound] = array
+        if width < maxWidth and height < maxHeight:
+            newArray = np.zeros((maxHeight,maxWidth))
+            lowerBound = maxHeight//2 - height//2
+            upperBound = lowerBound+height
+            leftBound = maxWidth//2 - width//2
+            rightBound = leftBound + width
+            newArray[lowerBound:upperBound, leftBound:rightBound] = array
+        else:
+            newArray = array
         return newArray
     
     def scaleImage(path,output):
