@@ -17,15 +17,15 @@ from classFileFunctions import fileFunc as fF
 #elliots path C:\Users\ellio\Desktop\training data\iterate test
 dataPath = 'C:/Users/ellio/Desktop/training data/iterate test/'
 #file to open
-fileName="1001-c.gnt"
 
+dataForSaving=0;
+data=0;
 #get info on gnt file
 data,tot = fF.iterateOverFiles(dataPath)
 dataInfo = fF.infoGNT(data,tot)
 dataForSaving = fF.arraysFromGNT(data,dataInfo)
-#dataInfo = fF.infoGNT(dataPath,fileName)
-#data=fF.arraysFromGNT(dataPath,fileName,dataInfo)
-#fF.saveNPZ(dataPath,"1001",saveLabels=data[0],saveImages=data[1])
+data=0;#delete data in raw byte form 
+fF.saveNPZ(dataPath,"1001to1004",saveLabels=dataForSaving[0],saveImages=dataForSaving[1])
 
 
 

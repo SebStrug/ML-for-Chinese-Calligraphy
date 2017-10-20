@@ -67,4 +67,4 @@ class imageFunc(object):
     
     def PIL2array(image):
         """Changes a PIL image to an array"""
-        return np.array(image.getdata(), np.uint8)
+        return np.array(image.getdata()).astype(np.int)

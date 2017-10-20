@@ -14,7 +14,7 @@ class fileFunc(object):
     """Class of functions that perform on files"""
     def byteToInt(byte,byteOrder='little'):
         return int.from_bytes(byte, byteorder=byteOrder)
-    
+
     def readByte(name):
         allBytes = []
         with open(name, "rb") as f:
@@ -24,8 +24,9 @@ class fileFunc(object):
                 # Do stuff with byte.
                 byte = f.read(1)
                 allBytes.append(byte) #creates list of all bytes, each byte has a separate index
-        allBytes = b''.join(map(bytes,allBytes)) #concatenates list of bytes
-        return allBytes
+        f.close()
+        allByte = b''.join(map(bytes,allBytes)) #concatenates list of bytes
+        return allByte
     
     #Function that reads the NPZ file 'name' at 'path' and returns the file object
     def readNPZ(path,name,labelName,imageName):
@@ -37,6 +38,7 @@ class fileFunc(object):
     #function that saves a list of arrays 'namedArrays' to the file 'name' at
     #location 'path' with the option of compression 'compressed'      
     def saveNPZ(path,name,compressed=False,**namedArrays):
+        print("save")
         fullName = f"{path}{name}"
         with open(fullName, 'wb') as ofs:
             if compressed:
@@ -46,6 +48,7 @@ class fileFunc(object):
         ofs.close();
 
     def arraysFromGNT(fullFile,info):
+        print("arraysFromGNT")
         #create arrays to store data read in
         totalSamples = int(np.sum(info.numSamples));
         characters = np.zeros(totalSamples,np.unicode);
@@ -62,7 +65,7 @@ class fileFunc(object):
                 image = np.zeros((height,width))
                 for row in range(0,height):
                     for column in range(0,width):
-                        image[row][column]=fullFile[j][position+10+row*width+column];
+                        image[row][column]=uchar.from_bytes(fullFile[j][position+10+row*width+column]);
                 position +=sampleSize;
 #               print(i)
 #               print('character',character[i])
@@ -78,6 +81,7 @@ class fileFunc(object):
     #find max width, max height and number of samples from a byte array holding gnt data
     def infoGNT(array,totalFiles):
         #array = array[0] #must set as this;
+        print("infoGNT")
         totalSize = 0;
         maxWidth=0;
         maxHeight=0;
@@ -87,11 +91,11 @@ class fileFunc(object):
             while position < len(array[i]):
                 sampleSize = fileFunc.byteToInt(array[i][position:position+4]);
                 maxWidth = max(fileFunc.byteToInt(array[i][position+6:position+8]),maxWidth)
-                maxHeight = max(fileFunc.byteToInt(array[i][position+8:position+10]),maxHeight)
+                maxHeight = max(fileFun.byteToInt(array[i][position+8:position+10]),maxHeight)
                 numSamples[i]+=1;
                 position += sampleSize
                 totalSize +=sampleSize;
-            numSamples[i] =int(numSamples[i]-1);
+            numSamples[i] =int(numSamples[i]-1);#remove excess bytes
         infoStruct = namedtuple("myStruct","numSamples maxHeight, maxWidth, totalSize")
         info = infoStruct(numSamples,maxHeight,maxWidth,totalSize)
         print (info)
@@ -104,7 +108,7 @@ class fileFunc(object):
         source = path
         for subdir, dirs, filenames in os.walk(source):
             totalFiles += len(filenames)
-        print(totalFiles)
+        print("total Files:",totalFiles)
         
         fullFile = [None]*totalFiles
         for subdir, dirs, filenames in os.walk(source):
