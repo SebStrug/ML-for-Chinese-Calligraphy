@@ -60,6 +60,7 @@ class fileFunc(object):
             for i in range(int(info.numSamples[j])):
                 sampleSize = fileFunc.byteToInt(fullFile[j][position:position+4]);
                 characters[k] = fullFile[j][position+4:position+6].decode('gb2312');
+                #print(characters[k])
                 width = fileFunc.byteToInt(fullFile[j][position+6:position+8]);
                 height = fileFunc.byteToInt(fullFile[j][position+8:position+10]);
                 image = np.zeros((height,width))
@@ -67,16 +68,14 @@ class fileFunc(object):
                     for column in range(0,width):
                         image[row][column]=uchar.from_bytes(fullFile[j][position+10+row*width+column]);
                 position +=sampleSize;
-#               print(i)
-#               print('character',character[i])
-                im = iF.arrayToImage(image,height,width)
-                #print(im)
-                imResize=iF.resizeImage(im,info.maxWidth,info.maxHeight)
-                #print(imResize)
-                images[k] = iF.PIL2array(imResize);
+                
+                images[k] = iF.extendArray(image, width, height, info.maxWidth, info.maxHeight)
+                #im = iF.arrayToImage(image,height,width)
+                #imResize=iF.resizeImage(im,info.maxWidth,info.maxHeight)
+                #images[k] = iF.PIL2array(imResize);
                 #print(images[k],k)
                 k+=1
-        return [characters,images,info.maxHeight,info.maxWidth]
+        return [characters, image, width, height, images, info.maxHeight,info.maxWidth]
 
     #find max width, max height and number of samples from a byte array holding gnt data
     def infoGNT(array,totalFiles):
