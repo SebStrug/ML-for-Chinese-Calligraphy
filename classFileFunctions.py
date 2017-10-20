@@ -68,7 +68,7 @@ class fileFunc(object):
                     for column in range(0,width):
                         image[row][column]=fullFile[j][position+10+row*width+column];
                 position +=sampleSize;
-                images[k] = iF.extendArray(image, width, height, info.maxWidth, info.maxHeight)
+                images[k] = np.reshape(iF.extendArray(image, width, height, info.maxWidth, info.maxHeight),info.maxHeight*info.maxWidth)
                 #im = iF.arrayToImage(image,height,width)
                 #imResize=iF.resizeImage(im,info.maxWidth,info.maxHeight)
                 #images[k] = iF.PIL2array(imResize);
