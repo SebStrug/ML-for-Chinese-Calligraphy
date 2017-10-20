@@ -14,7 +14,7 @@ class imageFunc(object):
     def extendArray(array, width, height, maxWidth, maxHeight):
         """Generates a new array of zeros with a size defined by the max height and max width,
         with the original array in question in the centre of that array."""
-        if width < maxWidth and height < maxHeight:
+        if width < maxWidth or height < maxHeight:
             newArray = np.zeros((maxHeight,maxWidth))
             lowerBound = maxHeight//2 - height//2
             upperBound = lowerBound+height

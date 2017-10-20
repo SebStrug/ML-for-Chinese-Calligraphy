@@ -5,9 +5,9 @@ Created on Thu Oct 19 17:39:32 2017
 @author: Sebastian
 """
 import numpy as np
-foo = [ [1,2,3],[4,5,6] ]
-boo = np.asarray(foo)
-zeros = np.zeros((1,5))
+boo = np.ones((32,56))
+maxWidth = 133
+maxHeight=168
 
 def extendArray(array, width, height, maxWidth, maxHeight):
     """Generates a new array of zeros with a size defined by the max height and max width,
@@ -23,4 +23,4 @@ def extendArray(array, width, height, maxWidth, maxHeight):
     else:
         return array
 
-print(extendArray(boo,boo.shape[1],boo.shape[0],zeros.shape[1],zeros.shape[0]))
+print(extendArray(boo,boo.shape[1],boo.shape[0],maxWidth,maxHeight))

@@ -66,9 +66,8 @@ class fileFunc(object):
                 image = np.zeros((height,width))
                 for row in range(0,height):
                     for column in range(0,width):
-                        image[row][column]=uchar.from_bytes(fullFile[j][position+10+row*width+column]);
+                        image[row][column]=fullFile[j][position+10+row*width+column];
                 position +=sampleSize;
-                
                 images[k] = iF.extendArray(image, width, height, info.maxWidth, info.maxHeight)
                 #im = iF.arrayToImage(image,height,width)
                 #imResize=iF.resizeImage(im,info.maxWidth,info.maxHeight)
@@ -90,7 +89,7 @@ class fileFunc(object):
             while position < len(array[i]):
                 sampleSize = fileFunc.byteToInt(array[i][position:position+4]);
                 maxWidth = max(fileFunc.byteToInt(array[i][position+6:position+8]),maxWidth)
-                maxHeight = max(fileFun.byteToInt(array[i][position+8:position+10]),maxHeight)
+                maxHeight = max(fileFunc.byteToInt(array[i][position+8:position+10]),maxHeight)
                 numSamples[i]+=1;
                 position += sampleSize
                 totalSize +=sampleSize;
