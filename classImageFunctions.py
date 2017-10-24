@@ -6,6 +6,7 @@ Created on Thu Oct 12 16:38:20 2017
 """
 import numpy as np
 from PIL import Image
+from skimage.measure import block_reduce
 
 path = 'C:/Users/Sebastian/Desktop/MLChinese/sample 46.png'
 
@@ -27,6 +28,17 @@ class imageFunc(object):
                   Width = {}, Height = {}, Max width = {}, Max Height = {}". \
                   format(width,height,maxWidth,maxHeight))
             return array
+        
+    #Function to reduce an array to scale it down
+    #reduceArray
+    #something about "skimage using an aggregate approach" is important
+    def reduceArray(array,height,width):
+        #this is fine as long as we are not binarizing the data
+        #it takes the means of slices
+        newArray = block_reduce(array, block_size=(height,width), func=np.mean) 
+        #can also do np.max
+        newArray = np.ceil(newArray).astype(int) #round up and return integers for each element
+        return newArray
     
     def binarizeArray(array,threshold):
         trueFalse = array < threshold
