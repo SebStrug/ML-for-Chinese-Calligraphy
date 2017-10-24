@@ -15,7 +15,7 @@ class imageFunc(object):
         """Generates a new array of zeros with a size defined by the max height and max width,
         with the original array in question in the centre of that array."""
         if width <= maxWidth and height <= maxHeight:
-            newArray = np.zeros((maxHeight,maxWidth))
+            newArray = np.full((maxHeight,maxWidth),255)
             lowerBound = maxHeight//2 - height//2
             upperBound = lowerBound+height
             leftBound = maxWidth//2 - width//2
@@ -27,6 +27,11 @@ class imageFunc(object):
                   Width = {}, Height = {}, Max width = {}, Max Height = {}". \
                   format(width,height,maxWidth,maxHeight))
             return array
+    
+    def binarizeArray(array,threshold):
+        trueFalse = array < threshold
+        #store white as 0, black as 1
+        return trueFalse.astype(int)
     
     def scaleImage(path,output):
         """Scales the image by a random value between 0.9 and 1.1"""
