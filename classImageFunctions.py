@@ -74,13 +74,13 @@ class imageFunc(object):
         #store white as 0, black as 1
         return trueFalse.astype(int)
     
-    def scaleImage(path,output):
-        """Scales the image by a random value between 0.9 and 1.1"""
-        im = Image.open(path) #not arary but image
-        scaling = np.random.uniform(0.9,1.1) #scales by a random value between 0.9 and 1.1
-        scaledSize = [i*scaling for i in im.size] #creates size array
-        im.thumbnail(scaledSize, Image.ANTIALIAS)
-        im.save(output)
+#    def scaleImage(path,output):
+#        """Scales the image by a random value between 0.9 and 1.1"""
+#        im = Image.open(path) #not arary but image
+#        scaling = np.random.uniform(0.9,1.1) #scales by a random value between 0.9 and 1.1
+#        scaledSize = [i*scaling for i in im.size] #creates size array
+#        im.thumbnail(scaledSize, Image.ANTIALIAS)
+#        im.save(output)
         
     def rotateImage(path,output):
         """Rotates the image by a random value (in degrees) between -10 and 10"""
