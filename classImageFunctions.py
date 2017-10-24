@@ -4,7 +4,6 @@ Created on Thu Oct 12 16:38:20 2017
 
 @author: Sebastian
 """
-import os
 import numpy as np
 from PIL import Image
 
@@ -12,10 +11,31 @@ path = 'C:/Users/Sebastian/Desktop/MLChinese/sample 46.png'
 
 class imageFunc(object):
     """Class of functions that perform various things on images"""
+    def extendArray(array, width, height, maxWidth, maxHeight):
+        """Generates a new array of zeros with a size defined by the max height and max width,
+        with the original array in question in the centre of that array."""
+        if width <= maxWidth and height <= maxHeight:
+            newArray = np.full((maxHeight,maxWidth),255)
+            lowerBound = maxHeight//2 - height//2
+            upperBound = lowerBound+height
+            leftBound = maxWidth//2 - width//2
+            rightBound = leftBound + width
+            newArray[lowerBound:upperBound, leftBound:rightBound] = array
+            return newArray
+        else:
+            print("Error, max dimension(s) less than dimension(s) of array. \
+                  Width = {}, Height = {}, Max width = {}, Max Height = {}". \
+                  format(width,height,maxWidth,maxHeight))
+            return array
+    
+    def binarizeArray(array,threshold):
+        trueFalse = array < threshold
+        #store white as 0, black as 1
+        return trueFalse.astype(int)
     
     def scaleImage(path,output):
         """Scales the image by a random value between 0.9 and 1.1"""
-        im = Image.open(path)
+        im = Image.open(path) #not arary but image
         scaling = np.random.uniform(0.9,1.1) #scales by a random value between 0.9 and 1.1
         scaledSize = [i*scaling for i in im.size] #creates size array
         im.thumbnail(scaledSize, Image.ANTIALIAS)
@@ -55,7 +75,7 @@ class imageFunc(object):
         """Generates image from an array"""
         #change from array to matrix OR checks it's the right size
         np.reshape(array,(height,width),'C') 
-        print(array.shape,'\n')
+        #print(array.shape,'\n')
         img = Image.fromarray(array); #generates image
         return img;
 
@@ -68,4 +88,4 @@ class imageFunc(object):
     
     def PIL2array(image):
         """Changes a PIL image to an array"""
-        return np.array(image.getdata(), np.uint8)
+        return np.array(image.getdata()).astype(np.int)
