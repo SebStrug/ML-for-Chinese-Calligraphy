@@ -13,9 +13,11 @@ path = 'C:/Users/Sebastian/Desktop/MLChinese/sample 46.png'
 
 class imageFunc(object):
     """Class of functions that perform various things on images"""
-    def extendArray(array, width, height, maxWidth, maxHeight):
+    def extendArray(array, maxHeight, maxWidth):
         """Generates a new array of zeros with a size defined by the max height and max width,
         with the original array in question in the centre of that array."""
+        height = array.shape[0]
+        width = array.shape[1]
         if width <= maxWidth and height <= maxHeight:
             newArray = np.full((maxHeight,maxWidth),255)
             lowerBound = maxHeight//2 - height//2
@@ -41,22 +43,32 @@ class imageFunc(object):
         newArray = np.ceil(newArray).astype(int) #round up and return integers for each element
         return newArray
     
-    def upscaleArray(array,maxHeight,maxWidth):
-        height = array.shape[0]
-        width = array.shape[1]
-        if height/maxHeight > width/maxWidth: 
-            #if height:maxHeight ratio is greater, we need to scale by height
-            newHeight = maxHeight
-            newWidth = int(width * maxHeight/height)
+    #scaling process
+    def scaleImage(image,downscaleSize):
+        #downscaleSize is the dimensions of the smaller image we want
+        """Takes an image, upscales it to an appropriate size,
+        adds white space so it forms a square,
+        finally downscales it to a useable size"""
+        height = image.shape[0]
+        width = image.shape[1]
+        #we must scale the larger dimension
+        upscaleSize = int(downscaleSize * np.ceil(max(height,width)/downscaleSize))
+        #if height is larger, scale that dimension
+        if height>width:
+            upscaledImage = scipy.misc.imresize(image,(upscaleSize,int(width*upscaleSize/height)))
+        #if width is larger, scale that dimension
         else:
-            #scale by width
-            newWidth = maxWidth
-            newHeight = int(height * maxWidth/width)
-        upscaledArray = scipy.misc.imresize(array,(newHeight,newWidth))
+            upscaledImage = scipy.misc.imresize(image,(int(height*upscaleSize/width),upscaleSize))
+        #then, add white space so the image is a square
+        newDimension = max(upscaledImage.shape[0],upscaledImage.shape[1])
+        whiteImage = imageFunc.extendArray(upscaledImage,newDimension,newDimension)
+        #reduce the image to an appropriate size
+        blockSize = int(newDimension/downscaleSize)
+        reducedArray = imageFunc.downscaleArray(whiteImage,blockSize,blockSize)
         #show the image from the array with
         #img = Image.fromarray(upscaledArray).show()
-        return upscaledArray
-    
+        return reducedArray
+
     def binarizeArray(array,threshold):
         trueFalse = array < threshold
         #store white as 0, black as 1
