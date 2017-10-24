@@ -68,13 +68,15 @@ class fileFunc(object):
                     for column in range(0,width):
                         image[row][column]=fullFile[j][position+10+row*width+column];
                 position +=sampleSize;
-                images[k] = np.reshape(iF.extendArray(image, width, height, info.maxWidth, info.maxHeight),info.maxHeight*info.maxWidth)
+                #make all images the same size and reshape them into a 1D vector
+                imageExtend = iF.extendArray(image, width, height, info.maxWidth, info.maxHeight)
+                images[k] = np.reshape(imageExtend,info.maxHeight*info.maxWidth)
                 #im = iF.arrayToImage(image,height,width)
                 #imResize=iF.resizeImage(im,info.maxWidth,info.maxHeight)
                 #images[k] = iF.PIL2array(imResize);
                 #print(images[k],k)
                 k+=1
-        return [characters, image, width, height, images, info.maxHeight,info.maxWidth]
+        return [characters, image, width, height, images, info.maxHeight,info.maxWidth, imageExtend]
 
     #find max width, max height and number of samples from a byte array holding gnt data
     def infoGNT(array,totalFiles):
