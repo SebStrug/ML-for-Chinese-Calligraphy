@@ -71,7 +71,7 @@ class fileFunc(object):
                 #make all images the same size and reshape them into a 1D vector
                 imageExtend = iF.extendArray(image, width, height, info.maxWidth, info.maxHeight)
                 images[k] = np.reshape(imageExtend,info.maxHeight*info.maxWidth)
-                images[k] = iF.binarizeArray(images[k],255)
+                #images[k] = iF.binarizeArray(images[k],255)
                 #im = iF.arrayToImage(image,height,width)
                 #imResize=iF.resizeImage(im,info.maxWidth,info.maxHeight)
                 #images[k] = iF.PIL2array(imResize);
