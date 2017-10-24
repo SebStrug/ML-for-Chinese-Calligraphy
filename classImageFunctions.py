@@ -7,6 +7,7 @@ Created on Thu Oct 12 16:38:20 2017
 import numpy as np
 from PIL import Image
 from skimage.measure import block_reduce
+import scipy.misc
 
 path = 'C:/Users/Sebastian/Desktop/MLChinese/sample 46.png'
 
@@ -32,13 +33,29 @@ class imageFunc(object):
     #Function to reduce an array to scale it down
     #reduceArray
     #something about "skimage using an aggregate approach" is important
-    def reduceArray(array,height,width):
+    def downscaleArray(array,height,width):
         #this is fine as long as we are not binarizing the data
         #it takes the means of slices
         newArray = block_reduce(array, block_size=(height,width), func=np.mean) 
         #can also do np.max
         newArray = np.ceil(newArray).astype(int) #round up and return integers for each element
         return newArray
+    
+    def upscaleArray(array,maxHeight,maxWidth):
+        height = array.shape[0]
+        width = array.shape[1]
+        if height/maxHeight > width/maxWidth: 
+            #if height:maxHeight ratio is greater, we need to scale by height
+            newHeight = maxHeight
+            newWidth = int(width * maxHeight/height)
+        else:
+            #scale by width
+            newWidth = maxWidth
+            newHeight = int(height * maxWidth/width)
+        upscaledArray = scipy.misc.imresize(array,(newHeight,newWidth))
+        #show the image from the array with
+        #img = Image.fromarray(upscaledArray).show()
+        return upscaledArray
     
     def binarizeArray(array,threshold):
         trueFalse = array < threshold
