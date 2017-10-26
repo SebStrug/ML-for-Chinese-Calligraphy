@@ -33,9 +33,10 @@ fF.saveNPZ(dataPath,"1001to1004",saveLabels=dataForSaving[0],saveImages=dataForS
 characters = dataForSaving[0]
 numChars = len(list(set(characters)))
 print(list(set(np.sort(characters))))
-
 #try out the 1hot vector method
 characters = [ord(i) for i in characters]
-b = np.zeros((len(characters), max(characters)+1))
-b[np.arange(len(characters)), characters] = 1
+oneHots = np.zeros((len(characters), max(characters)+1)) #array of zeros 
+oneHots[np.arange(len(characters)), characters] = 1 #replace a 0 in each vector with a 1 according to the labels
+
+
 
