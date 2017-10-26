@@ -61,8 +61,7 @@ class fileFunc(object):
             position = 0;
             for i in range(int(info.numSamples[j])):
                 sampleSize = fileFunc.byteToInt(fullFile[j][position:position+4]);
-                characters[k] = fullFile[j][position+4:position+6].decode('gb2312');
-                #print(characters[k])
+                characters[k] = fullFile[j][position+4:position+6].decode('gbk');
                 width = fileFunc.byteToInt(fullFile[j][position+6:position+8]);
                 height = fileFunc.byteToInt(fullFile[j][position+8:position+10]);
                 image = np.zeros((height,width))
@@ -107,14 +106,12 @@ class fileFunc(object):
     def iterateOverFiles(path):
         #path is the folder containing subfolders containing all .gnt files
         totalFiles = 0
-        source = 'C:/Users/Sebastian/Desktop/MLChinese/CASIA/HWDtest2' #left as example
-        source = path
-        for subdir, dirs, filenames in os.walk(source):
+        for subdir, dirs, filenames in os.walk(path):
             totalFiles += len(filenames)
         print("total Files:",totalFiles)
         
         fullFile = [None]*totalFiles
-        for subdir, dirs, filenames in os.walk(source):
+        for subdir, dirs, filenames in os.walk(path):
             for file in filenames:
                 fullpath = os.path.join(subdir, file)
                 with open(fullpath, 'rb') as openFile:

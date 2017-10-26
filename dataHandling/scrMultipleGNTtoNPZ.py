@@ -17,7 +17,8 @@ from classFileFunctions import fileFunc as fF
 
 #file path for data
 #dataPath = 'C:/Users/ellio/Desktop/training data/iterate test/'
-dataPath = 'C:\\Users\\Sebastian\\Desktop\\MLChinese\\CASIA\\HWDtest2\\HWDB1.1tst_gnt'
+#dataPath = 'C:\\Users\\Sebastian\\Desktop\\MLChinese\\CASIA\\HWDtest2\\HWDB1.1tst_gnt'
+dataPath = 'C:\\Users\\Sebastian\\Desktop\\MLChinese\\CASIA\\HWDtest2\\EnglishFiles'
 
 dataForSaving=0;
 data=0;
@@ -27,7 +28,7 @@ dataInfo = fF.infoGNT(data,tot)
 dataForSaving = fF.arraysFromGNT(data,dataInfo)
 
 data=0;#delete data in raw byte form 
-fF.saveNPZ(dataPath,"1001to1010-c",saveLabels=dataForSaving[0],saveImages=dataForSaving[5])
+fF.saveNPZ(dataPath,"1001to1002-f",saveLabels=dataForSaving[0],saveImages=dataForSaving[5])
 
 """Look at the characters in the data"""
 #characters = dataForSaving[0]
