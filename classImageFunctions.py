@@ -113,11 +113,12 @@ class imageFunc(object):
         im.save(output,optimize=True,quality=95)
         
     def arrayToImage(array,height,width):
-        """Generates image from an array"""
+        """Generates image from a 1D array"""
         #change from array to matrix OR checks it's the right size
-        np.reshape(array,(height,width),'C') 
+        array = np.reshape(array,(height,width),'C') 
         #print(array.shape,'\n')
         img = Image.fromarray(array); #generates image
+        scipy.misc.imsave('outfile.jpg', array) #saves image
         return img;
 
     def resizeImage(image,newWidth,newHeight ):

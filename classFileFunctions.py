@@ -52,7 +52,9 @@ class fileFunc(object):
         #create arrays to store data read in
         totalSamples = int(np.sum(info.numSamples));
         characters = np.zeros(totalSamples,np.unicode);
-        images = np.zeros((totalSamples,info.maxWidth*info.maxHeight))
+        #images = np.zeros((totalSamples,info.maxWidth*info.maxHeight))
+        reducedSize = 40
+        images = np.zeros((totalSamples,reducedSize*reducedSize)) #images saved as reduced versions
         #place data into arrays
         k=0
         for j in range(len(info.numSamples)):
@@ -69,7 +71,6 @@ class fileFunc(object):
                         image[row][column]=fullFile[j][position+10+row*width+column];
                 position +=sampleSize;
                 #make all images the same size and reshape them into a 1D vector
-                reducedSize = 40
                 imageReduced = iF.scaleImage(image,reducedSize)
                 images[k] = np.reshape(imageReduced,reducedSize*reducedSize)
                 #images[k] = iF.binarizeArray(images[k],255)

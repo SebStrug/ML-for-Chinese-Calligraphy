@@ -27,6 +27,6 @@ dataInfo = fF.infoGNT(data,tot)
 dataForSaving = fF.arraysFromGNT(data,dataInfo)
 
 data=0;#delete data in raw byte form 
-fF.saveNPZ(dataPath,"1001to1004",saveLabels=dataForSaving[0],saveImages=dataForSaving[4])
+fF.saveNPZ(dataPath,"1001to1004",saveLabels=dataForSaving[0],saveImages=dataForSaving[5])
 
 
