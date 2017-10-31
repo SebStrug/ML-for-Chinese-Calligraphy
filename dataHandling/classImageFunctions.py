@@ -101,16 +101,16 @@ class imageFunc(object):
         img.save(output)
         print(xyTranslate)
         
-    def reduceImage(path,output,pixelSize):
-        """Reduces image to a set size specified by pixelSize"""
-        """Suggested: 40"""
-        im = Image.open(path)
-        imSize = im.size
-        factor = imSize[0]/pixelSize 
-        newSize = (pixelSize,int(imSize[1]/factor))
-        # I downsize the image with an ANTIALIAS filter (gives the highest quality)
-        im = im.resize(newSize,Image.ANTIALIAS)
-        im.save(output,optimize=True,quality=95)
+#    def reduceImage(path,output,pixelSize):
+#        """Reduces image to a set size specified by pixelSize"""
+#        """Suggested: 40"""
+#        im = Image.open(path)
+#        imSize = im.size
+#        factor = imSize[0]/pixelSize 
+#        newSize = (pixelSize,int(imSize[1]/factor))
+#        # I downsize the image with an ANTIALIAS filter (gives the highest quality)
+#        im = im.resize(newSize,Image.ANTIALIAS)
+#        im.save(output,optimize=True,quality=95)
         
     def arrayToImage(array,height,width):
         """Generates image from a 1D array"""
