@@ -16,5 +16,5 @@ from classFileFunctions import fileFunc as fF
 dataPath = 'C:/Users/ellio/Desktop/training data/iterate test/'
 #file to open
 fileName="1001to1004"
-labels,images=fF.readNPZ(dataPath,fileName,"saveLabels","saveImages")
+labels,images=fF.readNPZ(fileName,"saveLabels","saveImages")
 
