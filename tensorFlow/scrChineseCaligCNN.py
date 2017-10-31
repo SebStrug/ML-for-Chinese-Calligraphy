@@ -6,6 +6,7 @@ Created on Thu Oct 26 15:18:01 2017
 """
 
 import tensorflow as tf
+import numpy as np
 import os
 #%%Load Data
 #file Path for functions
@@ -50,10 +51,15 @@ def conv2d(x, W):
 def max_pool_2x2(x):
   return tf.nn.max_pool(x, ksize=[1, 2, 2, 1],
                         strides=[1, 2, 2, 1], padding='SAME')
+def oneHot(i,n):
+    oneHotVector=np.zeros(n);
+    oneHotVector[i] = 1;
+    return oneHotVector;
+    
 
 #create place holders for nodes(inputs and labels)
 x = tf.placeholder(tf.float32, shape=[None, 1600])
-y_ = tf.placeholder(tf.float32, shape=[None, 40864])
+y_ = tf.placeholder(tf.float32, shape=[None])
 #create variebles for the wieghts and biases
 x_image = tf.reshape(x, [-1, 40, 40, 1])
 #1st conv layer
@@ -78,8 +84,8 @@ h_fc1 = tf.nn.relu(tf.matmul(h_flatten, W_fc1) + b_fc1)
 keep_prob = tf.placeholder(tf.float32)
 h_drop1 = tf.nn.dropout(h_fc1, keep_prob)
 #fully connected layer 2
-W_fc2 = weight_variable([1024, 40864])
-b_fc2 = bias_variable([40864])
+W_fc2 = weight_variable([1024, 3755])
+b_fc2 = bias_variable([3755])
 
 y_conv = tf.matmul(h_drop1, W_fc2) + b_fc2
 
