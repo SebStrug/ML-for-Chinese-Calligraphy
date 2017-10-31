@@ -8,7 +8,9 @@ from classFileFunctions import fileFunc as fF
 import numpy as np
 
 class machineLearning(object):
+    """Class of machine learning related functions"""
     
+    #create a zipped list
     def createZippedList(characters,name):
         #create a list of as many numbers as there are unique characters
         zipRange = list(range(len(set(characters)))) 
