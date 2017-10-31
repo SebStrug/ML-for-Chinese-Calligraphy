@@ -20,6 +20,8 @@ from classMachineLearning import machineLearning as ML
 #dataPath = 'C:/Users/ellio/Desktop/training data/iterate test/'
 dataPath = 'C:\\Users\\Sebastian\\Desktop\\MLChinese\\CASIA\\HWDtest2\\HWDB1.1tst_gnt'
 #dataPath = 'C:\\Users\\Sebastian\\Desktop\\MLChinese\\CASIA\\HWDtest2\\EnglishFiles'
+numFiles = len([filenames for subdir, dirs, filenames in os.walk(dataPath)][0])
+    
 
 dataForSaving=0;
 data=0;
@@ -30,12 +32,12 @@ dataForSaving = fF.arraysFromGNT(data,dataInfo)
 data=0;#delete data in raw byte form 
 
 savePathSeb = 'C:\\Users\\Sebastian\\Desktop\\MLChinese\\Saved script files'
-fF.saveNPZ(savePathSeb,"1001to1002-c",saveLabels=dataForSaving[0],\
+fF.saveNPZ(savePathSeb,"{}Files-characters-images".format(numFiles),saveLabels=dataForSaving[0],\
            saveImages=dataForSaving[5])
-fF.saveNPZ(savePathSeb,"hotOnes",\
-           saveLabels=ML.newHotOnes(dataForSaving[0],'zippedListTest',savePathSeb),\
-           saveImages=dataForSaving[5])
-fF.saveNPZ(savePathSeb,"charsAsNums",\
+#fF.saveNPZ(savePathSeb,"{}Files-hotOnes-images.format(numFiles)",\
+#           saveLabels=ML.newHotOnes(dataForSaving[0],'zippedListTest',savePathSeb),\
+#           saveImages=dataForSaving[5])
+fF.saveNPZ(savePathSeb,"{}Files-charNums-images".format(numFiles),\
            saveLabels=[ML.storeCharNumber(i,'zippedListTest',savePathSeb) for i in dataForSaving[0]],\
            saveImages=dataForSaving[5])
 
