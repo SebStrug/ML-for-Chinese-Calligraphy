@@ -22,7 +22,7 @@ numOutputs = 3755
 
 def oneHot(numberList,n):
     oneHotArray=np.zeros((len(numberList),n));
-    for j in numberList:
+    for j in range(len(numberList)):
         oneHotArray[j][numberList[j]] = 1;
     return oneHotArray;
 #file path for data
