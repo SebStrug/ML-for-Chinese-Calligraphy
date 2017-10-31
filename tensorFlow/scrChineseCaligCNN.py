@@ -26,12 +26,13 @@ def oneHot(numberList,n):
         oneHotArray[j][numberList[j]] = 1;
     return oneHotArray;
 #file path for data
-#dataPath = 'C:/Users/ellio/Desktop/training data/iterate test/'
+
 print("splitting data...")
 startTime=t.time()
 #file to open
-fileName="1001to1002-c.txt"
-labels,images=fF.readNPZ(fileName,"saveLabels","saveImages")
+dataPath = 'C:/Users/ellio/Documents/training data/'
+fileName="1001to1002.txt"
+labels,images=fF.readNPZ(dataPath,fileName,"saveLabels","saveImages")
 dataLength=len(labels)
 #split the data into training and testing
 #train data
