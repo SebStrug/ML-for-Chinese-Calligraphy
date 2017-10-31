@@ -36,7 +36,7 @@ fF.saveNPZ(savePathSeb,"hotOnes",\
            saveLabels=ML.newHotOnes(dataForSaving[0],'zippedListTest',savePathSeb),\
            saveImages=dataForSaving[5])
 fF.saveNPZ(savePathSeb,"charsAsNums",\
-           saveLabels=[ML.storeCharNumber(savePathSeb,i,'zippedListTest') for i in dataForSaving[0]],\
+           saveLabels=[ML.storeCharNumber(i,'zippedListTest',savePathSeb) for i in dataForSaving[0]],\
            saveImages=dataForSaving[5])
 
 
