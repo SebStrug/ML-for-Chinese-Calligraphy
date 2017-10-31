@@ -8,35 +8,45 @@ Created on Thu Oct 26 15:18:01 2017
 import tensorflow as tf
 import numpy as np
 import os
+import time as t
 #%%Load Data
 #file Path for functions
-funcPath = 'C:/Users/ellio/OneDrive/Documents/GitHub/ML-for-Chinese-Calligraphy/dataHandling/'
+funcPath = 'C:/Users/ellio/OneDrive/Documents/GitHub/ML-for-Chinese-Calligraphy/dataHandling'
 os.chdir(funcPath)
-from classFileFunctions import fileFunc as fF
+from classFileFunctions import fileFunc as fF 
+os.chdir("..")
 
 #set ration of data to be training and testing
 trainRatio = 0.9
+numOutputs = 3755
 
+def oneHot(numberList,n):
+    oneHotArray=np.zeros((len(numberList),n));
+    for j in numberList:
+        oneHotArray[j][numberList[j]] = 1;
+    return oneHotArray;
 #file path for data
 #dataPath = 'C:/Users/ellio/Desktop/training data/iterate test/'
-dataPath = 'C:/Users/ellio/OneDrive/Documents/GitHub/ML-for-Chinese-Calligraphy/'
+print("splitting data...")
+startTime=t.time()
 #file to open
-fileName="HWDB1.1tst_gnt1001to1010-c"
-labels,images=fF.readNPZ(dataPath,fileName,"saveLabels","saveImages")
+fileName="1001to1002-c.txt"
+labels,images=fF.readNPZ(fileName,"saveLabels","saveImages")
 dataLength=len(labels)
 #split the data into training and testing
 #train data
 trainLabels = labels[0:int(dataLength*trainRatio)]
 trainImages = images[0:int(dataLength*trainRatio)]
 #test data
-testLabels = labels[int(dataLength*trainRatio):dataLength-int(dataLength*trainRatio)]
-testImages = images[int(dataLength*trainRatio):dataLength-int(dataLength*trainRatio)]
+testLabels =  oneHot(labels[int(dataLength*trainRatio):dataLength-int(dataLength*trainRatio)],numOutputs)
+testImages =images[int(dataLength*trainRatio):dataLength-int(dataLength*trainRatio)]
 labels = 0;
 images = 0;
+print("took ",t.time()-startTime," seconds\n")
 
 #%%
-
-
+print("Building network...")
+startTime=t.time()
 #Functions to initialise weights to non-zero values 
 def weight_variable(shape):
   initial = tf.truncated_normal(shape, stddev=0.1)
@@ -51,15 +61,13 @@ def conv2d(x, W):
 def max_pool_2x2(x):
   return tf.nn.max_pool(x, ksize=[1, 2, 2, 1],
                         strides=[1, 2, 2, 1], padding='SAME')
-def oneHot(i,n):
-    oneHotVector=np.zeros(n);
-    oneHotVector[i] = 1;
-    return oneHotVector;
+  
+
     
 
 #create place holders for nodes(inputs and labels)
 x = tf.placeholder(tf.float32, shape=[None, 1600])
-y_ = tf.placeholder(tf.float32, shape=[None])
+y_ = tf.placeholder(tf.float32, shape=[None,3755])
 #create variebles for the wieghts and biases
 x_image = tf.reshape(x, [-1, 40, 40, 1])
 #1st conv layer
@@ -84,8 +92,8 @@ h_fc1 = tf.nn.relu(tf.matmul(h_flatten, W_fc1) + b_fc1)
 keep_prob = tf.placeholder(tf.float32)
 h_drop1 = tf.nn.dropout(h_fc1, keep_prob)
 #fully connected layer 2
-W_fc2 = weight_variable([1024, 3755])
-b_fc2 = bias_variable([3755])
+W_fc2 = weight_variable([1024, numOutputs])
+b_fc2 = bias_variable([numOutputs])
 
 y_conv = tf.matmul(h_drop1, W_fc2) + b_fc2
 
@@ -104,22 +112,41 @@ train_step = tf.train.AdamOptimizer(1e-4).minimize(cross_entropy)
 correct_prediction = tf.equal(tf.argmax(y_conv,1), tf.argmax(y_,1))
 #caluclate the average of all the predictions to get a factional accuracy
 accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
-
-
+print("took ",t.time()-startTime," seconds\n")
+print("start training")
+startTime=t.time()
 with tf.Session() as sess:
     sess.run(tf.global_variables_initializer())
 # put through all training data and update the weights for each batch
     i=0
+    print("took ",t.time()-startTime," seconds\n")
     while i<iterations:
-        batchImages = trainImages[i%dataLength:i%dataLength+batchSize] 
-        batchLabels = trainLabels[i%dataLength:i%dataLength+batchSize]
+        print("ITERATION: ",i,"\n------------------------")
+        iterationStart = t.time()
+        print("creating batch images...")
+        startTime=t.time()
+        batchImages = trainImages[i%dataLength:i%dataLength+batchSize]
+        print("took ",t.time()-startTime," seconds\n")
+        print("creating batch labels...")
+        startTime=t.time()
+        batchLabels = oneHot(trainLabels[i%dataLength:i%dataLength+batchSize],numOutputs)
+        print("took ",t.time()-startTime," seconds\n")
     #print training accuracy for every 100 iterations
         if i % 100 == 0:
+            print("evaluating training accuracy...")
+            startTime=t.time()
             train_accuracy = accuracy.eval(feed_dict={x: batchImages, y_: batchLabels, keep_prob: 1.0})
             print('step %d, training accuracy %g' % (i, train_accuracy))
+            print("took ",t.time()-startTime," seconds\n")
         if i%500 == 0 and i!=0:
+            print("evaluating test accuracy...")
+            startTime=t.time()
             test_accuracy = accuracy.eval(feed_dict={x: testImages, y_: testLabels, keep_prob: 1.0})
             print('test accuracy %g' % test_accuracy)
+            print("took ",t.time()-startTime," seconds\n")
+        print("running batch...")
+        startTime=t.time()
         train_step.run(feed_dict={x: batchImages, y_: batchLabels, keep_prob: 0.5})
+        print("took ",t.time()-startTime," seconds\n")
+        print("Iterations ",i,"-",i+50," took ",t.time()-iterationStart," seconds\n")
         i+=50
- 
