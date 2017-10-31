@@ -6,7 +6,6 @@ Created on Thu Oct 26 15:18:01 2017
 """
 
 import tensorflow as tf
-import numpy as np
 import os
 #%%Load Data
 #file Path for functions
@@ -31,7 +30,8 @@ trainImages = images[0:int(dataLength*trainRatio)]
 #test data
 testLabels = labels[int(dataLength*trainRatio):dataLength-int(dataLength*trainRatio)]
 testImages = images[int(dataLength*trainRatio):dataLength-int(dataLength*trainRatio)]
-
+labels = 0;
+images = 0;
 
 #%%
 
