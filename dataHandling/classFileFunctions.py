@@ -29,18 +29,18 @@ class fileFunc(object):
         return allByte
     
     #Function that reads the NPZ file 'name' at 'path' and returns the file object
-    def readNPZ(name,labelName,imageName):
-        fullName = f"{name}"
-        with open(fullName, 'rb') as ifs:
+    def readNPZ(path,name,labelName,imageName):
+        fullPath = os.path.join(path, name)
+        with open(fullPath, 'rb') as ifs:
             fileNPZ = np.load(ifs)
             return fileNPZ[labelName],fileNPZ[imageName]
         
     #function that saves a list of arrays 'namedArrays' to the file 'name' at
     #location 'path' with the option of compression 'compressed'      
-    def saveNPZ(name,compressed=False,**namedArrays):
+    def saveNPZ(path,name,compressed=False,**namedArrays):
         print("save")
-        fullName = f"{name}"
-        with open(fullName, 'wb') as ofs:
+        fullPath = os.path.join(path, name)
+        with open(fullPath, 'wb') as ofs:
             if compressed:
                 np.savez_compressed(ofs,**namedArrays)
             else:

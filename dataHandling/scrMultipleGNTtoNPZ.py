@@ -10,9 +10,9 @@ import numpy as np
 
 
 #file Path for functions
-#funcPath = 'C:/Users/ellio/OneDrive/Documents/GitHub/ML-for-Chinese-Calligraphy/'
-funcPath = 'C:\\Users\\Sebastian\\Desktop\\GitHub\\ML-for-Chinese-Calligraphy\\dataHandling'
-os.chdir(funcPath)
+funcPathElliot = 'C:/Users/ellio/OneDrive/Documents/GitHub/ML-for-Chinese-Calligraphy/'
+funcPathSeb = 'C:\\Users\\Sebastian\\Desktop\\GitHub\\ML-for-Chinese-Calligraphy\\dataHandling'
+os.chdir(funcPathSeb)
 from classFileFunctions import fileFunc as fF
 from classMachineLearning import machineLearning as ML
 
@@ -27,7 +27,16 @@ data=0;
 data,tot = fF.iterateOverFiles(dataPath)
 dataInfo = fF.infoGNT(data,tot)
 dataForSaving = fF.arraysFromGNT(data,dataInfo)
-
 data=0;#delete data in raw byte form 
-fF.saveNPZ("1001to1002-c",saveLabels=dataForSaving[0],saveImages=dataForSaving[5])
-fF.saveNPZ("hotOnes",saveLabels= ML.newHotOnes(dataForSaving[0],'zippedListTest'),saveImages=dataForSaving[5])
+
+savePathSeb = 'C:\\Users\\Sebastian\\Desktop\\MLChinese\\Saved script files'
+fF.saveNPZ(savePathSeb,"1001to1002-c",saveLabels=dataForSaving[0],\
+           saveImages=dataForSaving[5])
+fF.saveNPZ(savePathSeb,"hotOnes",\
+           saveLabels=ML.newHotOnes(dataForSaving[0],'zippedListTest',savePathSeb),\
+           saveImages=dataForSaving[5])
+fF.saveNPZ(savePathSeb,"charsAsNums",\
+           saveLabels=[ML.storeCharNumber(savePathSeb,i,'zippedListTest') for i in dataForSaving[0]],\
+           saveImages=dataForSaving[5])
+
+
