@@ -31,7 +31,10 @@ dataInfo = fF.infoGNT(data,tot)
 dataForSaving = fF.arraysFromGNT(data,dataInfo)
 data=0;#delete data in raw byte form 
 
+
+
 savePathSeb = 'C:\\Users\\Sebastian\\Desktop\\MLChinese\\Saved script files'
+zippedList = ML.createZippedList(dataForSaving[0],'zippedListTest',savePathSeb)
 fF.saveNPZ(savePathSeb,"{}Files-characters-images".format(numFiles),saveLabels=dataForSaving[0],\
            saveImages=dataForSaving[5])
 #fF.saveNPZ(savePathSeb,"{}Files-hotOnes-images.format(numFiles)",\
