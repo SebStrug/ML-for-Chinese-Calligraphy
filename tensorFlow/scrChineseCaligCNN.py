@@ -11,7 +11,7 @@ import os
 import time as t
 #%%Load Data
 #file Path for functions
-funcPath = 'C:/Users/ellio/OneDrive/Documents/GitHub/ML-for-Chinese-Calligraphy/dataHandling'
+funcPath = 'C:/Users/ellio/OneDrive/Documents/GitHubPC/ML-for-Chinese-Calligraphy/dataHandling'
 os.chdir(funcPath)
 from classFileFunctions import fileFunc as fF 
 os.chdir("..")
@@ -30,8 +30,8 @@ def oneHot(numberList,n):
 print("splitting data...")
 startTime=t.time()
 #file to open
-dataPath = 'C:/Users/ellio/Documents/training data/'
-fileName="1001to1002.txt"
+dataPath = 'C:/Users/ellio/Documents/Machine Learning data/'
+fileName="10Files-charNums-images"
 labels,images=fF.readNPZ(dataPath,fileName,"saveLabels","saveImages")
 dataLength=len(labels)
 #split the data into training and testing
@@ -102,7 +102,7 @@ y_conv = tf.matmul(h_drop1, W_fc2) + b_fc2
 
 #training parameters
 batchSize = 50
-iterations = 20000
+iterations = 70000
 #caluclate the average cross entropy across a batch between the predictions y_ and the labels y.
 #This is the value to reduce
 cross_entropy = tf.reduce_mean(
