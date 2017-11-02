@@ -9,7 +9,6 @@ import numpy as np
 
 class machineLearning(object):
     """Class of machine learning related functions"""
-    
     #create a zipped list
     def createZippedList(characters,name,path):
         #create a list of as many numbers as there are unique characters

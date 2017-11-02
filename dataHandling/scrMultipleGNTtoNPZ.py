@@ -34,13 +34,11 @@ data=0;#delete data in raw byte form
 
 
 savePathSeb = 'C:\\Users\\Sebastian\\Desktop\\MLChinese\\Saved script files'
-<<<<<<< HEAD
 zippedList = ML.createZippedList(dataForSaving[0],'zippedListTest',savePathSeb)
 fF.saveNPZ(savePathSeb,"{}Files-characters-images".format(numFiles),saveLabels=dataForSaving[0],\
-=======
+
 savePathElliot='C:\\Users\\ellio\\Documents\\training data'
 fF.saveNPZ(savePathElliot,"{}Files-characters-images".format(numFiles),saveLabels=dataForSaving[0],\
->>>>>>> f4e1aa15c9fe6a47df52def8bc839b573ebf8b04
            saveImages=dataForSaving[5])
 #fF.saveNPZ(savePathSeb,"{}Files-hotOnes-images.format(numFiles)",\
 #           saveLabels=ML.newHotOnes(dataForSaving[0],'zippedListTest',savePathSeb),\
