@@ -8,8 +8,7 @@ from classFileFunctions import fileFunc as fF
 import numpy as np
 
 class machineLearning(object):
-    """Class of machine learning related functions"""
-    
+    """Class of machine learning related functions"""    
     def storeCharNumber(character,name,path):
         listCharacters,index = fF.readNPZ(path,name,'saveChars','saveIndex')
         return np.where(listCharacters==ord(character))[0][0]
