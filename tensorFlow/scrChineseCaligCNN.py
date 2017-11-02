@@ -9,7 +9,8 @@ import tensorflow as tf
 import numpy as np
 import os
 import time as t
-import matplotlib.pylot as plt
+import matplotlib.pyplot as plt
+
 #%%Load Data
 #file Path for functions
 funcPath = 'C:/Users/ellio/OneDrive/Documents/GitHubPC/ML-for-Chinese-Calligraphy/dataHandling'
@@ -87,14 +88,14 @@ h_pool2 = max_pool_2x2(h_conv2)
 #flatten 
 h_flatten = tf.reshape(h_pool2, [-1, 10*10*64])
 #fully connected layer
-W_fc1 = weight_variable([10 * 10 * 64, 2048])
-b_fc1 = bias_variable([2048])
+W_fc1 = weight_variable([10 * 10 * 64, 4096])
+b_fc1 = bias_variable([4096])
 h_fc1 = tf.nn.relu(tf.matmul(h_flatten, W_fc1) + b_fc1)
 #dropout layer
 keep_prob = tf.placeholder(tf.float32)
 h_drop1 = tf.nn.dropout(h_fc1, keep_prob)
 #fully connected layer 2
-W_fc2 = weight_variable([2048, numOutputs])
+W_fc2 = weight_variable([4096, numOutputs])
 b_fc2 = bias_variable([numOutputs])
 
 y_conv = tf.matmul(h_drop1, W_fc2) + b_fc2
@@ -104,12 +105,14 @@ y_conv = tf.matmul(h_drop1, W_fc2) + b_fc2
 #training parameters
 batchSize = 50
 iterations = 70000
+displayNum = 100
+testNum = 500
 #caluclate the average cross entropy across a batch between the predictions y_ and the labels y.
 #This is the value to reduce
 cross_entropy = tf.reduce_mean(
     tf.nn.softmax_cross_entropy_with_logits(labels=y_, logits=y_conv))
 # define the training method to update the wieghts 
-train_step = tf.train.AdamOptimizer(1e-4).minimize(cross_entropy) 
+train_step = tf.train.AdamOptimizer(0.1).minimize(cross_entropy) 
 #caluclate whether the prediction for each image is correct
 correct_prediction = tf.equal(tf.argmax(y_conv,1), tf.argmax(y_,1))
 #caluclate the average of all the predictions to get a factional accuracy
@@ -121,7 +124,7 @@ with tf.Session() as sess:
     sess.run(tf.global_variables_initializer())
 # put through all training data and update the weights for each batch
     i=0
-    accuracy[iterations/500]
+    testAccuracy= np.zeros(int(iterations/(testNum)))
     print("took ",t.time()-startTime," seconds\n")
     while i<iterations:
         print("ITERATION: ",i,"\n------------------------")
@@ -135,24 +138,26 @@ with tf.Session() as sess:
         batchLabels = oneHot(trainLabels[i%dataLength:i%dataLength+batchSize],numOutputs)
         #print("took ",t.time()-startTime," seconds\n")
     #print training accuracy for every 100 iterations
-        if i % 100 == 0:
+        if i % (displayNum) == 0:
             print("evaluating training accuracy...")
             #startTime=t.time()
             train_accuracy = accuracy.eval(feed_dict={x: batchImages, y_: batchLabels, keep_prob: 1.0})
             print('step %d, training accuracy %g' % (i, train_accuracy))
             #print("took ",t.time()-startTime," seconds\n")
-        if i%500 == 0 and i!=0:
+        if i%(10*batchSize) == 0 and i!=0:
             print("evaluating test accuracy...")
             #startTime=t.time()
             test_accuracy = accuracy.eval(feed_dict={x: testImages, y_: testLabels, keep_prob: 1.0})
             print('test accuracy %g' % test_accuracy)
-            accuracy[i/500]=test_accuracy
+            testAccuracy[int(i/(10*batchSize))]=test_accuracy
             #print("took ",t.time()-startTime," seconds\n")
         #print("running batch...")
         #startTime=t.time()
         train_step.run(feed_dict={x: batchImages, y_: batchLabels, keep_prob: 0.5})
         #print("took ",t.time()-startTime," seconds\n")
-        print("Iterations ",i,"-",i+50," took ",t.time()-iterationStart," seconds\n")
-        i+=50
-    plt.plot(accuracy)
-    plt.show
+        print("Iterations ",i,"-",i+batchSize," took ",t.time()-iterationStart," seconds\n")
+        i+=batchSize
+    
+plt.plot(testAccuracy)
+plt.show()
+    
