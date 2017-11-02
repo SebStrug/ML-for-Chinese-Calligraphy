@@ -112,7 +112,7 @@ testNum = 500
 cross_entropy = tf.reduce_mean(
     tf.nn.softmax_cross_entropy_with_logits(labels=y_, logits=y_conv))
 # define the training method to update the wieghts 
-train_step = tf.train.AdamOptimizer(0.1).minimize(cross_entropy) 
+train_step = tf.train.GradientDescentOptimizer(0.1).minimize(cross_entropy) 
 #caluclate whether the prediction for each image is correct
 correct_prediction = tf.equal(tf.argmax(y_conv,1), tf.argmax(y_,1))
 #caluclate the average of all the predictions to get a factional accuracy
@@ -144,12 +144,12 @@ with tf.Session() as sess:
             train_accuracy = accuracy.eval(feed_dict={x: batchImages, y_: batchLabels, keep_prob: 1.0})
             print('step %d, training accuracy %g' % (i, train_accuracy))
             #print("took ",t.time()-startTime," seconds\n")
-        if i%(10*batchSize) == 0 and i!=0:
+        if i%(testNum) == 0 and i!=0:
             print("evaluating test accuracy...")
             #startTime=t.time()
             test_accuracy = accuracy.eval(feed_dict={x: testImages, y_: testLabels, keep_prob: 1.0})
             print('test accuracy %g' % test_accuracy)
-            testAccuracy[int(i/(10*batchSize))]=test_accuracy
+            testAccuracy[int(i/(testNum))]=test_accuracy
             #print("took ",t.time()-startTime," seconds\n")
         #print("running batch...")
         #startTime=t.time()
