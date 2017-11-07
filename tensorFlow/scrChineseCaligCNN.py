@@ -32,8 +32,8 @@ def oneHot(numberList,n):
 print("splitting data...")
 startTime=t.time()
 #file to open
-dataPath = 'C:/Users/ellio/Documents/Machine Learning data/'
-fileName="10Files-charNums-images"
+dataPath = 'C:/Users/ellio/Documents/training data/Machine Learning data/'
+fileName="3Files-charNums-images"
 labels,images=fF.readNPZ(dataPath,fileName,"saveLabels","saveImages")
 dataLength=len(labels)
 #split the data into training and testing
@@ -112,7 +112,7 @@ testNum = 500
 cross_entropy = tf.reduce_mean(
     tf.nn.softmax_cross_entropy_with_logits(labels=y_, logits=y_conv))
 # define the training method to update the wieghts 
-train_step = tf.train.GradientDescentOptimizer(0.1).minimize(cross_entropy) 
+train_step = tf.train.GradientDescentOptimizer(1e-4).minimize(cross_entropy) 
 #caluclate whether the prediction for each image is correct
 correct_prediction = tf.equal(tf.argmax(y_conv,1), tf.argmax(y_,1))
 #caluclate the average of all the predictions to get a factional accuracy

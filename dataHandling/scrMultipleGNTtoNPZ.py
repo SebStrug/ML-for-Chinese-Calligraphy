@@ -42,7 +42,7 @@ savePathSeb = 'C:\\Users\\Sebastian\\Desktop\\MLChinese\\Saved script files'
 #fF.saveNPZ(savePathElliot,"{}Files-characters-images".format(numFiles),saveLabels=dataForSaving[0],\
 #           saveImages=dataForSaving[5])
 #=======
-savePathElliot = 'C:\\Users\\ellio\\Documents\\Machine learning data\\'
+savePathElliot = 'C:\\Users\\ellio\\Documents\\training data\\Machine learning data'
 
 #zippedList = ML.createZippedList(dataForSaving[0],'zippedListTest',savePathElliot)
 
