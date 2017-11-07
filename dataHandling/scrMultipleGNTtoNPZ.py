@@ -53,7 +53,7 @@ savePathElliot = 'C:\\Users\\ellio\\Documents\\training data\\Machine learning d
 #fF.saveNPZ(savePathSeb,"{}Files-hotOnes-images.format(numFiles)",\
 #           saveLabels=ML.newHotOnes(dataForSaving[0],'zippedListTest',savePathSeb),\
 #           saveImages=dataForSaving[5])
-fF.saveNPZ(savePathElliot,"{}Files-charNums-images".format(numFiles),\
+fF.saveNPZ(savePathElliot,"1001-1020Files-charNums-images".format(numFiles),\
            saveLabels=[ML.storeCharNumber(i,'zippedListTest',savePathElliot) for i in dataForSaving[0]],\
            saveImages=dataForSaving[5])
 

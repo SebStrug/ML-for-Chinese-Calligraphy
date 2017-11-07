@@ -19,7 +19,7 @@ from classFileFunctions import fileFunc as fF
 os.chdir("..")
 
 #set ration of data to be training and testing
-trainRatio = 0.9
+trainRatio = 0.8
 numOutputs = 3755
 
 def oneHot(numberList,n):
@@ -33,7 +33,7 @@ print("splitting data...")
 startTime=t.time()
 #file to open
 dataPath = 'C:/Users/ellio/Documents/training data/Machine Learning data/'
-fileName="3Files-charNums-images"
+fileName="1001-1020Files-charNums-images"
 labels,images=fF.readNPZ(dataPath,fileName,"saveLabels","saveImages")
 dataLength=len(labels)
 #split the data into training and testing
@@ -42,7 +42,7 @@ trainLabels = labels[0:int(dataLength*trainRatio)]
 trainImages = images[0:int(dataLength*trainRatio)]
 #test data
 testLabels =  oneHot(labels[int(dataLength*trainRatio):dataLength],numOutputs)
-testImages =images[int(dataLength*trainRatio):dataLength]
+testImages = images[int(dataLength*trainRatio):dataLength]
 labels = 0;
 images = 0;
 print("took ",t.time()-startTime," seconds\n")
@@ -72,47 +72,47 @@ def max_pool_2x2(x):
 x = tf.placeholder(tf.float32, shape=[None, 1600])
 y_ = tf.placeholder(tf.float32, shape=[None,numOutputs])
 #create variebles for the wieghts and biases
-x_image = tf.reshape(x, [-1, 40, 40, 1])
+#x_image = tf.reshape(x, [-1, 40, 40, 1])
 #1st conv layer
-W_conv1 = weight_variable([9, 9, 1, 32])#layer weights
-b_conv1 = bias_variable([32])#layer bias
-h_conv1 = tf.nn.relu(conv2d(x_image, W_conv1) + b_conv1)#layer output
-#1st pooling layer
-h_pool1 = max_pool_2x2(h_conv1)
+#W_conv1 = weight_variable([9, 9, 1, 32])#layer weights
+#b_conv1 = bias_variable([32])#layer bias
+#h_conv1 = tf.nn.relu(conv2d(x_image, W_conv1) + b_conv1)#layer output
+##1st pooling layer
+#h_pool1 = max_pool_2x2(h_conv1)
 #second conv layer
-W_conv2 = weight_variable([9, 9, 32, 64])
-b_conv2 = bias_variable([64])
-h_conv2 = tf.nn.relu(conv2d(h_pool1, W_conv2) + b_conv2)
-#second pool
-h_pool2 = max_pool_2x2(h_conv2)
+#W_conv2 = weight_variable([9, 9, 32, 64])
+#b_conv2 = bias_variable([64])
+#h_conv2 = tf.nn.relu(conv2d(h_pool1, W_conv2) + b_conv2)
+##second pool
+#h_pool2 = max_pool_2x2(h_conv2)
 #flatten 
-h_flatten = tf.reshape(h_pool2, [-1, 10*10*64])
+#h_flatten = tf.reshape(h_pool1, [-1, 10*10*64])
 #fully connected layer
-W_fc1 = weight_variable([10 * 10 * 64, 1024])
-b_fc1 = bias_variable([1024])
-h_fc1 = tf.nn.relu(tf.matmul(h_flatten, W_fc1) + b_fc1)
+#W_fc1 = weight_variable([10 * 10 * 64, 1024])
+#b_fc1 = bias_variable([1024])
+#h_fc1 = tf.nn.relu(tf.matmul(h_flatten, W_fc1) + b_fc1)
 #dropout layer
 keep_prob = tf.placeholder(tf.float32)
-h_drop1 = tf.nn.dropout(h_fc1, keep_prob)
+h_drop1 = tf.nn.dropout(x, keep_prob)
 #fully connected layer 2
-W_fc2 = weight_variable([1024, numOutputs])
+W_fc2 = weight_variable([1600, numOutputs])
 b_fc2 = bias_variable([numOutputs])
 
-y_conv = tf.matmul(h_drop1, W_fc2) + b_fc2
+y_conv = tf.matmul(x, W_fc2) + b_fc2
 
 #%%TRAINING
 
 #training parameters
-batchSize = 50
-iterations = 70000
-displayNum = 100
-testNum = 500
+batchSize = 800
+iterations = 160000
+displayNum = 1600
+testNum = 3200
 #caluclate the average cross entropy across a batch between the predictions y_ and the labels y.
 #This is the value to reduce
 cross_entropy = tf.reduce_mean(
     tf.nn.softmax_cross_entropy_with_logits(labels=y_, logits=y_conv))
 # define the training method to update the wieghts 
-train_step = tf.train.GradientDescentOptimizer(1e-4).minimize(cross_entropy) 
+train_step = tf.train.GradientDescentOptimizer(1e-2).minimize(cross_entropy) 
 #caluclate whether the prediction for each image is correct
 correct_prediction = tf.equal(tf.argmax(y_conv,1), tf.argmax(y_,1))
 #caluclate the average of all the predictions to get a factional accuracy
@@ -159,5 +159,7 @@ with tf.Session() as sess:
         i+=batchSize
     
 plt.plot(testAccuracy)
+plt.xlabel("Iterations/{}".format(batchSize))
+plt.ylabel("Test accuracy")
 plt.show()
     
