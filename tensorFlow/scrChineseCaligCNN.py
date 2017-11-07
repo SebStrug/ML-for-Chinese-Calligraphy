@@ -104,15 +104,18 @@ y_conv = tf.matmul(x, W_fc2) + b_fc2
 
 #training parameters
 batchSize = 800
-iterations = 160000
+iterations = 320000
 displayNum = 1600
 testNum = 3200
+learningRate = 1e-2
 #caluclate the average cross entropy across a batch between the predictions y_ and the labels y.
 #This is the value to reduce
 cross_entropy = tf.reduce_mean(
     tf.nn.softmax_cross_entropy_with_logits(labels=y_, logits=y_conv))
 # define the training method to update the wieghts 
-train_step = tf.train.GradientDescentOptimizer(1e-2).minimize(cross_entropy) 
+train_step = tf.train.GradientDescentOptimizer(learningRate).minimize(cross_entropy) 
+#define the weight decay
+#decay = tf.train.exponential_decay(learningRate,.......)
 #caluclate whether the prediction for each image is correct
 correct_prediction = tf.equal(tf.argmax(y_conv,1), tf.argmax(y_,1))
 #caluclate the average of all the predictions to get a factional accuracy
