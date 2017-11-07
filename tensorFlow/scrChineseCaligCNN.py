@@ -13,7 +13,7 @@ import matplotlib.pyplot as plt
 
 #%%Load Data
 #file Path for functions
-funcPath = 'C:/Users/ellio/OneDrive/Documents/GitHubPC/ML-for-Chinese-Calligraphy/dataHandling'
+funcPath = 'C:/Users/ellio/OneDrive/Documents/GitHub/ML-for-Chinese-Calligraphy/dataHandling'
 os.chdir(funcPath)
 from classFileFunctions import fileFunc as fF 
 os.chdir("..")
@@ -88,14 +88,14 @@ h_pool2 = max_pool_2x2(h_conv2)
 #flatten 
 h_flatten = tf.reshape(h_pool2, [-1, 10*10*64])
 #fully connected layer
-W_fc1 = weight_variable([10 * 10 * 64, 4096])
-b_fc1 = bias_variable([4096])
+W_fc1 = weight_variable([10 * 10 * 64, 1024])
+b_fc1 = bias_variable([1024])
 h_fc1 = tf.nn.relu(tf.matmul(h_flatten, W_fc1) + b_fc1)
 #dropout layer
 keep_prob = tf.placeholder(tf.float32)
 h_drop1 = tf.nn.dropout(h_fc1, keep_prob)
 #fully connected layer 2
-W_fc2 = weight_variable([4096, numOutputs])
+W_fc2 = weight_variable([1024, numOutputs])
 b_fc2 = bias_variable([numOutputs])
 
 y_conv = tf.matmul(h_drop1, W_fc2) + b_fc2

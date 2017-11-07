@@ -10,14 +10,14 @@ import numpy as np
 
 
 #file Path for functions
-funcPathElliot = 'C:/Users/ellio/OneDrive/Documents/GitHubPC/ML-for-Chinese-Calligraphy/dataHandling'
+funcPathElliot = 'C:/Users/ellio/OneDrive/Documents/GitHub/ML-for-Chinese-Calligraphy/dataHandling'
 funcPathSeb = 'C:\\Users\\Sebastian\\Desktop\\GitHub\\ML-for-Chinese-Calligraphy\\dataHandling'
 os.chdir(funcPathElliot)
 from classFileFunctions import fileFunc as fF
 from classMachineLearning import machineLearning as ML
 
 #file path for data
-dataPath = 'C:\\Users\\ellio\\Documents\\Machine learning data\\First download\\HWDB1.1trn_gnt_P1'
+dataPath = 'C:\\Users\\ellio\\Documents\\training data\\forConversion'
 #dataPath = 'C:\\Users\\Sebastian\\Desktop\\MLChinese\\CASIA\\HWDtest2\\HWDB1.1tst_gnt'
 #dataPath = 'C:\\Users\\Sebastian\\Desktop\\MLChinese\\CASIA\\HWDtest2\\EnglishFiles'
 numFiles = len([filenames for subdir, dirs, filenames in os.walk(dataPath)][0])
