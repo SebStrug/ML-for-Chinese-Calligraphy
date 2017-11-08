@@ -33,7 +33,7 @@ print("splitting data...")
 startTime=t.time()
 #file to open
 dataPath = 'C:/Users/ellio/Documents/training data/Machine Learning data/'
-fileName="1001-1020Files-charNums-images"
+fileName="1001-1100C"
 labels,images=fF.readNPZ(dataPath,fileName,"saveLabels","saveImages")
 dataLength=len(labels)
 #split the data into training and testing
@@ -104,7 +104,7 @@ y_conv = tf.matmul(x, W_fc2) + b_fc2
 
 #training parameters
 batchSize = 800
-iterations = 320000
+iterations = 600000
 displayNum = 1600
 testNum = 3200
 learningRate = 1e-2
