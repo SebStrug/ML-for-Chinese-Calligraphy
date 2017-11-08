@@ -10,7 +10,7 @@ import numpy as np
 
 
 #file Path for functions
-funcPathElliot = 'C:/Users/ellio/OneDrive/Documents/GitHub/ML-for-Chinese-Calligraphy/dataHandling'
+funcPathElliot = 'C:/Users/ellio/OneDrive/Documents/GitHubPC/ML-for-Chinese-Calligraphy/dataHandling'
 funcPathSeb = 'C:\\Users\\Sebastian\\Desktop\\GitHub\\ML-for-Chinese-Calligraphy\\dataHandling'
 os.chdir(funcPathElliot)
 from classFileFunctions import fileFunc as fF
@@ -53,8 +53,8 @@ savePathElliot = 'C:\\Users\\ellio\\Documents\\training data\\Machine learning d
 #fF.saveNPZ(savePathSeb,"{}Files-hotOnes-images.format(numFiles)",\
 #           saveLabels=ML.newHotOnes(dataForSaving[0],'zippedListTest',savePathSeb),\
 #           saveImages=dataForSaving[5])
-fF.saveNPZ(savePathElliot,"1001-1020Files-charNums-images".format(numFiles),\
-           saveLabels=[ML.storeCharNumber(i,'zippedListTest',savePathElliot) for i in dataForSaving[0]],\
+fF.saveNPZ(savePathElliot,"11Pt2C",\
+           saveLabels=[ML.storeCharNumber(i,'charToNumCfiles',savePathElliot) for i in dataForSaving[0]],\
            saveImages=dataForSaving[5])
 
 
