@@ -13,15 +13,27 @@ import matplotlib.pyplot as plt
 
 #%%Load Data
 #file Path for functions
+
+user = "Elliot"
+#user = "Seb"
+
 funcPathElliot = 'C:/Users/ellio/OneDrive/Documents/GitHub/ML-for-Chinese-Calligraphy/dataHandling'
 funcPathSeb = 'C:\\Users\\Sebastian\\Desktop\\GitHub\\ML-for-Chinese-Calligraphy\\dataHandling'
 dataPathElliot = 'C:/Users/ellio/Documents/training data/Machine Learning data/'
 dataPathSeb = 'C:\\Users\\Sebastian\\Desktop\\MLChinese\\CASIA\\Converted\\All C Files'
 savePathSeb = 'C:\\Users\\Sebastian\\Desktop\\MLChinese\\Saved script files'
+savePathElliot = 'C:\\Users\\ellio\OneDrive\\Documents\\University\\Year 4\\ML chinese caligraphy\\Graphs'
 
-funcPath = funcPathSeb
-dataPath = dataPathSeb
-savePath = savePathSeb
+if user == "Elliot":
+    funcPath = funcPathElliot
+    dataPath = dataPathElliot
+    savePath = savePathElliot
+else:
+    funcPath = funcPathSeb
+    dataPath = dataPathSeb
+    savePath = savePathSeb
+    
+        
 
 #%% Plot any images produced
 def plotter(testAccuracy,testNum,name):
@@ -29,7 +41,7 @@ def plotter(testAccuracy,testNum,name):
     plt.xlabel("Iterations/{}".format(testNum))
     plt.ylabel("Test accuracy")
     name = '\\' + name
-    plt.savefig(savePathSeb+name)
+    plt.savefig(savePath+name)
 
 #%%
 os.chdir(funcPath)
@@ -122,9 +134,9 @@ y_conv = tf.matmul(x, W_fc2) + b_fc2
 
 #training parameters
 batchSize = 800
-iterations = 60000
-displayNum = 1600
-testNum = 3200
+iterations = 8000
+displayNum = 800
+testNum = 800
 learningRate = 1e-2
 #caluclate the average cross entropy across a batch between the predictions y_ and the labels y.
 #This is the value to reduce
@@ -178,4 +190,4 @@ with tf.Session() as sess:
         #print("took ",t.time()-startTime," seconds\n")
         print("Iterations ",i,"-",i+batchSize," took ",t.time()-iterationStart," seconds\n")
         i+=batchSize
-
+    plotter(testAccuracy,testNum,"test")
