@@ -134,10 +134,10 @@ y_conv = tf.matmul(x, W_fc2) + b_fc2
 
 #training parameters
 batchSize = 800
-iterations = 8000
+iterations = 640000
 displayNum = 800
-testNum = 800
-learningRate = 1e-2
+testNum = 3200
+learningRate = 1e-4
 #caluclate the average cross entropy across a batch between the predictions y_ and the labels y.
 #This is the value to reduce
 cross_entropy = tf.reduce_mean(
