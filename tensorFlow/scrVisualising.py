@@ -1,18 +1,3 @@
-
-# Copyright 2015 The TensorFlow Authors. All Rights Reserved.
-#
-# Licensed under the Apache License, Version 2.0 (the 'License');
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an 'AS IS' BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-# ==============================================================================
 """A simple MNIST classifier which displays summaries in TensorBoard.
 This is an unimpressive MNIST model, but it is a good example of using
 tf.name_scope to make a graph legible in the TensorBoard graph explorer, and of
@@ -28,11 +13,9 @@ import os
 import sys
 
 import tensorflow as tf
-
 from tensorflow.examples.tutorials.mnist import input_data
 
 FLAGS = None
-
 
 def train():
   # Import data
@@ -184,6 +167,9 @@ def main(_):
   tf.gfile.MakeDirs(FLAGS.log_dir)
   train()
 
+tensorboardPathSeb = 'C:\\Users\\Sebastian\\Desktop\\MLChinese\\Saved script files\\tensorboard'
+#tensorboardPathElliot = 
+tensorboardPath = tensorboardPathSeb
 
 if __name__ == '__main__':
   parser = argparse.ArgumentParser()
@@ -205,8 +191,7 @@ if __name__ == '__main__':
   parser.add_argument(
       '--log_dir',
       type=str,
-      default=os.path.join(os.getenv('TEST_TMPDIR', '/tmp'),
-                           'tensorflow/mnist/logs/mnist_with_summaries'),
+      default=tensorboardPath,
       help='Summaries log directory')
   FLAGS, unparsed = parser.parse_known_args()
   tf.app.run(main=main, argv=[sys.argv[0]] + unparsed)
