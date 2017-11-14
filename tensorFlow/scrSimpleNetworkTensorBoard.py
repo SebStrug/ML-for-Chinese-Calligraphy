@@ -4,11 +4,11 @@ Created on Tue Nov 14 12:25:07 2017
 
 @author: ellio
 """
-
 import os
 import tensorflow as tf
 import numpy as np
 import time as t
+import datetime
 
 #%%Notes
 """ .eval() converts a tensor within a session into its real output.
@@ -30,17 +30,26 @@ dataPathElliot = 'C:/Users/ellio/Documents/training data/Machine Learning data/'
 dataPathSeb = 'C:\\Users\\Sebastian\\Desktop\\MLChinese\\CASIA\\Converted\\All C Files'
 savePathSeb = 'C:\\Users\\Sebastian\\Desktop\\MLChinese\\Saved script files'
 savePathElliot = 'C:\\Users\\ellio\OneDrive\\Documents\\University\\Year 4\\ML chinese caligraphy\\Graphs'
+SebLOGDIR = r'C:/Users/Sebastian/Anaconda3/Lib/site-packages/tensorflow/tmp/ChineseCaligCNN/'
+elliotLOGDIR = r'C:/Users/ellio/Anaconda3/Lib/site-packages/tensorflow/tmp/SimpleNetwork/'
 
 if user == "Elliot":
     funcPath = funcPathElliot
     dataPath = dataPathElliot
     savePath = savePathElliot
+    LOGDIR = elliotLOGDIR
 else:
     funcPath = funcPathSeb
     dataPath = dataPathSeb
     savePath = savePathSeb
-    
-LOGDIR = r'C:/Users/Sebastian/Anaconda3/Lib/site-packages/tensorflow/tmp/ChineseCaligCNN/'
+    LOGDIR = SebLOGDIR
+
+whichTest = 1
+
+LOGDIR = LOGDIR + str(datetime.date.today()) + '/test-{}'.format(whichTest)
+#make a directory
+if not os.path.exists(LOGDIR):
+    os.makedirs(LOGDIR)
 
 os.chdir(funcPath)
 from classFileFunctions import fileFunc as fF 
@@ -66,17 +75,17 @@ labels,images=fF.readNPZ(dataPath,fileName,"saveLabels","saveImages")
 dataLength=len(labels)
 #split the data into training and testing
 #train data
-trainLabels = labels[0:int(dataLength*trainRatio)]
 trainImages = images[0:int(dataLength*trainRatio)]
-#test data
-testLabels =  tf.one_hot(labels[int(dataLength*trainRatio):dataLength],numOutputs)
+trainLabels = labels[0:int(dataLength*trainRatio)]
 testImages = images[int(dataLength*trainRatio):dataLength]
+testLabels = labels[int(dataLength*trainRatio):dataLength]
 labels = 0;
 images = 0;
 print("took ",t.time()-startTime," seconds\n")
 
-#%%
 
+
+#%%
 print("Building network...")
 def conv_layer(input, size_in, size_out, name="conv"):
   with tf.name_scope(name):
@@ -103,7 +112,7 @@ def fc_layer(input, size_in, size_out, name="fc"):
 
 def mnist_model(learning_rate, use_two_conv, use_two_fc, hparam):
   tf.reset_default_graph()
-  sess = tf.Session()
+  sess = tf.InteractiveSession()
   with sess.as_default():
       # Setup placeholders, and reshape the data
       x = tf.placeholder(tf.float32, shape=[None, 1600], name="x")
@@ -147,14 +156,16 @@ def mnist_model(learning_rate, use_two_conv, use_two_fc, hparam):
     
       summ = tf.summary.merge_all()
     
-    
       embedding = tf.Variable(tf.zeros([1024, embedding_size]), name="test_embedding")
       assignment = embedding.assign(embedding_input)
       saver = tf.train.Saver()
-    
+      
+      """Initialise variables, key step, can only make tensorflow objects after this"""
       sess.run(tf.global_variables_initializer())
       writer = tf.summary.FileWriter(os.path.join(LOGDIR, hparam))
       writer.add_graph(sess.graph)
+      #initialise the tensors for the one hot vectors
+      tfTestLabels =  tf.one_hot(testLabels,numOutputs)
     
     #  config = tf.contrib.tensorboard.plugins.projector.ProjectorConfig()
     #  embedding_config = config.embeddings.add()
@@ -167,12 +178,13 @@ def mnist_model(learning_rate, use_two_conv, use_two_fc, hparam):
       batchSize = 200
       iterations = 32000
       displayNum = 200
-      testNum = 1600
+      testNum = 600
       i=0
       print("took ",t.time()-startTime," seconds\n")
       while i<iterations:
           print("ITERATION: ",i,"\n------------------------")
           batchImages = trainImages[i%dataLength:i%dataLength+batchSize]
+          #batchLabels = tf.one_hot(trainLabels[i%dataLength:i%dataLength+batchSize],numOutputs)
           batchLabels = tf.one_hot(trainLabels[i%dataLength:i%dataLength+batchSize],numOutputs)
           if i % (displayNum) == 0:
               print("evaluating training accuracy...")
@@ -181,7 +193,7 @@ def mnist_model(learning_rate, use_two_conv, use_two_fc, hparam):
               #train_accuracy = accuracy.eval(feed_dict={x: batchImages, y_: batchLabels, keep_prob: 1.0})
           if i%(testNum) == 0 and i!=0:
               print("evaluating test accuracy...")
-              sess.run(assignment, feed_dict={x: testImages[:1024], y: testLabels[:1024].eval()})
+              sess.run(assignment, feed_dict={x: testImages[:1024], y: tfTestLabels[:1024].eval()})
               saver.save(sess, os.path.join(LOGDIR, "model.ckpt"), i)
               #test_accuracy = accuracy.eval(feed_dict={x: testImages, y_: testLabels, keep_prob: 1.0})
               #testAccuracy[int(i/(testNum))]=test_accuracy
