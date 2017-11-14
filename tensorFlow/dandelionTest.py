@@ -8,6 +8,7 @@ import os
 import tensorflow as tf
 import numpy as np
 import time as t
+import datetime
 
 #%%Notes
 """ .eval() converts a tensor within a session into its real output.
@@ -38,8 +39,13 @@ else:
     funcPath = funcPathSeb
     dataPath = dataPathSeb
     savePath = savePathSeb
-    
-LOGDIR = r'C:/Users/Sebastian/Anaconda3/Lib/site-packages/tensorflow/tmp/ChineseCaligCNN/'
+
+whichTest = 1
+SebLOGDIR = r'C:/Users/Sebastian/Anaconda3/Lib/site-packages/tensorflow/tmp/ChineseCaligCNN/'
+LOGDIR = SebLOGDIR + str(datetime.date.today()) + '/test-{}'.format(whichTest)
+#make a directory
+if not os.path.exists(LOGDIR):
+    os.makedirs(LOGDIR)
 
 os.chdir(funcPath)
 from classFileFunctions import fileFunc as fF 
@@ -65,17 +71,63 @@ labels,images=fF.readNPZ(dataPath,fileName,"saveLabels","saveImages")
 dataLength=len(labels)
 #split the data into training and testing
 #train data
-trainLabels = labels[0:int(dataLength*trainRatio)]
 trainImages = images[0:int(dataLength*trainRatio)]
-#test data
-testLabels =  tf.one_hot(labels[int(dataLength*trainRatio):dataLength],numOutputs)
+trainLabels = labels[0:int(dataLength*trainRatio)]
 testImages = images[int(dataLength*trainRatio):dataLength]
+testLabels = labels[int(dataLength*trainRatio):dataLength]
 labels = 0;
 images = 0;
 print("took ",t.time()-startTime," seconds\n")
 
-#%%
+#%%Looking into using the tensorflow batching system
+# create TensorFlow Iterator object
+print('Creating the iterator and two initialization ops')
+initializationTime = t.time()
+#batch the training data
+batchSize = 500
+batched_tr_data = training_dataset.batch(batchSize)
+batched_val_data = validation_dataset.batch(batchSize)
+"""Define the structure of our iterator with a type and shape.
+    N.B. Does this structure have to be the same for both training and validation?
+    Looks like it does"""
+iterator = tf.data.Iterator.from_structure(batched_tr_data.output_types,
+                                   batched_tr_data.output_shapes)
+#call the next element
+next_element = iterator.get_next()
+# create two initialization ops to switch between the datasets
+training_init_op = iterator.make_initializer(batched_tr_data)
+validation_init_op = iterator.make_initializer(batched_val_data)
+print('Time taken to create iterator/initializations: {}\n'.format(t.time()-initializationTime))
 
+
+epochNum = 5
+print('\nRunning {} epochs...'.format(epochNum))
+epochTime = t.time()
+# Run 5 epochs in which the training dataset is traversed, followed by the
+# validation dataset.
+k = 0
+for _ in range(epochNum):
+    print('Epoch number: {}'.format(k))
+    # Initialize an iterator over the training dataset.
+    sess.run(training_init_op)
+    for _ in range(trDataSize):
+        #we need to feed it a batch
+        print('training step')
+        trainFeatures,trainLabels = sess.run(next_element)
+        train_step.run(feed_dict={x: trainFeatures, y_: trainLabels}) 
+        print(sess.run(next_element))
+    # Initialize an iterator over the validation dataset.
+    sess.run(validation_init_op)
+    for _ in range(valDataSize):
+        print('test step')
+        testFeatures,testLabels = sess.run(next_element)
+        test_accuracy = accuracy.eval(feed_dict={x: testFeatures, y_: testLabels})
+        print(sess.run(next_element))
+    k += 1
+print('Time taken to run {} epochs: {} seconds\n'.format(epochNum,int(t.time()-epochTime)) )  
+
+
+#%%
 print("Building network...")
 def conv_layer(input, size_in, size_out, name="conv"):
   with tf.name_scope(name):
@@ -102,7 +154,7 @@ def fc_layer(input, size_in, size_out, name="fc"):
 
 def mnist_model(learning_rate, use_two_conv, use_two_fc, hparam):
   tf.reset_default_graph()
-  sess = tf.Session()
+  sess = tf.InteractiveSession()
   with sess.as_default():
       # Setup placeholders, and reshape the data
       x = tf.placeholder(tf.float32, shape=[None, 1600], name="x")
@@ -146,14 +198,16 @@ def mnist_model(learning_rate, use_two_conv, use_two_fc, hparam):
     
       summ = tf.summary.merge_all()
     
-    
       embedding = tf.Variable(tf.zeros([1024, embedding_size]), name="test_embedding")
       assignment = embedding.assign(embedding_input)
       saver = tf.train.Saver()
-    
+      
+      """Initialise variables, key step, can only make tensorflow objects after this"""
       sess.run(tf.global_variables_initializer())
       writer = tf.summary.FileWriter(os.path.join(LOGDIR, hparam))
       writer.add_graph(sess.graph)
+      #initialise the tensors for the one hot vectors
+      tfTestLabels =  tf.one_hot(testLabels,numOutputs)
     
     #  config = tf.contrib.tensorboard.plugins.projector.ProjectorConfig()
     #  embedding_config = config.embeddings.add()
@@ -166,12 +220,13 @@ def mnist_model(learning_rate, use_two_conv, use_two_fc, hparam):
       batchSize = 200
       iterations = 32000
       displayNum = 200
-      testNum = 1600
+      testNum = 600
       i=0
       print("took ",t.time()-startTime," seconds\n")
       while i<iterations:
           print("ITERATION: ",i,"\n------------------------")
           batchImages = trainImages[i%dataLength:i%dataLength+batchSize]
+          #batchLabels = tf.one_hot(trainLabels[i%dataLength:i%dataLength+batchSize],numOutputs)
           batchLabels = tf.one_hot(trainLabels[i%dataLength:i%dataLength+batchSize],numOutputs)
           if i % (displayNum) == 0:
               print("evaluating training accuracy...")
@@ -180,7 +235,7 @@ def mnist_model(learning_rate, use_two_conv, use_two_fc, hparam):
               #train_accuracy = accuracy.eval(feed_dict={x: batchImages, y_: batchLabels, keep_prob: 1.0})
           if i%(testNum) == 0 and i!=0:
               print("evaluating test accuracy...")
-              sess.run(assignment, feed_dict={x: testImages[:1024], y: testLabels[:1024].eval()})
+              sess.run(assignment, feed_dict={x: testImages[:1024], y: tfTestLabels[:1024].eval()})
               saver.save(sess, os.path.join(LOGDIR, "model.ckpt"), i)
               #test_accuracy = accuracy.eval(feed_dict={x: testImages, y_: testLabels, keep_prob: 1.0})
               #testAccuracy[int(i/(testNum))]=test_accuracy

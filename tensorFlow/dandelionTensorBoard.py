@@ -24,6 +24,7 @@ import tensorflow as tf
 import numpy as np
 import os
 import time as t
+import datetime
 
 LOGDIR = r'C:/Users/Sebastian/Anaconda3/Lib/site-packages/tensorflow/tmp/mnist_tutorial/'
 
@@ -48,8 +49,10 @@ else:
     funcPath = funcPathSeb
     dataPath = dataPathSeb
     savePath = savePathSeb
-    
+
+
 LOGDIR = r'C:/Users/Sebastian/Anaconda3/Lib/site-packages/tensorflow/tmp/ChineseCaligCNN/'
+LOGDIR = LOGDIR + str(datetime.date.today()) + '/test-1'
 
 os.chdir(funcPath)
 from classFileFunctions import fileFunc as fF 
