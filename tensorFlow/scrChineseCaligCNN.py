@@ -32,6 +32,8 @@ else:
     funcPath = funcPathSeb
     dataPath = dataPathSeb
     savePath = savePathSeb
+    
+LOGDIR = r'C:/Users/Sebastian/Anaconda3/Lib/site-packages/tensorflow/tmp/ChineseCaligCNN/'
 
 #%% Plot any images produced
 def plotter(testAccuracy,testNum,name):
@@ -40,6 +42,9 @@ def plotter(testAccuracy,testNum,name):
     plt.ylabel("Test accuracy")
     name = '\\' + name
     plt.savefig(savePath+name)
+
+
+
 
 #%%
 os.chdir(funcPath)
@@ -94,12 +99,12 @@ def max_pool_2x2(x):
                         strides=[1, 2, 2, 1], padding='SAME')
   
 
-    
-
 #create place holders for nodes(inputs and labels)
 with tf.name_scope('input'):
     x = tf.placeholder(tf.float32, shape=[None, 1600], name='x-input')
-    y_ = tf.placeholder(tf.float32, shape=[None,numOutputs], name='y-input')
+    x_image = tf.reshape(x, [-1, 40, 40, 1])
+    tf.summary.image('input',x_image,3)
+    y_ = tf.placeholder(tf.float32, shape=[None,numOutputs], name='labels')
 #create variebles for the wieghts and biases
 #x_image = tf.reshape(x, [-1, 40, 40, 1])
 #1st conv layer
@@ -163,32 +168,33 @@ learningRate = 1e-4
 #This is the value to reduce
 
 with tf.name_scope('cross_entropy'):
-    diff = tf.nn.softmax_cross_entropy_with_logits(labels=y_, logits=y_conv)
-    with tf.name_scope('total'):
-        cross_entropy = tf.reduce_mean(diff)
+    cross_entropy= tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(labels=y_, logits=y_conv),name="cross_entropy")
     tf.summary.scalar('cross_entropy', cross_entropy)
     
 # define the training method to update the wieghts 
 with tf.name_scope('train'):
     train_step = tf.train.GradientDescentOptimizer(learningRate).minimize(cross_entropy) 
+    
 #define the weight decay
 #decay = tf.train.exponential_decay(learningRate,.......)
 #caluclate whether the prediction for each image is correct
 with tf.name_scope('accuracy'):
-    with tf.name_scope('correct_prediction'):
-        correct_prediction = tf.equal(tf.argmax(y_conv,1), tf.argmax(y_,1))
-    with tf.name_scope('accuracy'):
-        accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
+    correct_prediction = tf.equal(tf.argmax(y_conv,1), tf.argmax(y_,1))
+    accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
     tf.summary.scalar('accuracy', accuracy)
 
 sess = tf.InteractiveSession()
-# Merge all the summaries and write them out to
-# /tmp/tensorflow/mnist/logs/mnist_with_summaries (by default)
-FLAGS = None
-merged = tf.summary.merge_all()
-train_writer = tf.summary.FileWriter(FLAGS.log_dir + '/train', sess.graph)
-test_writer = tf.summary.FileWriter(FLAGS.log_dir + '/test')
-tf.global_variables_initializer().run()
+# Merge all the summaries and write them out to LOGDIR
+summ = tf.summary.merge_all()
+writer = tf.summary.FileWriter(os.path.join(LOGDIR, 'test1'))
+writer.add_graph(sess.graph)
+##
+embedding = tf.Variable(tf.zeros([1600, 3755]), name="test_embedding")
+assignment = embedding.assign(3755)
+##
+saver = tf.train.Saver()
+sess.run(tf.global_variables_initializer())
+#tf.global_variables_initializer().run()
 
 print("took ",t.time()-startTime," seconds\n")
 print("start training")
@@ -214,15 +220,19 @@ while i<iterations:
     if i % (displayNum) == 0:
         print("evaluating training accuracy...")
         #startTime=t.time()
-        train_accuracy = accuracy.eval(feed_dict={x: batchImages, y_: batchLabels, keep_prob: 1.0})
+        [train_accuracy, s] = sess.run([accuracy, summ], feed_dict={x: batchImages, y_: batchLabels})
+        writer.add_summary(s, i)
+        #train_accuracy = accuracy.eval(feed_dict={x: batchImages, y_: batchLabels, keep_prob: 1.0})
         print('step %d, training accuracy %g' % (i, train_accuracy))
         #print("took ",t.time()-startTime," seconds\n")
     if i%(testNum) == 0 and i!=0:
         print("evaluating test accuracy...")
         #startTime=t.time()
-        test_accuracy = accuracy.eval(feed_dict={x: testImages, y_: testLabels, keep_prob: 1.0})
-        print('test accuracy %g' % test_accuracy)
-        testAccuracy[int(i/(testNum))]=test_accuracy
+        sess.run(assignment, feed_dict={x: testImages, y_: testLabels})
+        saver.save(sess, os.path.join(LOGDIR, "model.ckpt"), i)
+        #test_accuracy = accuracy.eval(feed_dict={x: testImages, y_: testLabels, keep_prob: 1.0})
+        #print('test accuracy %g' % test_accuracy)
+        #testAccuracy[int(i/(testNum))]=test_accuracy
         #print("took ",t.time()-startTime," seconds\n")
     #print("running batch...")
     #startTime=t.time()
