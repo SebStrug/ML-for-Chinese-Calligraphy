@@ -64,7 +64,7 @@ def oneHot(numberList,n):
     return oneHotArray;
 
 trainRatio = 0.95
-numOutputs = 3755
+
 
 print("splitting data...")
 startTime=t.time()
@@ -109,14 +109,16 @@ def fc_layer(input, size_in, size_out, name="fc"):
     tf.summary.histogram("activations", act)
     return act
 
+numOutputs = 3755
+inputDim = 40
 
 def mnist_model(learning_rate, use_two_conv, use_two_fc, hparam):
   tf.reset_default_graph()
   sess = tf.InteractiveSession()
   with sess.as_default():
       # Setup placeholders, and reshape the data
-      x = tf.placeholder(tf.float32, shape=[None, 1600], name="x")
-      x_image = tf.reshape(x, [-1, 40, 40, 1])
+      x = tf.placeholder(tf.float32, shape=[None, inputDim^2], name="x")
+      x_image = tf.reshape(x, [-1, inputDim, inputDim, 1])
       tf.summary.image('input', x_image, 3)
       y = tf.placeholder(tf.float32, shape=[None, 3755], name="labels")
     
