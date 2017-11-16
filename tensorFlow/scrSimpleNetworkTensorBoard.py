@@ -44,7 +44,7 @@ else:
     savePath = savePathSeb
     LOGDIR = SebLOGDIR
 
-whichTest = 1
+whichTest = 4
 
 LOGDIR = LOGDIR + str(datetime.date.today()) + '/test-{}'.format(whichTest)
 #make a directory
@@ -133,7 +133,7 @@ def mnist_model(learning_rate, hparam):
         tf.summary.scalar("xent", xent)
     
       with tf.name_scope("train"):
-        train_step = tf.train.AdamOptimizer(learning_rate).minimize(xent)
+        train_step = tf.train.GradientDescentOptimizer(learning_rate).minimize(xent)
     
       with tf.name_scope("accuracy"):
         correct_prediction = tf.equal(tf.argmax(logits, 1), tf.argmax(y, 1))
@@ -162,9 +162,9 @@ def mnist_model(learning_rate, hparam):
     #  embedding_config.sprite.single_image_dim.extend([28, 28])
     #  tf.contrib.tensorboard.plugins.projector.visualize_embeddings(writer, config)
       batchSize = 800
-      iterations = 64000
+      iterations = 320000
       displayNum = 800
-      testNum = 3200
+      testNum = 6400
       i=0
       print("took ",t.time()-startTime," seconds\n")
       while i<iterations:
@@ -193,7 +193,7 @@ def make_hparam_string(learning_rate):
 
 def main():
   # You can try adding some more learning rates
-  for learning_rate in [1E-4]:
+  for learning_rate in [1E-4,1E-3,1E-2,1E-1]:
 
     # Include "False" as a value to try different model architectures
         # Construct a hyperparameter string for each one (example: "lr_1E-3,fc=2,conv=2)
