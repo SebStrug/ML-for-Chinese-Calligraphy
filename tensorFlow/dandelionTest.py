@@ -53,12 +53,6 @@ os.chdir("..")
 
 #%%Get the data
 #set ration of data to be training and testing
-def oneHot(numberList,n):
-    oneHotArray=np.zeros((len(numberList),n));
-    for j in range(len(numberList)):
-        oneHotArray[j][numberList[j]] = 1;
-    return oneHotArray;
-
 trainRatio = 0.95
 numOutputs = 3755
 
@@ -75,57 +69,9 @@ trainImages = images[0:int(dataLength*trainRatio)]
 trainLabels = labels[0:int(dataLength*trainRatio)]
 testImages = images[int(dataLength*trainRatio):dataLength]
 testLabels = labels[int(dataLength*trainRatio):dataLength]
-labels = 0;
-images = 0;
+#labels = 0;
+#images = 0;
 print("took ",t.time()-startTime," seconds\n")
-
-#%%Looking into using the tensorflow batching system
-# create TensorFlow Iterator object
-print('Creating the iterator and two initialization ops')
-initializationTime = t.time()
-#batch the training data
-batchSize = 500
-batched_tr_data = training_dataset.batch(batchSize)
-batched_val_data = validation_dataset.batch(batchSize)
-"""Define the structure of our iterator with a type and shape.
-    N.B. Does this structure have to be the same for both training and validation?
-    Looks like it does"""
-iterator = tf.data.Iterator.from_structure(batched_tr_data.output_types,
-                                   batched_tr_data.output_shapes)
-#call the next element
-next_element = iterator.get_next()
-# create two initialization ops to switch between the datasets
-training_init_op = iterator.make_initializer(batched_tr_data)
-validation_init_op = iterator.make_initializer(batched_val_data)
-print('Time taken to create iterator/initializations: {}\n'.format(t.time()-initializationTime))
-
-
-epochNum = 5
-print('\nRunning {} epochs...'.format(epochNum))
-epochTime = t.time()
-# Run 5 epochs in which the training dataset is traversed, followed by the
-# validation dataset.
-k = 0
-for _ in range(epochNum):
-    print('Epoch number: {}'.format(k))
-    # Initialize an iterator over the training dataset.
-    sess.run(training_init_op)
-    for _ in range(trDataSize):
-        #we need to feed it a batch
-        print('training step')
-        trainFeatures,trainLabels = sess.run(next_element)
-        train_step.run(feed_dict={x: trainFeatures, y_: trainLabels}) 
-        print(sess.run(next_element))
-    # Initialize an iterator over the validation dataset.
-    sess.run(validation_init_op)
-    for _ in range(valDataSize):
-        print('test step')
-        testFeatures,testLabels = sess.run(next_element)
-        test_accuracy = accuracy.eval(feed_dict={x: testFeatures, y_: testLabels})
-        print(sess.run(next_element))
-    k += 1
-print('Time taken to run {} epochs: {} seconds\n'.format(epochNum,int(t.time()-epochTime)) )  
-
 
 #%%
 print("Building network...")
@@ -140,7 +86,6 @@ def conv_layer(input, size_in, size_out, name="conv"):
     tf.summary.histogram("activations", act)
     return tf.nn.max_pool(act, ksize=[1, 2, 2, 1], strides=[1, 2, 2, 1], padding="SAME")
 
-
 def fc_layer(input, size_in, size_out, name="fc"):
   with tf.name_scope(name):
     w = tf.Variable(tf.truncated_normal([size_in, size_out], stddev=0.1), name="W")
@@ -154,7 +99,7 @@ def fc_layer(input, size_in, size_out, name="fc"):
 
 def mnist_model(learning_rate, use_two_conv, use_two_fc, hparam):
   tf.reset_default_graph()
-  sess = tf.InteractiveSession()
+  sess = tf.Session()
   with sess.as_default():
       # Setup placeholders, and reshape the data
       x = tf.placeholder(tf.float32, shape=[None, 1600], name="x")
@@ -207,8 +152,63 @@ def mnist_model(learning_rate, use_two_conv, use_two_fc, hparam):
       writer = tf.summary.FileWriter(os.path.join(LOGDIR, hparam))
       writer.add_graph(sess.graph)
       #initialise the tensors for the one hot vectors
-      tfTestLabels =  tf.one_hot(testLabels,numOutputs)
+      #tfTestLabels =  tf.one_hot(testLabels,numOutputs)
+      
+      training_dataset = tf.data.Dataset.from_tensor_slices\
+        ((images[0:int(dataLength*trainRatio)], \
+        tf.one_hot(labels[0:int(dataLength*trainRatio)],3755)))
+      validation_dataset = tf.data.Dataset.from_tensor_slices\
+        ((images[int(dataLength*trainRatio):dataLength], \
+        tf.one_hot(labels[int(dataLength*trainRatio):dataLength],3755)))
+  
+      # create TensorFlow Iterator object
+      print('Creating the iterator and two initialization ops')
+      initializationTime = t.time()
+      #batch the training data
+      batchSize = 500
+      batched_tr_data = training_dataset.batch(batchSize)
+      batched_val_data = validation_dataset.batch(batchSize)
+      """Define the structure of our iterator with a type and shape.
+        N.B. Does this structure have to be the same for both training and validation?
+        Looks like it does"""
+      iterator = tf.data.Iterator.from_structure(batched_tr_data.output_types,
+                                       batched_tr_data.output_shapes)
+      #call the next element
+      next_element = iterator.get_next()
+      # create two initialization ops to switch between the datasets
+      training_init_op = iterator.make_initializer(batched_tr_data)
+      validation_init_op = iterator.make_initializer(batched_val_data)
+      print('Time taken to create iterator/initializations: {}\n'.format(t.time()-initializationTime))
     
+      epochNum = 5
+      print('\nRunning {} epochs...'.format(epochNum))
+      epochTime = t.time()
+      # Run 5 epochs in which the training dataset is traversed, followed by the
+      # validation dataset.
+      k = 0
+      for i in range(600):
+          # Initialize an iterator over the training dataset.
+          print('training step')
+          sess.run(training_init_op)
+          trainFeatures,trainLabels = sess.run(next_element)
+          if i % 5 == 0:
+              #we need to feed it a batch
+              [train_accuracy, s] = sess.run([accuracy, summ], \
+                  feed_dict={x: trainFeatures, y: trainLabels.eval()})
+              writer.add_summary(s, i)
+          # Initialize an iterator over the validation dataset.
+          
+          if i % 300 == 0:
+              print('test step')
+              sess.run(validation_init_op)
+              testFeatures,testLabels = sess.run(next_element)
+              sess.run(assignment, feed_dict={x: testFeatures[:1024], y: testLabels[:1024].eval()})
+              saver.save(sess, os.path.join(LOGDIR, "model.ckpt"),i)
+          sess.run(train_step,feed_dict={x: trainFeatures, y: trainLabels.eval()})
+          k += 1
+      print('Time taken to run {} epochs: {} seconds\n'.format(epochNum,int(t.time()-epochTime)) )  
+    
+"""This runs the embedding, i.e. the 3d t-SNE visualisation"""
     #  config = tf.contrib.tensorboard.plugins.projector.ProjectorConfig()
     #  embedding_config = config.embeddings.add()
     #  embedding_config.tensor_name = embedding.name
@@ -217,31 +217,29 @@ def mnist_model(learning_rate, use_two_conv, use_two_fc, hparam):
     #  # Specify the width and height of a single thumbnail.
     #  embedding_config.sprite.single_image_dim.extend([28, 28])
     #  tf.contrib.tensorboard.plugins.projector.visualize_embeddings(writer, config)
-      batchSize = 200
-      iterations = 32000
-      displayNum = 200
-      testNum = 600
-      i=0
-      print("took ",t.time()-startTime," seconds\n")
-      while i<iterations:
-          print("ITERATION: ",i,"\n------------------------")
-          batchImages = trainImages[i%dataLength:i%dataLength+batchSize]
-          #batchLabels = tf.one_hot(trainLabels[i%dataLength:i%dataLength+batchSize],numOutputs)
-          batchLabels = tf.one_hot(trainLabels[i%dataLength:i%dataLength+batchSize],numOutputs)
-          if i % (displayNum) == 0:
-              print("evaluating training accuracy...")
-              [train_accuracy, s] = sess.run([accuracy, summ], feed_dict={x: batchImages, y: batchLabels.eval()})
-              writer.add_summary(s, i)
-              #train_accuracy = accuracy.eval(feed_dict={x: batchImages, y_: batchLabels, keep_prob: 1.0})
-          if i%(testNum) == 0 and i!=0:
-              print("evaluating test accuracy...")
-              sess.run(assignment, feed_dict={x: testImages[:1024], y: tfTestLabels[:1024].eval()})
-              saver.save(sess, os.path.join(LOGDIR, "model.ckpt"), i)
-              #test_accuracy = accuracy.eval(feed_dict={x: testImages, y_: testLabels, keep_prob: 1.0})
-              #testAccuracy[int(i/(testNum))]=test_accuracy
-          sess.run(train_step, feed_dict={x: batchImages, y: batchLabels.eval()})
-          #train_step.run(feed_dict={x: batchImages, y: batchLabels, keep_prob: 0.5})
-          i+=batchSize
+    
+"""Working code for the model"""  
+#      batchSize = 200
+#      iterations = 32000
+#      displayNum = 200
+#      testNum = 600
+#      i=0
+#      print("took ",t.time()-startTime," seconds\n")
+#      while i<iterations:
+#          print("ITERATION: ",i,"\n------------------------")
+#          batchImages = trainImages[i%dataLength:i%dataLength+batchSize]
+#          #batchLabels = tf.one_hot(trainLabels[i%dataLength:i%dataLength+batchSize],numOutputs)
+#          batchLabels = tf.one_hot(trainLabels[i%dataLength:i%dataLength+batchSize],numOutputs)
+#          if i % (displayNum) == 0:
+#              print("evaluating training accuracy...")
+#              [train_accuracy, s] = sess.run([accuracy, summ], feed_dict={x: batchImages, y: batchLabels.eval()})
+#              writer.add_summary(s, i)
+#          if i%(testNum) == 0 and i!=0:
+#              print("evaluating test accuracy...")
+#              sess.run(assignment, feed_dict={x: testImages[:1024], y: tfTestLabels[:1024].eval()})
+#              saver.save(sess, os.path.join(LOGDIR, "model.ckpt"), i)
+#          sess.run(train_step, feed_dict={x: batchImages, y: batchLabels.eval()})
+#          i+=batchSize
 
 def make_hparam_string(learning_rate, use_two_fc, use_two_conv):
   conv_param = "conv=2" if use_two_conv else "conv=1"
