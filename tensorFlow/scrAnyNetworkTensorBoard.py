@@ -124,10 +124,9 @@ def mnist_model(learning_rate, hparam):
     
       embedding_input = x
       embedding_size = pow(inputDim,2)
-      x=tf.reshape(x, [-1, inputDim, inputDim, 1])
-      conv_1 = conv_layer(x,1,32)
-      flatten = conv_1.reshape(conv_1,[-1,20*20*32])
-      logits = fc_layer(flatten, pow(inputDim,2), numOutputs, "fc")
+      conv_1 = conv_layer(x_image,1,32)
+      flatten = tf.reshape(conv_1,[-1,20*20*32])
+      logits = fc_layer(flatten, 20*20*32, numOutputs, "fc")
     
       with tf.name_scope("xent"):
         xent = tf.reduce_mean(
