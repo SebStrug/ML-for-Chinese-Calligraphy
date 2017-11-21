@@ -31,7 +31,7 @@ dataPathSeb = 'C:\\Users\\Sebastian\\Desktop\\MLChinese\\CASIA\\Converted\\All C
 savePathSeb = 'C:\\Users\\Sebastian\\Desktop\\MLChinese\\Saved script files'
 savePathElliot = 'C:\\Users\\ellio\OneDrive\\Documents\\University\\Year 4\\ML chinese caligraphy\\Graphs'
 SebLOGDIR = r'C:/Users/Sebastian/Anaconda3/Lib/site-packages/tensorflow/tmp/ChineseCaligCNN/'
-elliotLOGDIR = r'C:/Users/ellio/Anaconda3/Lib/site-packages/tensorflow/tmp/SimpleNetwork/'
+elliotLOGDIR = r'C:/Users/ellio/Anaconda3/Lib/site-packages/tensorflow/tmp/1LayerCNN/'
 
 if user == "Elliot":
     funcPath = funcPathElliot
@@ -44,9 +44,9 @@ else:
     savePath = savePathSeb
     LOGDIR = SebLOGDIR
 
-whichTest = 5
+whichTest = 1
 
-LOGDIR = LOGDIR + str(datetime.date.today()) + '/test{}3Files'.format(whichTest)
+LOGDIR = LOGDIR + str(datetime.date.today()) + '/test{}'.format(whichTest)
 #make a directory
 if not os.path.exists(LOGDIR):
     os.makedirs(LOGDIR)
@@ -70,7 +70,7 @@ print("splitting data...")
 startTime=t.time()
 #file to open
 
-fileName="1001-1003C"
+fileName="1001-1100C"
 labels,images=fF.readNPZ(dataPath,fileName,"saveLabels","saveImages")
 dataLength=len(labels)
 #split the data into training and testing
@@ -155,7 +155,7 @@ def mnist_model(learning_rate,batchSize, hparam):
       writer = tf.summary.FileWriter(os.path.join(LOGDIR, hparam))
       writer.add_graph(sess.graph)
       #initialise the tensors for the one hot vectors
-      tfTestLabels =  tf.one_hot(testLabels,numOutputs)
+      tf.TestLabels =  tf.one_hot(testLabels,numOutputs)
     
     #  config = tf.contrib.tensorboard.plugins.projector.ProjectorConfig()
     #  embedding_config = config.embeddings.add()
@@ -166,9 +166,9 @@ def mnist_model(learning_rate,batchSize, hparam):
     #  embedding_config.sprite.single_image_dim.extend([28, 28])
     #  tf.contrib.tensorboard.plugins.projector.visualize_embeddings(writer, config)
       batchSize = batchSize
-      iterations = 512000
+      iterations = 320000
       displayNum = 256
-     # testNum = 4096
+      testNum = 6400
       i=0
       print("took ",t.time()-startTime," seconds\n")
       while i<iterations:
@@ -181,12 +181,11 @@ def mnist_model(learning_rate,batchSize, hparam):
               [train_accuracy, s] = sess.run([accuracy, summ], feed_dict={x: batchImages, y: batchLabels.eval()})
               writer.add_summary(s, i)
               #train_accuracy = accuracy.eval(feed_dict={x: batchImages, y_: batchLabels, keep_prob: 1.0})
-          #if i%(testNum) == 0 and i!=0:
-#              print("evaluating test accuracy...")
-#              sess.run(assignment, feed_dict={x: testImages[:3800], y: tfTestLabels[:3800].eval()})
-#              saver.save(sess, os.path.join(LOGDIR, "model.ckpt"), i)
-              #test_accuracy = accuracy.eval(feed_dict={x: testImages, y_: testLabels, keep_prob: 1.0})
-              #testAccuracy[int(i/(testNum))]=test_accuracy
+          if i%(testNum) == 0 and i!=0:
+              print("evaluating test accuracy...")
+              sess.run(assignment, feed_dict={x: testImages[:3800], y: tf.TestLabels[:3800].eval()})
+              saver.save(sess, os.path.join(LOGDIR, "model.ckpt"), i)
+#              test_accuracy = accuracy.eval(feed_dict={x: testImages, y_: testLabels, keep_prob: 1.0})
           sess.run(train_step, feed_dict={x: batchImages, y: batchLabels.eval()})
           #train_step.run(feed_dict={x: batchImages, y: batchLabels, keep_prob: 0.5})
           i+=batchSize
@@ -198,7 +197,7 @@ def make_hparam_string(learning_rate,batchSize):
 
 def main():
   # You can try adding some more learning rates
-  for learning_rate in [1E-6]:
+  for learning_rate in [1E-8,1E-7,1E-6,1E-5,1E-4]:
       for batchSize in [128]:
 
         # Include "False" as a value to try different model architectures
