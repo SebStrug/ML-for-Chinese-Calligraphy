@@ -44,7 +44,7 @@ else:
     savePath = savePathSeb
     LOGDIR = SebLOGDIR
 
-whichTest = 4
+whichTest = 10
 
 LOGDIR = LOGDIR + str(datetime.date.today()) + '/test-{}'.format(whichTest)
 #make a directory
@@ -57,14 +57,7 @@ os.chdir("..")
 
 #%%Get the data
 #set ration of data to be training and testing
-def oneHot(numberList,n):
-    oneHotArray=np.zeros((len(numberList),n));
-    for j in range(len(numberList)):
-        oneHotArray[j][numberList[j]] = 1;
-    return oneHotArray;
-
 trainRatio = 0.90
-
 
 print("splitting data...")
 startTime=t.time()
@@ -118,7 +111,7 @@ def mnist_model(learning_rate, hparam):
       x = tf.placeholder(tf.float32, shape=[None, pow(inputDim,2)], name="x")
       x_image = tf.reshape(x, [-1, inputDim, inputDim, 1])
       tf.summary.image('input', x_image, 3)
-      y = tf.placeholder(tf.float32, shape=[None, numOutputs], name="labels")
+      y = tf.placeholder(tf.float32, shape=[None,numOutputs], name="labels")
     
       embedding_input = x
       embedding_size = pow(inputDim,2)
@@ -140,7 +133,7 @@ def mnist_model(learning_rate, hparam):
     
       summ = tf.summary.merge_all()
     
-      embedding = tf.Variable(tf.zeros([1024, embedding_size]), name="test_embedding")
+      embedding = tf.Variable(tf.zeros([3800, embedding_size]), name="test_embedding")
       assignment = embedding.assign(embedding_input)
       saver = tf.train.Saver()
       
@@ -148,55 +141,70 @@ def mnist_model(learning_rate, hparam):
       sess.run(tf.global_variables_initializer())
       writer = tf.summary.FileWriter(os.path.join(LOGDIR, hparam))
       writer.add_graph(sess.graph)
-      #initialise the tensors for the one hot vectors
-      tfTestLabels =  tf.one_hot(testLabels,numOutputs)
-    
-    #  config = tf.contrib.tensorboard.plugins.projector.ProjectorConfig()
-    #  embedding_config = config.embeddings.add()
-    #  embedding_config.tensor_name = embedding.name
-    #  embedding_config.sprite.image_path = os.path.join(LOGDIR,'sprite_1024.png')
-    #  embedding_config.metadata_path = os.path.join(LOGDIR,'labels_1024.tsv')
-    #  # Specify the width and height of a single thumbnail.
-    #  embedding_config.sprite.single_image_dim.extend([28, 28])
-    #  tf.contrib.tensorboard.plugins.projector.visualize_embeddings(writer, config)
-      batchSize = 800
-      iterations = 160000
-      displayNum = 800
-      testNum = 6400
-      i=0
-      print("took ",t.time()-startTime," seconds\n")
-      while i<iterations:
-          print("ITERATION: ",i,"\n------------------------")
-          batchImages = trainImages[i%dataLength:i%dataLength+batchSize]
-          #batchLabels = tf.one_hot(trainLabels[i%dataLength:i%dataLength+batchSize],numOutputs)
-          batchLabels = tf.one_hot(trainLabels[i%dataLength:i%dataLength+batchSize],numOutputs)
-          if i % (displayNum) == 0:
-              print("evaluating training accuracy...")
-              [train_accuracy, s] = sess.run([accuracy, summ], feed_dict={x: batchImages, y: batchLabels.eval()})
+      
+      print("Creating dataset tensors...")
+      tensorCreation = t.time()
+      #create dataset for training and validation
+      tr_data = tf.data.Dataset.from_tensor_slices((trainImages,trainLabels))
+      #take a batch of 128
+      tr_data = tr_data.batch(128)
+      val_data = tf.data.Dataset.from_tensor_slices((testImages,testLabels))
+      val_data = val_data.shuffle(buffer_size=10000)
+      #repeat the test dataset infinitely, so that we can loop over its test
+      val_data = val_data.repeat()
+      #loop over the test value
+      val_data = val_data.batch(len(testLabels))
+      print("took {} seconds\n".format(t.time()-tensorCreation))
+      
+      # create TensorFlow Iterator object
+      iteratorCreation = t.time()
+      print("Creating the iterator...")
+      #training iterator
+      tr_iterator = tr_data.make_initializable_iterator()
+      next_image, next_label = tr_iterator.get_next()
+      #validation iterator (not really iterator, takes in all test values)
+      val_iterator = val_data.make_initializable_iterator()
+      next_val_image, next_val_label = val_iterator.get_next()
+      print("took {} seconds\n".format(t.time()-iteratorCreation))
+      
+      print("Initialising the iterator...")
+      iteratorInitialisation = t.time()
+      sess.run(tr_iterator.initializer)
+      sess.run(val_iterator.initializer)  
+      print("took {} seconds\n".format(t.time()-iteratorInitialisation))
+      
+      print(tf.one_hot(next_label,3755).eval())
+      print(len(tf.one_hot(next_label,3755).eval()))
+      
+      for i in range(3001): #range 2001
+          if i % 30 == 0:
+              print('calculating training accuracy... i={}'.format(i))
+              [train_accuracy, s] = sess.run([accuracy, summ], \
+                  feed_dict={x: next_image.eval(), \
+                             y: tf.one_hot(next_label,3755).eval()})
               writer.add_summary(s, i)
-              #train_accuracy = accuracy.eval(feed_dict={x: batchImages, y_: batchLabels, keep_prob: 1.0})
-          if i%(testNum) == 0 and i!=0:
-              print("evaluating test accuracy...")
-              sess.run(assignment, feed_dict={x: testImages[:1024], y: tfTestLabels[:1024].eval()})
+          if i % 500 == 0:
+              print('did 500, saving')
+              sess.run(assignment, \
+                       feed_dict={x: next_val_image.eval()[:3800],  \
+                                  y: tf.one_hot(next_val_label,3755).eval()[:3800]})
               saver.save(sess, os.path.join(LOGDIR, "model.ckpt"), i)
-              #test_accuracy = accuracy.eval(feed_dict={x: testImages, y_: testLabels, keep_prob: 1.0})
-              #testAccuracy[int(i/(testNum))]=test_accuracy
-          sess.run(train_step, feed_dict={x: batchImages, y: batchLabels.eval()})
-          #train_step.run(feed_dict={x: batchImages, y: batchLabels, keep_prob: 0.5})
-          i+=batchSize
-
+          sess.run(train_step, \
+                   feed_dict={x: next_image.eval(), \
+                              y: tf.one_hot(next_label,3755).eval()})
+    
 def make_hparam_string(learning_rate):
   fc_param = "fc=1"
   return "lr_%.0E,%s" % (learning_rate, fc_param)
 
 def main():
   # You can try adding some more learning rates
-  for learning_rate in [1E-4,1E-3,1E-2,1E-1]:
+  for learning_rate in [5E-5]:
 
     # Include "False" as a value to try different model architectures
         # Construct a hyperparameter string for each one (example: "lr_1E-3,fc=2,conv=2)
     hparam = make_hparam_string(learning_rate)
-    print('Starting run for %s' % hparam)
+    print('Starting run for %s\n' % hparam)
 
 	    # Actually run with the new settings
     mnist_model(learning_rate, hparam)

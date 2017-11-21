@@ -16,6 +16,8 @@ import datetime
     before this we need to do 'with sess.as_default()' so all the variables are run
     in the same session
     
+    Cannot use Iterator_from_structure class to create a reinitializable class of iterators
+    This just doesn't work on Seb's/our systems
     """
 
 #%%Load Data
@@ -114,7 +116,7 @@ def mnist_model(learning_rate, use_two_conv, use_two_fc, hparam):
         conv1 = conv_layer(x_image, 1, 64, "conv")
         conv_out = tf.nn.max_pool(conv1, ksize=[1, 2, 2, 1], strides=[1, 2, 2, 1], padding="SAME")
     
-      flattened = tf.reshape(conv_out, [-1, 10 * 10 * 64])
+      flattened = tf.reshape(conv_out, [-1, 10*10*64])
     
     
       if use_two_fc:
@@ -258,7 +260,7 @@ def main():
         print('Starting run for %s' % hparam)
 
 	    # Actually run with the new settings
-        mnist_model(learning_rate, use_two_fc, use_two_conv, hparam)
+        #mnist_model(learning_rate, use_two_fc, use_two_conv, hparam)
 
 
 if __name__ == '__main__':
