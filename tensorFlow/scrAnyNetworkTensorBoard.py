@@ -46,7 +46,7 @@ else:
 
 whichTest = 1
 
-LOGDIR = LOGDIR + str(datetime.date.today()) + '/test-{}'.format(whichTest)
+LOGDIR = LOGDIR + str(datetime.date.today()) + '/highLR'
 #make a directory
 if not os.path.exists(LOGDIR):
     os.makedirs(LOGDIR)
@@ -87,11 +87,11 @@ print("took ",t.time()-startTime," seconds\n")
 
 #%%
 print("Building network...")
-def conv_layer(input, size_in, size_out, name="conv"):
+def conv_layer(input, size_in, size_out,kernelSize=5,stride=1, name="conv"):
   with tf.name_scope(name):
-    w = tf.Variable(tf.truncated_normal([5, 5, size_in, size_out], stddev=0.1), name="W")
+    w = tf.Variable(tf.truncated_normal([kernelSize, kernelSize, size_in, size_out], stddev=0.1), name="W")
     b = tf.Variable(tf.constant(0.1, shape=[size_out]), name="B")
-    conv = tf.nn.conv2d(input, w, strides=[1, 1, 1, 1], padding="SAME")
+    conv = tf.nn.conv2d(input, w, strides=[1, stride, stride, 1], padding="SAME")
     act = tf.nn.relu(conv + b)
     tf.summary.histogram("weights", w)
     tf.summary.histogram("biases", b)
@@ -109,6 +109,7 @@ def fc_layer(input, size_in, size_out, name="fc"):
     tf.summary.histogram("activations", act)
     return act
 
+numConvOutputs = 64
 numOutputs = 3755
 inputDim = 40
 
@@ -124,9 +125,10 @@ def mnist_model(learning_rate, hparam):
     
       embedding_input = x
       embedding_size = pow(inputDim,2)
-      conv_1 = conv_layer(x_image,1,32)
-      flatten = tf.reshape(conv_1,[-1,20*20*32])
-      logits = fc_layer(flatten, 20*20*32, numOutputs, "fc")
+      
+      conv_1 = conv_layer(x_image,1,numConvOutputs)
+      flatten = tf.reshape(conv_1,[-1,20*20*numConvOutputs])
+      logits = fc_layer(flatten, 20*20*numConvOutputs, numOutputs, "fc")
     
       with tf.name_scope("xent"):
         xent = tf.reduce_mean(
@@ -163,10 +165,10 @@ def mnist_model(learning_rate, hparam):
     #  # Specify the width and height of a single thumbnail.
     #  embedding_config.sprite.single_image_dim.extend([28, 28])
     #  tf.contrib.tensorboard.plugins.projector.visualize_embeddings(writer, config)
-      batchSize = 3200
-      iterations = 320000
-      displayNum = 3200
-      testNum = 6400
+      batchSize = 128
+      iterations = 512000
+      displayNum = 256
+      testNum = 2048
       i=0
       print("took ",t.time()-startTime," seconds\n")
       while i<iterations:
@@ -196,7 +198,7 @@ def make_hparam_string(learning_rate):
 
 def main():
   # You can try adding some more learning rates
-  for learning_rate in [1E-4,1E-3]:
+  for learning_rate in [1]:
 
     # Include "False" as a value to try different model architectures
         # Construct a hyperparameter string for each one (example: "lr_1E-3,fc=2,conv=2)
