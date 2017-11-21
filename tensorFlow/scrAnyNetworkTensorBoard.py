@@ -44,9 +44,9 @@ else:
     savePath = savePathSeb
     LOGDIR = SebLOGDIR
 
-whichTest = 4
+whichTest = 3
 
-LOGDIR = LOGDIR + str(datetime.date.today()) + '/test-{}'.format(whichTest)
+LOGDIR = LOGDIR + str(datetime.date.today()) + '/test{}'.format(whichTest)
 #make a directory
 if not os.path.exists(LOGDIR):
     os.makedirs(LOGDIR)
@@ -87,11 +87,11 @@ print("took ",t.time()-startTime," seconds\n")
 
 #%%
 print("Building network...")
-def conv_layer(input, size_in, size_out, name="conv"):
+def conv_layer(input, size_in, size_out,kernelSize=5,stride=1, name="conv"):
   with tf.name_scope(name):
-    w = tf.Variable(tf.truncated_normal([5, 5, size_in, size_out], stddev=0.1), name="W")
+    w = tf.Variable(tf.truncated_normal([kernelSize, kernelSize, size_in, size_out], stddev=0.1), name="W")
     b = tf.Variable(tf.constant(0.1, shape=[size_out]), name="B")
-    conv = tf.nn.conv2d(input, w, strides=[1, 1, 1, 1], padding="SAME")
+    conv = tf.nn.conv2d(input, w, strides=[1, stride, stride, 1], padding="SAME")
     act = tf.nn.relu(conv + b)
     tf.summary.histogram("weights", w)
     tf.summary.histogram("biases", b)
@@ -109,10 +109,11 @@ def fc_layer(input, size_in, size_out, name="fc"):
     tf.summary.histogram("activations", act)
     return act
 
+numConvOutputs = 64
 numOutputs = 3755
 inputDim = 40
 
-def mnist_model(learning_rate, hparam):
+def mnist_model(learning_rate,batchSize, hparam):
   tf.reset_default_graph()
   sess = tf.InteractiveSession()
   with sess.as_default():
@@ -124,7 +125,10 @@ def mnist_model(learning_rate, hparam):
     
       embedding_input = x
       embedding_size = pow(inputDim,2)
-      logits = fc_layer(x, pow(inputDim,2), numOutputs, "fc")
+      
+      conv_1 = conv_layer(x_image,1,numConvOutputs)
+      flatten = tf.reshape(conv_1,[-1,20*20*numConvOutputs])
+      logits = fc_layer(flatten, 20*20*numConvOutputs, numOutputs, "fc")
     
       with tf.name_scope("xent"):
         xent = tf.reduce_mean(
@@ -142,7 +146,7 @@ def mnist_model(learning_rate, hparam):
     
       summ = tf.summary.merge_all()
     
-      embedding = tf.Variable(tf.zeros([1024, embedding_size]), name="test_embedding")
+      embedding = tf.Variable(tf.zeros([3800, embedding_size]), name="test_embedding")
       assignment = embedding.assign(embedding_input)
       saver = tf.train.Saver()
       
@@ -161,10 +165,10 @@ def mnist_model(learning_rate, hparam):
     #  # Specify the width and height of a single thumbnail.
     #  embedding_config.sprite.single_image_dim.extend([28, 28])
     #  tf.contrib.tensorboard.plugins.projector.visualize_embeddings(writer, config)
-      batchSize = 800
-      iterations = 320000
-      displayNum = 800
-      testNum = 6400
+      batchSize = batchSize
+      iterations = 512000
+      displayNum = 256
+      testNum = 4096
       i=0
       print("took ",t.time()-startTime," seconds\n")
       while i<iterations:
@@ -179,7 +183,7 @@ def mnist_model(learning_rate, hparam):
               #train_accuracy = accuracy.eval(feed_dict={x: batchImages, y_: batchLabels, keep_prob: 1.0})
           if i%(testNum) == 0 and i!=0:
               print("evaluating test accuracy...")
-              sess.run(assignment, feed_dict={x: testImages[:1024], y: tfTestLabels[:1024].eval()})
+              sess.run(assignment, feed_dict={x: testImages[:3800], y: tfTestLabels[:3800].eval()})
               saver.save(sess, os.path.join(LOGDIR, "model.ckpt"), i)
               #test_accuracy = accuracy.eval(feed_dict={x: testImages, y_: testLabels, keep_prob: 1.0})
               #testAccuracy[int(i/(testNum))]=test_accuracy
@@ -187,21 +191,23 @@ def mnist_model(learning_rate, hparam):
           #train_step.run(feed_dict={x: batchImages, y: batchLabels, keep_prob: 0.5})
           i+=batchSize
 
-def make_hparam_string(learning_rate):
+def make_hparam_string(learning_rate,batchSize):
   fc_param = "fc=1"
-  return "lr_%.0E,%s" % (learning_rate, fc_param)
+  conv_param = "conv=1"
+  return "lr_%.0E,batch_%s,%s,%s" % (learning_rate,batchSize, fc_param, conv_param)
 
 def main():
   # You can try adding some more learning rates
-  for learning_rate in [1E-4,1E-3,1E-2,1E-1]:
+  for learning_rate in [1E-6]:
+      for batchSize in [128]:
 
-    # Include "False" as a value to try different model architectures
-        # Construct a hyperparameter string for each one (example: "lr_1E-3,fc=2,conv=2)
-    hparam = make_hparam_string(learning_rate)
-    print('Starting run for %s' % hparam)
-
-	    # Actually run with the new settings
-    mnist_model(learning_rate, hparam)
+        # Include "False" as a value to try different model architectures
+            # Construct a hyperparameter string for each one (example: "lr_1E-3,fc=2,conv=2)
+        hparam = make_hparam_string(learning_rate,batchSize)
+        print('Starting run for %s' % hparam)
+    
+    	    # Actually run with the new settings
+        mnist_model(learning_rate,batchSize, hparam)
 
 
 if __name__ == '__main__':
