@@ -44,7 +44,7 @@ else:
     savePath = savePathSeb
     LOGDIR = SebLOGDIR
 
-whichTest = 2
+whichTest = 3
 
 LOGDIR = LOGDIR + str(datetime.date.today()) + '/test{}'.format(whichTest)
 #make a directory
@@ -168,7 +168,7 @@ def mnist_model(learning_rate,batchSize, hparam):
       batchSize = batchSize
       iterations = 512000
       displayNum = 256
-      testNum = 2048
+      testNum = 4096
       i=0
       print("took ",t.time()-startTime," seconds\n")
       while i<iterations:
@@ -198,7 +198,7 @@ def make_hparam_string(learning_rate,batchSize):
 
 def main():
   # You can try adding some more learning rates
-  for learning_rate in [5e-3]:
+  for learning_rate in [1E-6]:
       for batchSize in [128]:
 
         # Include "False" as a value to try different model architectures
