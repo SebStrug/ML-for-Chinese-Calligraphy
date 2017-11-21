@@ -44,9 +44,9 @@ else:
     savePath = savePathSeb
     LOGDIR = SebLOGDIR
 
-whichTest = 1
+whichTest = 2
 
-LOGDIR = LOGDIR + str(datetime.date.today()) + '/highLR'
+LOGDIR = LOGDIR + str(datetime.date.today()) + '/test{}'.format(whichTest)
 #make a directory
 if not os.path.exists(LOGDIR):
     os.makedirs(LOGDIR)
@@ -113,7 +113,7 @@ numConvOutputs = 64
 numOutputs = 3755
 inputDim = 40
 
-def mnist_model(learning_rate, hparam):
+def mnist_model(learning_rate,batchSize, hparam):
   tf.reset_default_graph()
   sess = tf.InteractiveSession()
   with sess.as_default():
@@ -165,7 +165,7 @@ def mnist_model(learning_rate, hparam):
     #  # Specify the width and height of a single thumbnail.
     #  embedding_config.sprite.single_image_dim.extend([28, 28])
     #  tf.contrib.tensorboard.plugins.projector.visualize_embeddings(writer, config)
-      batchSize = 128
+      batchSize = batchSize
       iterations = 512000
       displayNum = 256
       testNum = 2048
@@ -191,22 +191,23 @@ def mnist_model(learning_rate, hparam):
           #train_step.run(feed_dict={x: batchImages, y: batchLabels, keep_prob: 0.5})
           i+=batchSize
 
-def make_hparam_string(learning_rate):
+def make_hparam_string(learning_rate,batchSize):
   fc_param = "fc=1"
   conv_param = "conv=1"
-  return "lr_%.0E,%s,%s" % (learning_rate, fc_param, conv_param)
+  return "lr_%.0E,batch_%s,%s,%s" % (learning_rate,batchSize, fc_param, conv_param)
 
 def main():
   # You can try adding some more learning rates
-  for learning_rate in [1]:
+  for learning_rate in [5e-3]:
+      for batchSize in [128]:
 
-    # Include "False" as a value to try different model architectures
-        # Construct a hyperparameter string for each one (example: "lr_1E-3,fc=2,conv=2)
-    hparam = make_hparam_string(learning_rate)
-    print('Starting run for %s' % hparam)
-
-	    # Actually run with the new settings
-    mnist_model(learning_rate, hparam)
+        # Include "False" as a value to try different model architectures
+            # Construct a hyperparameter string for each one (example: "lr_1E-3,fc=2,conv=2)
+        hparam = make_hparam_string(learning_rate,batchSize)
+        print('Starting run for %s' % hparam)
+    
+    	    # Actually run with the new settings
+        mnist_model(learning_rate,batchSize, hparam)
 
 
 if __name__ == '__main__':
