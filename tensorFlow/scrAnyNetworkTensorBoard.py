@@ -44,9 +44,9 @@ else:
     savePath = savePathSeb
     LOGDIR = SebLOGDIR
 
-whichTest = 3
+whichTest = 5
 
-LOGDIR = LOGDIR + str(datetime.date.today()) + '/test{}'.format(whichTest)
+LOGDIR = LOGDIR + str(datetime.date.today()) + '/test{}3Files'.format(whichTest)
 #make a directory
 if not os.path.exists(LOGDIR):
     os.makedirs(LOGDIR)
@@ -70,7 +70,7 @@ print("splitting data...")
 startTime=t.time()
 #file to open
 
-fileName="1001-1100C"
+fileName="1001-1003C"
 labels,images=fF.readNPZ(dataPath,fileName,"saveLabels","saveImages")
 dataLength=len(labels)
 #split the data into training and testing
@@ -168,7 +168,7 @@ def mnist_model(learning_rate,batchSize, hparam):
       batchSize = batchSize
       iterations = 512000
       displayNum = 256
-      testNum = 4096
+     # testNum = 4096
       i=0
       print("took ",t.time()-startTime," seconds\n")
       while i<iterations:
@@ -181,10 +181,10 @@ def mnist_model(learning_rate,batchSize, hparam):
               [train_accuracy, s] = sess.run([accuracy, summ], feed_dict={x: batchImages, y: batchLabels.eval()})
               writer.add_summary(s, i)
               #train_accuracy = accuracy.eval(feed_dict={x: batchImages, y_: batchLabels, keep_prob: 1.0})
-          if i%(testNum) == 0 and i!=0:
-              print("evaluating test accuracy...")
-              sess.run(assignment, feed_dict={x: testImages[:3800], y: tfTestLabels[:3800].eval()})
-              saver.save(sess, os.path.join(LOGDIR, "model.ckpt"), i)
+          #if i%(testNum) == 0 and i!=0:
+#              print("evaluating test accuracy...")
+#              sess.run(assignment, feed_dict={x: testImages[:3800], y: tfTestLabels[:3800].eval()})
+#              saver.save(sess, os.path.join(LOGDIR, "model.ckpt"), i)
               #test_accuracy = accuracy.eval(feed_dict={x: testImages, y_: testLabels, keep_prob: 1.0})
               #testAccuracy[int(i/(testNum))]=test_accuracy
           sess.run(train_step, feed_dict={x: batchImages, y: batchLabels.eval()})
