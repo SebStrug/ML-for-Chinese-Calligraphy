@@ -21,8 +21,8 @@ import datetime
 #%%Load Data
 #file Path for functions
 
-user = "Elliot"
-#user = "Seb"
+#user = "Elliot"
+user = "Seb"
 
 funcPathElliot = 'C:/Users/ellio/OneDrive/Documents/GitHub/ML-for-Chinese-Calligraphy/dataHandling'
 funcPathSeb = 'C:\\Users\\Sebastian\\Desktop\\GitHub\\ML-for-Chinese-Calligraphy\\dataHandling'
@@ -82,8 +82,6 @@ testLabels = labels[int(dataLength*trainRatio):dataLength]
 labels = 0;
 images = 0;
 print("took ",t.time()-startTime," seconds\n")
-
-
 
 #%%
 print("Building network...")
@@ -162,7 +160,7 @@ def mnist_model(learning_rate, hparam):
     #  embedding_config.sprite.single_image_dim.extend([28, 28])
     #  tf.contrib.tensorboard.plugins.projector.visualize_embeddings(writer, config)
       batchSize = 800
-      iterations = 320000
+      iterations = 160000
       displayNum = 800
       testNum = 6400
       i=0
