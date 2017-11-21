@@ -44,7 +44,7 @@ else:
     savePath = savePathSeb
     LOGDIR = SebLOGDIR
 
-whichTest = 4
+whichTest = 1
 
 LOGDIR = LOGDIR + str(datetime.date.today()) + '/test-{}'.format(whichTest)
 #make a directory
@@ -124,7 +124,10 @@ def mnist_model(learning_rate, hparam):
     
       embedding_input = x
       embedding_size = pow(inputDim,2)
-      logits = fc_layer(x, pow(inputDim,2), numOutputs, "fc")
+      x=tf.reshape(x, [-1, inputDim, inputDim, 1])
+      conv_1 = conv_layer(x,1,32)
+      flatten = conv_1.reshape(conv_1,[-1,20*20*32])
+      logits = fc_layer(flatten, pow(inputDim,2), numOutputs, "fc")
     
       with tf.name_scope("xent"):
         xent = tf.reduce_mean(
@@ -142,7 +145,7 @@ def mnist_model(learning_rate, hparam):
     
       summ = tf.summary.merge_all()
     
-      embedding = tf.Variable(tf.zeros([1024, embedding_size]), name="test_embedding")
+      embedding = tf.Variable(tf.zeros([3800, embedding_size]), name="test_embedding")
       assignment = embedding.assign(embedding_input)
       saver = tf.train.Saver()
       
@@ -161,9 +164,9 @@ def mnist_model(learning_rate, hparam):
     #  # Specify the width and height of a single thumbnail.
     #  embedding_config.sprite.single_image_dim.extend([28, 28])
     #  tf.contrib.tensorboard.plugins.projector.visualize_embeddings(writer, config)
-      batchSize = 800
+      batchSize = 3200
       iterations = 320000
-      displayNum = 800
+      displayNum = 3200
       testNum = 6400
       i=0
       print("took ",t.time()-startTime," seconds\n")
@@ -179,7 +182,7 @@ def mnist_model(learning_rate, hparam):
               #train_accuracy = accuracy.eval(feed_dict={x: batchImages, y_: batchLabels, keep_prob: 1.0})
           if i%(testNum) == 0 and i!=0:
               print("evaluating test accuracy...")
-              sess.run(assignment, feed_dict={x: testImages[:1024], y: tfTestLabels[:1024].eval()})
+              sess.run(assignment, feed_dict={x: testImages[:3800], y: tfTestLabels[:3800].eval()})
               saver.save(sess, os.path.join(LOGDIR, "model.ckpt"), i)
               #test_accuracy = accuracy.eval(feed_dict={x: testImages, y_: testLabels, keep_prob: 1.0})
               #testAccuracy[int(i/(testNum))]=test_accuracy
@@ -189,11 +192,12 @@ def mnist_model(learning_rate, hparam):
 
 def make_hparam_string(learning_rate):
   fc_param = "fc=1"
-  return "lr_%.0E,%s" % (learning_rate, fc_param)
+  conv_param = "conv=1"
+  return "lr_%.0E,%s,%s" % (learning_rate, fc_param, conv_param)
 
 def main():
   # You can try adding some more learning rates
-  for learning_rate in [1E-4,1E-3,1E-2,1E-1]:
+  for learning_rate in [1E-4,1E-3]:
 
     # Include "False" as a value to try different model architectures
         # Construct a hyperparameter string for each one (example: "lr_1E-3,fc=2,conv=2)
