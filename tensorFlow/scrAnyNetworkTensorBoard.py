@@ -75,14 +75,14 @@ labels,images=fF.readNPZ(dataPath,fileName,"saveLabels","saveImages")
 dataLength=len(labels)
 #split the data into training and testing
 #train data
-trainImages = images[0:int(dataLength*trainRatio)]
-trainLabels = labels[0:int(dataLength*trainRatio)]
-testImages = images[int(dataLength*trainRatio):dataLength]
-testLabels = labels[int(dataLength*trainRatio):dataLength]
-#trainImages = images[0:3000]
-#trainLabels = labels[0:3000]
-#testImages = images[0:3000]
-#testLabels = labels[0:3000]
+#trainImages = images[0:int(dataLength*trainRatio)]
+#trainLabels = labels[0:int(dataLength*trainRatio)]
+#testImages = images[int(dataLength*trainRatio):dataLength]
+#testLabels = labels[int(dataLength*trainRatio):dataLength]
+trainImages = images[0:3000]
+trainLabels = labels[0:3000]
+testImages = images[0:3000]
+testLabels = labels[0:3000]
 trainLength = len(trainLabels)
 testLength = len(testLabels)
 labels = 0;
@@ -201,13 +201,11 @@ def mnist_model(learning_rate,batchSize, hparam):
       tensorCreation = t.time()
       #create dataset for training and validation
       tr_data = tf.data.Dataset.from_tensor_slices((trainImages,trainLabels))
-#      del trainImages 
-#      del trainLabels
+      tr_data = tr_data.repeat()
       #take a batch of 128
       tr_data = tr_data.batch(batchSize)
       val_data = tf.data.Dataset.from_tensor_slices((testImages,testLabels))
-#      del testImages
-#      del testLabels
+
       val_data = val_data.shuffle(buffer_size=10000)
       #repeat the test dataset infinitely, so that we can loop over its test
       val_data = val_data.repeat()
