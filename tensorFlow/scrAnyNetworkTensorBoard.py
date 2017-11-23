@@ -44,9 +44,9 @@ else:
     savePath = savePathSeb
     LOGDIR = SebLOGDIR
 
-whichTest = 10
+whichTest = 1
 
-LOGDIR = LOGDIR + str(datetime.date.today()) + '/test{}'.format(whichTest)
+LOGDIR = LOGDIR + str(datetime.date.today()) + '/testMerged{}'.format(whichTest)
 #make a directory
 if not os.path.exists(LOGDIR):
     os.makedirs(LOGDIR)
@@ -83,6 +83,8 @@ testLabels = labels[int(dataLength*trainRatio):dataLength]
 #trainLabels = labels[0:3000]
 #testImages = images[0:3000]
 #testLabels = labels[0:3000]
+trainLength = len(trainLabels)
+testLength = len(testLabels)
 labels = 0;
 images = 0;
 print("took ",t.time()-startTime," seconds\n")
@@ -159,7 +161,7 @@ def mnist_model(learning_rate,batchSize, hparam):
       writer = tf.summary.FileWriter(os.path.join(LOGDIR, hparam))
       writer.add_graph(sess.graph)
       #initialise the tensors for the one hot vectors
-      tf.TestLabels =  tf.one_hot(testLabels,numOutputs)
+      #tf.TestLabels =  tf.one_hot(testLabels,numOutputs)
     
     #  config = tf.contrib.tensorboard.plugins.projector.ProjectorConfig()
     #  embedding_config = config.embeddings.add()
@@ -170,29 +172,83 @@ def mnist_model(learning_rate,batchSize, hparam):
     #  embedding_config.sprite.single_image_dim.extend([28, 28])
     #  tf.contrib.tensorboard.plugins.projector.visualize_embeddings(writer, config)
       batchSize = batchSize
-      iterations = 320000
-      displayNum = 256
-      testNum = 6400
-      i=0
-      print("took ",t.time()-startTime," seconds\n")
-      while i<iterations:
-          print("ITERATION: ",i,"\n------------------------")
-          batchImages = trainImages[i%dataLength:i%dataLength+batchSize]
-          #batchLabels = tf.one_hot(trainLabels[i%dataLength:i%dataLength+batchSize],numOutputs)
-          batchLabels = tf.one_hot(trainLabels[i%dataLength:i%dataLength+batchSize],numOutputs)
-          if i % (displayNum) == 0:
-              print("evaluating training accuracy...")
-              [train_accuracy, s] = sess.run([accuracy, summ], feed_dict={x: batchImages, y: batchLabels.eval()})
+      iterations = 3001
+      displayNum = 10
+      testNum = 500
+#      i=0
+#      print("took ",t.time()-startTime," seconds\n")
+#      while i<iterations:
+#          print("ITERATION: ",i,"\n------------------------")
+#          batchImages = trainImages[i%dataLength:i%dataLength+batchSize]
+#          #batchLabels = tf.one_hot(trainLabels[i%dataLength:i%dataLength+batchSize],numOutputs)
+#          batchLabels = tf.one_hot(trainLabels[i%dataLength:i%dataLength+batchSize],numOutputs)
+#          if i % (displayNum) == 0:
+#              print("evaluating training accuracy...")
+#              [train_accuracy, s] = sess.run([accuracy, summ], feed_dict={x: batchImages, y: batchLabels.eval()})
+#              writer.add_summary(s, i)
+#              #train_accuracy = accuracy.eval(feed_dict={x: batchImages, y_: batchLabels, keep_prob: 1.0})
+#          if i%(testNum) == 0 and i!=0:
+#              print("evaluating test accuracy...")
+#              sess.run(assignment, feed_dict={x: testImages[:3800], y: tf.TestLabels[:3800].eval()})
+#              saver.save(sess, os.path.join(LOGDIR, "model.ckpt"), i)
+##              test_accuracy = accuracy.eval(feed_dict={x: testImages, y_: testLabels, keep_prob: 1.0})
+#          sess.run(train_step, feed_dict={x: batchImages, y: batchLabels.eval()})
+#          #train_step.run(feed_dict={x: batchImages, y: batchLabels, keep_prob: 0.5})
+#          i+=batchSize
+          
+          
+      print("Creating dataset tensors...")
+      tensorCreation = t.time()
+      #create dataset for training and validation
+      tr_data = tf.data.Dataset.from_tensor_slices((trainImages,trainLabels))
+#      del trainImages 
+#      del trainLabels
+      #take a batch of 128
+      tr_data = tr_data.batch(batchSize)
+      val_data = tf.data.Dataset.from_tensor_slices((testImages,testLabels))
+#      del testImages
+#      del testLabels
+      val_data = val_data.shuffle(buffer_size=10000)
+      #repeat the test dataset infinitely, so that we can loop over its test
+      val_data = val_data.repeat()
+      #loop over the test value
+      val_data = val_data.batch(testLength)
+      print("took {} seconds\n".format(t.time()-tensorCreation))
+      # create TensorFlow Iterator object
+      iteratorCreation = t.time()
+      print("Creating the iterator...")
+      #training iterator
+      tr_iterator = tr_data.make_initializable_iterator()
+      next_image, next_label = tr_iterator.get_next()
+      #validation iterator (not really iterator, takes in all test values)
+      val_iterator = val_data.make_initializable_iterator()
+      next_val_image, next_val_label = val_iterator.get_next()
+      print("took {} seconds\n".format(t.time()-iteratorCreation))
+      
+      print("Initialising the iterator...")
+      iteratorInitialisation = t.time()
+      sess.run(tr_iterator.initializer)
+      sess.run(val_iterator.initializer)  
+      print("took {} seconds\n".format(t.time()-iteratorInitialisation))
+      
+      print(tf.one_hot(next_label,numOutputs).eval())
+      print(len(tf.one_hot(next_label,numOutputs).eval()))
+      
+      for i in range(iterations): #range 2001
+          if i % displayNum == 0:
+              print('calculating training accuracy... i={}'.format(i))
+              [train_accuracy, s] = sess.run([accuracy, summ], \
+                  feed_dict={x: next_image.eval(), \
+                             y: tf.one_hot(next_label,numOutputs).eval()})
               writer.add_summary(s, i)
-              #train_accuracy = accuracy.eval(feed_dict={x: batchImages, y_: batchLabels, keep_prob: 1.0})
-          if i%(testNum) == 0 and i!=0:
-              print("evaluating test accuracy...")
-              sess.run(assignment, feed_dict={x: testImages[:3800], y: tf.TestLabels[:3800].eval()})
+              print('did 500, saving')
+              sess.run(assignment, \
+                       feed_dict={x: next_val_image.eval()[:3800],  \
+                                  y: tf.one_hot(next_val_label,numOutputs).eval()[:3800]})
               saver.save(sess, os.path.join(LOGDIR, "model.ckpt"), i)
-#              test_accuracy = accuracy.eval(feed_dict={x: testImages, y_: testLabels, keep_prob: 1.0})
-          sess.run(train_step, feed_dict={x: batchImages, y: batchLabels.eval()})
-          #train_step.run(feed_dict={x: batchImages, y: batchLabels, keep_prob: 0.5})
-          i+=batchSize
+          sess.run(train_step, \
+                   feed_dict={x: next_image.eval(), \
+                              y: tf.one_hot(next_label,numOutputs ).eval()})
 
 def make_hparam_string(learning_rate,batchSize):
   fc_param = "fc=1"
