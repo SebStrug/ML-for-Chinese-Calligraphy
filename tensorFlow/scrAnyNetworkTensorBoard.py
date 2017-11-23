@@ -93,7 +93,7 @@ print("took ",t.time()-startTime," seconds\n")
 
 #%%
 print("Building network...")
-def conv_layer(input, size_in, size_out,kernelSize=5,stride=1, name="conv"):
+def conv_layer(input, size_in, size_out,kernelSize=5,stride=1, name="conv",dropOut = False):
   with tf.name_scope(name):
     w = tf.Variable(tf.truncated_normal([kernelSize, kernelSize, size_in, size_out], stddev=0.1), name="W")
     b = tf.Variable(tf.constant(0.1, shape=[size_out]), name="B")
@@ -104,16 +104,20 @@ def conv_layer(input, size_in, size_out,kernelSize=5,stride=1, name="conv"):
     tf.summary.histogram("activations", act)
     return tf.nn.max_pool(act, ksize=[1, 2, 2, 1], strides=[1, 2, 2, 1], padding="SAME")
 
-
-def fc_layer(input, size_in, size_out, name="fc"):
+# to specify any arguments with default values do {"argName": argValue,"argName2",argValue2,.......}
+def fc_layer(input, size_in, size_out, name="fc",dropOut = False,keepProb = 0.5):
   with tf.name_scope(name):
     w = tf.Variable(tf.truncated_normal([size_in, size_out], stddev=0.1), name="W")
     b = tf.Variable(tf.constant(0.1, shape=[size_out]), name="B")
-    act = tf.nn.relu(tf.matmul(input, w) + b)
+    if dropOut: 
+        drop = tf.nn.dropout(tf.matmul(input, w) + b,keepProb)
+    else: 
+        drop = tf.matmul(input, w) + b
+    relu = tf.nn.relu(drop)
     tf.summary.histogram("weights", w)
     tf.summary.histogram("biases", b)
-    tf.summary.histogram("activations", act)
-    return act
+    tf.summary.histogram("activations", relu)
+    return relu
 
 numConvOutputs = 64
 numOutputs = 3755
