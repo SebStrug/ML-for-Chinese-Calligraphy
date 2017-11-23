@@ -4,57 +4,93 @@ Spyder Editor
 #
 This is a temporary script file.
 """
+#%%Load Data
+#file Path for functions
+
+#user = "Elliot"
+user = "Seb"
+
+funcPathElliot = 'C:/Users/ellio/OneDrive/Documents/GitHubPC/ML-for-Chinese-Calligraphy/dataHandling'
+funcPathSeb = 'C:\\Users\\Sebastian\\Desktop\\GitHub\\ML-for-Chinese-Calligraphy\\dataHandling'
+dataPathElliot = 'C:/Users/ellio/Documents/training data/Machine Learning data/'
+dataPathSeb = 'C:\\Users\\Sebastian\\Desktop\\MLChinese\\CASIA\\Converted\\All C Files'
+savePathSeb = 'C:\\Users\\Sebastian\\Desktop\\MLChinese\\Saved script files'
+savePathElliot = 'C:\\Users\\ellio\OneDrive\\Documents\\University\\Year 4\\ML chinese caligraphy\\Graphs'
+#savePathElliot='C:\\Users\\ellio\\Documents\\training data'
+#savePathElliot = 'C:\\Users\\ellio\\Documents\\training data\\Machine learning data'
+
+if user == "Elliot":
+    funcPath = funcPathElliot
+    dataPath = dataPathElliot
+    savePath = savePathElliot
+elif user == "Seb":
+    funcPath = funcPathSeb
+    dataPath = dataPathSeb
+    savePath = savePathSeb
+
 #%%
 import os
 import numpy as np
-
-
-#file Path for functions
-funcPathElliot = 'C:/Users/ellio/OneDrive/Documents/GitHubPC/ML-for-Chinese-Calligraphy/dataHandling'
-funcPathSeb = 'C:\\Users\\Sebastian\\Desktop\\GitHub\\ML-for-Chinese-Calligraphy\\dataHandling'
-os.chdir(funcPathElliot)
+os.chdir(funcPath)
 from classFileFunctions import fileFunc as fF
 from classMachineLearning import machineLearning as ML
 
+#%% Extract data
 #file path for data
-dataPath = 'C:\\Users\\ellio\\Documents\\training data\\forConversion'
-#dataPath = 'C:\\Users\\Sebastian\\Desktop\\MLChinese\\CASIA\\HWDtest2\\HWDB1.1tst_gnt'
+#dataPath = 'C:\\Users\\ellio\\Documents\\training data\\forConversion'
+dataPath = 'C:\\Users\\Sebastian\\Desktop\\MLChinese\\CASIA\\HWDtest1'
 #dataPath = 'C:\\Users\\Sebastian\\Desktop\\MLChinese\\CASIA\\HWDtest2\\EnglishFiles'
 numFiles = len([filenames for subdir, dirs, filenames in os.walk(dataPath)][0])
     
-
-dataForSaving=0;
-data=0;
 #get info on gnt file
 data,tot = fF.iterateOverFiles(dataPath)
 dataInfo = fF.infoGNT(data,tot)
 dataForSaving = fF.arraysFromGNT(data,dataInfo)
-data=0;#delete data in raw byte form 
+del data #delete data in raw byte form 
 
+#%% Check our characters and their labels are lining up in the original data file
+characters = dataForSaving[0]
+images = dataForSaving[5]
+#del dataForSaving #clear memory
+for i in range(len(characters)):
+    if characters[i] == characters[0]:
+        print(i,characters[i])
+    elif characters[i] == characters[1]:
+        print(i,characters[i])
 
+#%% Create a zipped list, labeling each characters
+def createZipList(characters):
+    #each of the characters in this list has a unique index
+    fF.saveNPZ(savePath,"3755charsZipped",saveChars = list(set(characters)))
 
-savePathSeb = 'C:\\Users\\Sebastian\\Desktop\\MLChinese\\Saved script files'
-#<<<<<<< HEAD
-#zippedList = ML.createZippedList(dataForSaving[0],'zippedListTest',savePathSeb)
-#fF.saveNPZ(savePathSeb,"{}Files-characters-images".format(numFiles),saveLabels=dataForSaving[0],\
-#
-#savePathElliot='C:\\Users\\ellio\\Documents\\training data'
-#fF.saveNPZ(savePathElliot,"{}Files-characters-images".format(numFiles),saveLabels=dataForSaving[0],\
-#           saveImages=dataForSaving[5])
-#=======
-savePathElliot = 'C:\\Users\\ellio\\Documents\\training data\\Machine learning data'
+#%% Now label each file according to the zipped list
+#open the file with uniquely indexed characters
+with open(os.path.join(savePath,"3755charsZipped"), 'rb') as ifs:
+    fileNPZ = np.load(ifs)
+    uniqueChars = fileNPZ["saveChars"]
 
-#zippedList = ML.createZippedList(dataForSaving[0],'zippedListTest',savePathElliot)
+#label our original list of characters
+labeledChars = [np.where(uniqueChars == i)[0][0] for i in characters]
 
-#fF.saveNPZ(savePathElliot,"{}Files-characters-images".format(numFiles),saveLabels=dataForSaving[0],\
-     #    saveImages=dataForSaving[5])
-       
-#>>>>>>> ebec6f8cc84415c9f4ef1e31e1ee6a9e8062db68
-#fF.saveNPZ(savePathSeb,"{}Files-hotOnes-images.format(numFiles)",\
-#           saveLabels=ML.newHotOnes(dataForSaving[0],'zippedListTest',savePathSeb),\
-#           saveImages=dataForSaving[5])
-fF.saveNPZ(savePathElliot,"1001-1100C",\
-           saveLabels=[ML.storeCharNumber(i,'charToNumCfiles',savePathElliot) for i in dataForSaving[0]],\
-           saveImages=dataForSaving[5])
+#save a file containing our images (as arrays) and corresponding labels
+fF.saveNPZ(savePath,"CharToNumList".format(numFiles),\
+           saveImages = dataForSaving[5], \
+           saveLabels = labeledChars)
 
-
+#%% Check that the images and labels match up
+def checkImages(savePath,nameZippedList,charNumToCheck):
+    from PIL import Image
+    
+    with open(os.path.join(savePath,nameZippedList), 'rb') as ifs:
+        fileNPZ = np.load(ifs)
+        imagesCheck = fileNPZ["saveImages"]
+        labelsCheck = fileNPZ["saveLabels"]
+        
+    allImg = []
+    for i in range(len(imagesCheck)):
+        if labelsCheck[i] == charNumToCheck:
+            print(i,labelsCheck[i])
+            allImg.append(Image.fromarray(np.resize(imagesCheck[i],(40,40)), 'L'))
+    return allImg
+        
+            
