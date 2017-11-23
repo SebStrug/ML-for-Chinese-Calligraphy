@@ -44,7 +44,7 @@ else:
     savePath = savePathSeb
     LOGDIR = SebLOGDIR
 
-whichTest = 1
+whichTest = 10
 
 LOGDIR = LOGDIR + str(datetime.date.today()) + '/test{}'.format(whichTest)
 #make a directory
@@ -79,6 +79,10 @@ trainImages = images[0:int(dataLength*trainRatio)]
 trainLabels = labels[0:int(dataLength*trainRatio)]
 testImages = images[int(dataLength*trainRatio):dataLength]
 testLabels = labels[int(dataLength*trainRatio):dataLength]
+#trainImages = images[0:3000]
+#trainLabels = labels[0:3000]
+#testImages = images[0:3000]
+#testLabels = labels[0:3000]
 labels = 0;
 images = 0;
 print("took ",t.time()-startTime," seconds\n")
@@ -197,7 +201,7 @@ def make_hparam_string(learning_rate,batchSize):
 
 def main():
   # You can try adding some more learning rates
-  for learning_rate in [1E-8,1E-7,1E-6,1E-5,1E-4]:
+  for learning_rate in [1E-6]:
       for batchSize in [128]:
 
         # Include "False" as a value to try different model architectures
