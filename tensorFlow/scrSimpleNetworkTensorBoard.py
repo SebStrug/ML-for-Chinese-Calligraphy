@@ -44,7 +44,7 @@ else:
     savePath = savePathSeb
     LOGDIR = SebLOGDIR
 
-whichTest = 10
+whichTest = 4
 
 LOGDIR = LOGDIR + str(datetime.date.today()) + '/test-{}'.format(whichTest)
 #make a directory
@@ -63,7 +63,9 @@ print("splitting data...")
 startTime=t.time()
 #file to open
 
-fileName="1001-1100C"
+dataPath = savePathSeb
+
+fileName="1001-C"
 labels,images=fF.readNPZ(dataPath,fileName,"saveLabels","saveImages")
 dataLength=len(labels)
 #split the data into training and testing
@@ -75,6 +77,20 @@ testLabels = labels[int(dataLength*trainRatio):dataLength]
 labels = 0;
 images = 0;
 print("took ",t.time()-startTime," seconds\n")
+
+#%% Check images are correct
+#from PIL import Image
+#image0 = Image.fromarray(np.resize(trainImages[0],(40,40)), 'L')
+#label0 = trainLabels[0]
+#image3755 = Image.fromarray(np.resize(trainImages[3755],(40,40)), 'L')
+#label3755 = trainLabels[3755]
+#print(image0,label0)
+#print(image3755,label3755)
+#
+#for i in range(len(trainLabels)):
+#    if trainLabels[i] == 2604:
+#        print(i)
+    
 
 #%%
 print("Building network...")
@@ -100,7 +116,7 @@ def fc_layer(input, size_in, size_out, name="fc"):
     tf.summary.histogram("activations", act)
     return act
 
-numOutputs = 3755
+numOutputs = 3373
 inputDim = 40
 
 def mnist_model(learning_rate, hparam):
@@ -112,10 +128,17 @@ def mnist_model(learning_rate, hparam):
       x_image = tf.reshape(x, [-1, inputDim, inputDim, 1])
       tf.summary.image('input', x_image, 3)
       y = tf.placeholder(tf.float32, shape=[None,numOutputs], name="labels")
-    
-      embedding_input = x
-      embedding_size = pow(inputDim,2)
-      logits = fc_layer(x, pow(inputDim,2), numOutputs, "fc")
+      
+      conv1 = conv_layer(x_image, 1, 64, "conv")
+      #the next line pools it twice to keep it simple, reduce computational complexity
+      conv_out = tf.nn.max_pool(conv1, ksize=[1, 2, 2, 1], strides=[1, 2, 2, 1], padding="SAME")
+      flattened = tf.reshape(conv_out, [-1, 10 * 10 * 64])  #10*10 or 20*20
+      embedding_input = flattened
+      embedding_size = 10*10*64
+      logits = fc_layer(flattened, 10*10*64, 3373, "fc")
+#      embedding_input = x
+#      embedding_size = pow(inputDim,2)
+#      logits = fc_layer(x, pow(inputDim,2), numOutputs, "fc")
     
       with tf.name_scope("xent"):
         xent = tf.reduce_mean(
@@ -133,7 +156,7 @@ def mnist_model(learning_rate, hparam):
     
       summ = tf.summary.merge_all()
     
-      embedding = tf.Variable(tf.zeros([3800, embedding_size]), name="test_embedding")
+      embedding = tf.Variable(tf.zeros([375, embedding_size]), name="test_embedding")
       assignment = embedding.assign(embedding_input)
       saver = tf.train.Saver()
       
@@ -146,6 +169,7 @@ def mnist_model(learning_rate, hparam):
       tensorCreation = t.time()
       #create dataset for training and validation
       tr_data = tf.data.Dataset.from_tensor_slices((trainImages,trainLabels))
+      tr_data = tr_data.repeat()
       #take a batch of 128
       tr_data = tr_data.batch(128)
       val_data = tf.data.Dataset.from_tensor_slices((testImages,testLabels))
@@ -173,25 +197,25 @@ def mnist_model(learning_rate, hparam):
       sess.run(val_iterator.initializer)  
       print("took {} seconds\n".format(t.time()-iteratorInitialisation))
       
-      print(tf.one_hot(next_label,3755).eval())
-      print(len(tf.one_hot(next_label,3755).eval()))
+      print(tf.one_hot(next_label,3373).eval())
+      print(len(tf.one_hot(next_label,3373).eval()))
       
-      for i in range(3001): #range 2001
+      for i in range(301): #range 2001
           if i % 30 == 0:
               print('calculating training accuracy... i={}'.format(i))
               [train_accuracy, s] = sess.run([accuracy, summ], \
                   feed_dict={x: next_image.eval(), \
-                             y: tf.one_hot(next_label,3755).eval()})
+                             y: tf.one_hot(next_label,3373).eval()})
               writer.add_summary(s, i)
           if i % 500 == 0:
               print('did 500, saving')
               sess.run(assignment, \
-                       feed_dict={x: next_val_image.eval()[:3800],  \
-                                  y: tf.one_hot(next_val_label,3755).eval()[:3800]})
-              saver.save(sess, os.path.join(LOGDIR, "model.ckpt"), i)
+                       feed_dict={x: next_val_image.eval()[:375],  \
+                                  y: tf.one_hot(next_val_label,3373).eval()[:375]})
+              saver.save(sess, os.path.join(LOGDIR, "model.ckpt{}".format(learning_rate)), i)
           sess.run(train_step, \
                    feed_dict={x: next_image.eval(), \
-                              y: tf.one_hot(next_label,3755).eval()})
+                              y: tf.one_hot(next_label,3373).eval()})
     
 def make_hparam_string(learning_rate):
   fc_param = "fc=1"
@@ -199,7 +223,7 @@ def make_hparam_string(learning_rate):
 
 def main():
   # You can try adding some more learning rates
-  for learning_rate in [5E-5]:
+  for learning_rate in [5E-5,5E-6]:
 
     # Include "False" as a value to try different model architectures
         # Construct a hyperparameter string for each one (example: "lr_1E-3,fc=2,conv=2)
