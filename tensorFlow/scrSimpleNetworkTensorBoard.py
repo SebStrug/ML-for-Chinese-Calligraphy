@@ -44,7 +44,7 @@ else:
     savePath = savePathSeb
     LOGDIR = SebLOGDIR
 
-whichTest = 7
+whichTest = 8
 
 LOGDIR = LOGDIR + str(datetime.date.today()) + '/test-{}'.format(whichTest)
 #make a directory
@@ -130,18 +130,18 @@ def mnist_model(learning_rate, hparam):
       y = tf.placeholder(tf.float32, shape=[None,numOutputs], name="labels")
       
       """With conv layer"""
-      conv1 = conv_layer(x_image, 1, 64, "conv")
-      #the next line pools it twice to keep it simple, reduce computational complexity
-      conv_out = tf.nn.max_pool(conv1, ksize=[1, 2, 2, 1], strides=[1, 2, 2, 1], padding="SAME")
-      flattened = tf.reshape(conv_out, [-1, 10 * 10 * 64])  #10*10 or 20*20
-      embedding_input = flattened
-      embedding_size = 10*10*64
-      logits = fc_layer(flattened, 10*10*64, 3373, "fc")
+#      conv1 = conv_layer(x_image, 1, 64, "conv")
+#      #the next line pools it twice to keep it simple, reduce computational complexity
+#      conv_out = tf.nn.max_pool(conv1, ksize=[1, 2, 2, 1], strides=[1, 2, 2, 1], padding="SAME")
+#      flattened = tf.reshape(conv_out, [-1, 10 * 10 * 64])  #10*10 or 20*20
+#      embedding_input = flattened
+#      embedding_size = 10*10*64
+#      logits = fc_layer(flattened, 10*10*64, 3373, "fc")
       
       """Without conv layer"""
-#      embedding_input = x
-#      embedding_size = pow(inputDim,2)
-#      logits = fc_layer(x, pow(inputDim,2), numOutputs, "fc")
+      embedding_input = x
+      embedding_size = pow(inputDim,2)
+      logits = fc_layer(x, pow(inputDim,2), numOutputs, "fc")
     
       with tf.name_scope("xent"):
         xent = tf.reduce_mean(
@@ -152,10 +152,12 @@ def mnist_model(learning_rate, hparam):
       with tf.name_scope("train"):
         train_step = tf.train.GradientDescentOptimizer(learning_rate).minimize(xent)
     
-      with tf.name_scope("accuracy"):
+      with tf.name_scope("training_accuracy"):
         correct_prediction = tf.equal(tf.argmax(logits, 1), tf.argmax(y, 1))
         accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
         tf.summary.scalar("accuracy", accuracy)
+      
+        ###CREATE ACCURACY VARIABLE FOR TESTING.
     
       summ = tf.summary.merge_all()
     
@@ -210,12 +212,13 @@ def mnist_model(learning_rate, hparam):
                   feed_dict={x: next_image.eval(), \
                              y: tf.one_hot(next_label,3373).eval()})
               writer.add_summary(s, i)
-          if i % 500 == 0:
+          if i % 90 == 0:
               print('did 500, saving')
-              sess.run(assignment, \
+              [test_accuracy, s] = sess.run([accuracy, summ], \
                        feed_dict={x: next_val_image.eval()[:375],  \
                                   y: tf.one_hot(next_val_label,3373).eval()[:375]})
-              saver.save(sess, os.path.join(LOGDIR, "model.ckpt{}".format(learning_rate)), i)
+              writer.add_summary(s, i)
+#              saver.save(sess, os.path.join(LOGDIR, "model.ckpt{}".format(learning_rate)), i)
           sess.run(train_step, \
                    feed_dict={x: next_image.eval(), \
                               y: tf.one_hot(next_label,3373).eval()})
