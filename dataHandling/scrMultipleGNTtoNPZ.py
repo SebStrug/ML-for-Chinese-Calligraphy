@@ -32,7 +32,6 @@ import os
 import numpy as np
 os.chdir(funcPath)
 from classFileFunctions import fileFunc as fF
-from classMachineLearning import machineLearning as ML
 
 #%% Extract data
 #file path for data
@@ -72,12 +71,12 @@ with open(os.path.join(savePath,"3755charsZipped"), 'rb') as ifs:
 labeledChars = [np.where(uniqueChars == i)[0][0] for i in characters]
 
 #save a file containing our images (as arrays) and corresponding labels
-fF.saveNPZ(savePath,"CharToNumList".format(numFiles),\
+fF.saveNPZ(savePath,"CharToNumList_{}".format(numFiles),\
            saveImages = dataForSaving[5], \
            saveLabels = labeledChars)
 
 #%% Check that the images and labels match up
-def checkImages(savePath,nameZippedList,charNumToCheck):
+def checkImages(savePath,nameCharToNumList,charNumToCheck):
     from PIL import Image
     
     with open(os.path.join(savePath,nameZippedList), 'rb') as ifs:

@@ -44,7 +44,7 @@ else:
     savePath = savePathSeb
     LOGDIR = SebLOGDIR
 
-whichTest = 4
+whichTest = 7
 
 LOGDIR = LOGDIR + str(datetime.date.today()) + '/test-{}'.format(whichTest)
 #make a directory
@@ -65,7 +65,7 @@ startTime=t.time()
 
 dataPath = savePathSeb
 
-fileName="1001-1100C"
+fileName="CharToNumList_10"
 labels,images=fF.readNPZ(dataPath,fileName,"saveLabels","saveImages")
 dataLength=len(labels)
 #split the data into training and testing
@@ -129,6 +129,7 @@ def mnist_model(learning_rate, hparam):
       tf.summary.image('input', x_image, 3)
       y = tf.placeholder(tf.float32, shape=[None,numOutputs], name="labels")
       
+      """With conv layer"""
       conv1 = conv_layer(x_image, 1, 64, "conv")
       #the next line pools it twice to keep it simple, reduce computational complexity
       conv_out = tf.nn.max_pool(conv1, ksize=[1, 2, 2, 1], strides=[1, 2, 2, 1], padding="SAME")
@@ -136,6 +137,8 @@ def mnist_model(learning_rate, hparam):
       embedding_input = flattened
       embedding_size = 10*10*64
       logits = fc_layer(flattened, 10*10*64, 3373, "fc")
+      
+      """Without conv layer"""
 #      embedding_input = x
 #      embedding_size = pow(inputDim,2)
 #      logits = fc_layer(x, pow(inputDim,2), numOutputs, "fc")
@@ -200,7 +203,7 @@ def mnist_model(learning_rate, hparam):
       print(tf.one_hot(next_label,3373).eval())
       print(len(tf.one_hot(next_label,3373).eval()))
       
-      for i in range(301): #range 2001
+      for i in range(300001): #range 2001
           if i % 30 == 0:
               print('calculating training accuracy... i={}'.format(i))
               [train_accuracy, s] = sess.run([accuracy, summ], \
@@ -223,7 +226,7 @@ def make_hparam_string(learning_rate):
 
 def main():
   # You can try adding some more learning rates
-  for learning_rate in [5E-5,5E-6]:
+  for learning_rate in [5E-4]:
 
     # Include "False" as a value to try different model architectures
         # Construct a hyperparameter string for each one (example: "lr_1E-3,fc=2,conv=2)
