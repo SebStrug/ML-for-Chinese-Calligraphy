@@ -7,17 +7,16 @@ This is a temporary script file.
 #%%Load Data
 #file Path for functions
 
-#user = "Elliot"
-user = "Seb"
+#user = "Seb"
+user = "Elliot"
 
-funcPathElliot = 'C:/Users/ellio/OneDrive/Documents/GitHubPC/ML-for-Chinese-Calligraphy/dataHandling'
+funcPathElliot = 'C:/Users/ellio/OneDrive/Documents/GitHub/ML-for-Chinese-Calligraphy/dataHandling'
 funcPathSeb = 'C:\\Users\\Sebastian\\Desktop\\GitHub\\ML-for-Chinese-Calligraphy\\dataHandling'
-dataPathElliot = 'C:/Users/ellio/Documents/training data/Machine Learning data/'
+dataPathElliot = 'C:/Users/ellio/Documents/training data/forConversion/'
 dataPathSeb = 'C:\\Users\\Sebastian\\Desktop\\MLChinese\\CASIA\\Converted\\All C Files'
 savePathSeb = 'C:\\Users\\Sebastian\\Desktop\\MLChinese\\Saved script files'
-savePathElliot = 'C:\\Users\\ellio\OneDrive\\Documents\\University\\Year 4\\ML chinese caligraphy\\Graphs'
-#savePathElliot='C:\\Users\\ellio\\Documents\\training data'
-#savePathElliot = 'C:\\Users\\ellio\\Documents\\training data\\Machine learning data'
+savePathElliot = 'C:\\Users\\ellio\\Documents\\training data\\Machine learning data'
+
 
 if user == "Elliot":
     funcPath = funcPathElliot
@@ -37,7 +36,7 @@ from classFileFunctions import fileFunc as fF
 #%% Extract data
 #file path for data
 #dataPath = 'C:\\Users\\ellio\\Documents\\training data\\forConversion'
-dataPath = 'C:\\Users\\Sebastian\\Desktop\\MLChinese\\CASIA\\HWDtest1'
+#dataPath = 'C:\\Users\\Sebastian\\Desktop\\MLChinese\\CASIA\\HWDtest1'
 #dataPath = 'C:\\Users\\Sebastian\\Desktop\\MLChinese\\CASIA\\HWDtest2\\EnglishFiles'
 numFiles = len([filenames for subdir, dirs, filenames in os.walk(dataPath)][0])
     
@@ -80,7 +79,7 @@ fF.saveNPZ(savePath,"CharToNumList_{}".format(numFiles),\
 def checkImages(savePath,nameCharToNumList,charNumToCheck):
     from PIL import Image
     
-    with open(os.path.join(savePath,nameZippedList), 'rb') as ifs:
+    with open(os.path.join(savePath,nameCharToNumList), 'rb') as ifs:
         fileNPZ = np.load(ifs)
         imagesCheck = fileNPZ["saveImages"]
         labelsCheck = fileNPZ["saveLabels"]
