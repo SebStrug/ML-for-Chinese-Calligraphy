@@ -36,7 +36,7 @@ from classFileFunctions import fileFunc as fF
 #%% Extract data
 #file path for data
 #dataPath = 'C:\\Users\\ellio\\Documents\\training data\\forConversion'
-dataPath = 'C:\\Users\\Sebastian\\Desktop\\MLChinese\\CASIA\\HWDtest1'
+#dataPath = 'C:\\Users\\Sebastian\\Desktop\\MLChinese\\CASIA\\HWDtest1'
 #dataPath = 'C:\\Users\\Sebastian\\Desktop\\MLChinese\\CASIA\\HWDtest2\\EnglishFiles'
 numFiles = len([filenames for subdir, dirs, filenames in os.walk(dataPath)][0])
     
@@ -79,7 +79,7 @@ fF.saveNPZ(savePath,"CharToNumList_{}".format(numFiles),\
 def checkImages(savePath,nameCharToNumList,charNumToCheck):
     from PIL import Image
     
-    with open(os.path.join(savePath,nameZippedList), 'rb') as ifs:
+    with open(os.path.join(savePath,nameCharToNumList), 'rb') as ifs:
         fileNPZ = np.load(ifs)
         imagesCheck = fileNPZ["saveImages"]
         labelsCheck = fileNPZ["saveLabels"]
