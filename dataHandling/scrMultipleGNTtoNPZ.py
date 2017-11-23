@@ -73,21 +73,24 @@ with open(os.path.join(savePath,"3755charsZipped"), 'rb') as ifs:
 labeledChars = [np.where(uniqueChars == i)[0][0] for i in characters]
 
 #save a file containing our images (as arrays) and corresponding labels
-fF.saveNPZ(savePath,"{}".format(numFiles),\
+fF.saveNPZ(savePath,"CharToNumList".format(numFiles),\
            saveImages = dataForSaving[5], \
            saveLabels = labeledChars)
 
 #%% Check that the images and labels match up
-from PIL import Image
-
-with open(os.path.join(savePath,"2"), 'rb') as ifs:
-    fileNPZ = np.load(ifs)
-    imagesCheck = fileNPZ["saveImages"]
-    labelsCheck = fileNPZ["saveLabels"]
-
-for i in range(len(imagesCheck)):
-    if labelsCheck[i] == 20:
-        print(i,labelsCheck[i])
+def checkImages(savePath,nameZippedList,charNumToCheck):
+    from PIL import Image
     
-imageCheck1 = Image.fromarray(np.resize(imagesCheck[3346],(40,40)), 'L')
-imageCheck2 = Image.fromarray(np.resize(imagesCheck[5210],(40,40)),'L')
+    with open(os.path.join(savePath,nameZippedList), 'rb') as ifs:
+        fileNPZ = np.load(ifs)
+        imagesCheck = fileNPZ["saveImages"]
+        labelsCheck = fileNPZ["saveLabels"]
+        
+    allImg = []
+    for i in range(len(imagesCheck)):
+        if labelsCheck[i] == charNumToCheck:
+            print(i,labelsCheck[i])
+            allImg.append(Image.fromarray(np.resize(imagesCheck[i],(40,40)), 'L'))
+    return allImg
+        
+            
