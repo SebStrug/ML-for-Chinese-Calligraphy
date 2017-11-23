@@ -241,6 +241,7 @@ def mnist_model(learning_rate,batchSize, hparam):
                   feed_dict={x: next_image.eval(), \
                              y: tf.one_hot(next_label,numOutputs).eval()})
               writer.add_summary(s, i)
+          if i % testNum == 0 and i!=0:
               print('did 500, saving')
               sess.run(assignment, \
                        feed_dict={x: next_val_image.eval()[:3800],  \
