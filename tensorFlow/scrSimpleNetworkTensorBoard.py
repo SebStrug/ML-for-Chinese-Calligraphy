@@ -57,7 +57,7 @@ os.chdir("..")
 
 #%%Get the data
 #set ration of data to be training and testing
-trainRatio = 0.90
+trainRatio = 0.95
 
 print("splitting data...")
 startTime=t.time()
@@ -65,7 +65,7 @@ startTime=t.time()
 
 dataPath = savePathSeb
 
-fileName="1001-C"
+fileName="1001-1100C"
 labels,images=fF.readNPZ(dataPath,fileName,"saveLabels","saveImages")
 dataLength=len(labels)
 #split the data into training and testing
