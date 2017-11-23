@@ -44,7 +44,7 @@ else:
     savePath = savePathSeb
     LOGDIR = SebLOGDIR
 
-whichTest = 1
+whichTest = 3
 
 LOGDIR = LOGDIR + str(datetime.date.today()) + '/testMerged{}'.format(whichTest)
 #make a directory
@@ -256,7 +256,7 @@ def make_hparam_string(learning_rate,batchSize):
 
 def main():
   # You can try adding some more learning rates
-  for learning_rate in [1E-6]:
+  for learning_rate in [1E-4]:
       for batchSize in [128]:
 
         # Include "False" as a value to try different model architectures
