@@ -24,7 +24,7 @@ import datetime
 user = "Elliot"
 #user = "Seb"
 
-funcPathElliot = 'C:/Users/ellio/OneDrive/Documents/GitHub/ML-for-Chinese-Calligraphy/dataHandling'
+funcPathElliot = 'C:/Users/ellio/OneDrive/Documents/GitHubPC/ML-for-Chinese-Calligraphy/dataHandling'
 funcPathSeb = 'C:\\Users\\Sebastian\\Desktop\\GitHub\\ML-for-Chinese-Calligraphy\\dataHandling'
 dataPathElliot = 'C:/Users/ellio/Documents/training data/Machine Learning data/'
 dataPathSeb = 'C:\\Users\\Sebastian\\Desktop\\MLChinese\\CASIA\\Converted\\All C Files'
@@ -46,7 +46,7 @@ else:
 
 
 whichTest = 1
-LOGDIR = LOGDIR + str(datetime.date.today()) + '/test{}'.format(whichTest)
+LOGDIR = LOGDIR + str(datetime.date.today()) + '/10filetest{}'.format(whichTest)
 #make a directory
 if not os.path.exists(LOGDIR):
     os.makedirs(LOGDIR)
@@ -55,7 +55,7 @@ os.chdir(funcPath)
 from classFileFunctions import fileFunc as fF 
 os.chdir("..")
 #%% set Data size Parameters
-numConvOutputs = 64
+numConvOutputs = 1
 numOutputs = 3755
 inputDim = 40
 
@@ -66,8 +66,6 @@ def subSet(numClasses,images,labels):
     for i in range(len(labels)):
         if labels[i] in labelsToExtract:
             indicesToExtract.append(i)
-            #print(i)
-    #print(indicesToExtract)
     subSetLabels=np.zeros(len(indicesToExtract))  
     subSetImages=np.zeros((len(indicesToExtract),inputDim*inputDim))
     j=0
@@ -75,7 +73,7 @@ def subSet(numClasses,images,labels):
             subSetLabels[j]=labels[i]
             subSetImages[j]=images[i]
             j+=1
-    return subSetLabels,subSetImages
+    return subSetLabels.astype(int),subSetImages.astype(int)
         
             
         
@@ -90,11 +88,14 @@ print("splitting data...")
 startTime=t.time()
 #file to open
 fileName="1001-1100C"
-labels,images=fF.readNPZ(dataPath,fileName,"saveLabels","saveImages")
+fullLabels,fullImages=fF.readNPZ(dataPath,fileName,"saveLabels","saveImages")
 #############################################################
 #if taking a subset of the data
-subLabels,subImages = subSet(10,images,labels)
-labels,images = subLabels, subImages
+labels,images = subSet(10,fullImages,fullLabels)
+#if taking all data
+#labels,images = fullLabels, fullImages
+fullImages=0
+fullLabels = 0
 #############################################################
 dataLength=len(labels)
 #split the data into training and testing
@@ -283,7 +284,7 @@ def make_hparam_string(learning_rate,batchSize):
 
 def main():
   # You can try adding some more learning rates
-  for learning_rate in [1E-7]:
+  for learning_rate in [1E-5]:
       for batchSize in [128]:
 
         # Include "False" as a value to try different model architectures
