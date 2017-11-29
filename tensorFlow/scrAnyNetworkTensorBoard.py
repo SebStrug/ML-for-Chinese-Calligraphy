@@ -19,49 +19,26 @@ import datetime
     """
 
 #%%Load Data
-#file Path for functions
-
-user = "Elliot"
-#user = "Seb"
-
-funcPathElliot = 'C:/Users/ellio/OneDrive/Documents/GitHub/ML-for-Chinese-Calligraphy/dataHandling'
-funcPathSeb = 'C:\\Users\\Sebastian\\Desktop\\GitHub\\ML-for-Chinese-Calligraphy\\dataHandling'
-dataPathElliot = 'C:/Users/ellio/Documents/training data/Machine Learning data/'
-dataPathSeb = 'C:\\Users\\Sebastian\\Desktop\\MLChinese\\CASIA\\Converted\\All C Files'
-savePathSeb = 'C:\\Users\\Sebastian\\Desktop\\MLChinese\\Saved script files'
-savePathElliot = 'C:\\Users\\ellio\OneDrive\\Documents\\University\\Year 4\\ML chinese caligraphy\\Graphs'
-SebLOGDIR = r'C:/Users/Sebastian/Anaconda3/Lib/site-packages/tensorflow/tmp/ChineseCaligCNN/'
-elliotLOGDIR = r'C:/Users/ellio/Anaconda3/Lib/site-packages/tensorflow/tmp/1LayerCNN/'
-
-if user == "Elliot":
-    funcPath = funcPathElliot
-    dataPath = dataPathElliot
-    savePath = savePathElliot
-    LOGDIR = elliotLOGDIR
-else:
-    funcPath = funcPathSeb
-    dataPath = dataPathSeb
-    savePath = savePathSeb
-    LOGDIR = SebLOGDIR
-
-whichTest = 4
-
-LOGDIR = LOGDIR + str(datetime.date.today()) + '/testMerged{}'.format(whichTest)
-#make a directory
-if not os.path.exists(LOGDIR):
-    os.makedirs(LOGDIR)
-
-os.chdir(funcPath)
+#first part of the next line goes one back in the directory
+os.chdir(os.path.normpath(os.getcwd() + os.sep + os.pardir) + '\\dataHandling')
 from classFileFunctions import fileFunc as fF 
+"""Define the user"""
+funcPath,dataPath,savePath,rootDIR = fF.whichUser('Seb')
 os.chdir("..")
+
+def makeDir(rootDIR,hparam):
+    """Makes a directory automatically to save tensorboard data to"""
+    testNum = 0
+    LOGDIR = rootDIR + str(datetime.date.today()) + '/test-{}'.format(testNum)
+    while os.path.exists(LOGDIR):
+        testNum += 1
+        LOGDIR = rootDIR + str(datetime.date.today()) + '/test-{}'.format(testNum)
+    #make a directory
+    os.makedirs(LOGDIR)
+    return LOGDIR
 
 #%%Get the data
 #set ration of data to be training and testing
-def oneHot(numberList,n):
-    oneHotArray=np.zeros((len(numberList),n));
-    for j in range(len(numberList)):
-        oneHotArray[j][numberList[j]] = 1;
-    return oneHotArray;
 
 trainRatio = 0.90
 
@@ -119,7 +96,7 @@ numConvOutputs = 64
 numOutputs = 3755
 inputDim = 40
 
-def mnist_model(learning_rate,batchSize, hparam):
+def mnist_model(LOGDIR, learning_rate,batchSize, hparam):
   tf.reset_default_graph()
   sess = tf.InteractiveSession()
   with sess.as_default():
@@ -263,7 +240,7 @@ def main():
             # Construct a hyperparameter string for each one (example: "lr_1E-3,fc=2,conv=2)
         hparam = make_hparam_string(learning_rate,batchSize)
         print('Starting run for %s' % hparam)
-    
+        LOGDIR = makeDir(rootDIR,hparam)
     	    # Actually run with the new settings
         mnist_model(learning_rate,batchSize, hparam)
 

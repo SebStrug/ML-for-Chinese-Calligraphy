@@ -19,41 +19,23 @@ import datetime
     """
 
 #%%Load Data
-#file Path for functions
-
-#user = "Elliot"
-user = "Seb"
-
-funcPathElliot = 'C:/Users/ellio/OneDrive/Documents/GitHub/ML-for-Chinese-Calligraphy/dataHandling'
-funcPathSeb = 'C:\\Users\\Sebastian\\Desktop\\GitHub\\ML-for-Chinese-Calligraphy\\dataHandling'
-dataPathElliot = 'C:/Users/ellio/Documents/training data/Machine Learning data/'
-dataPathSeb = 'C:\\Users\\Sebastian\\Desktop\\MLChinese\\CASIA\\Converted\\All C Files'
-savePathSeb = 'C:\\Users\\Sebastian\\Desktop\\MLChinese\\Saved script files'
-savePathElliot = 'C:\\Users\\ellio\OneDrive\\Documents\\University\\Year 4\\ML chinese caligraphy\\Graphs'
-SebLOGDIR = r'C:/Users/Sebastian/Anaconda3/Lib/site-packages/tensorflow/tmp/ChineseCaligCNN/'
-elliotLOGDIR = r'C:/Users/ellio/Anaconda3/Lib/site-packages/tensorflow/tmp/SimpleNetwork/'
-
-if user == "Elliot":
-    funcPath = funcPathElliot
-    dataPath = dataPathElliot
-    savePath = savePathElliot
-    LOGDIR = elliotLOGDIR
-else:
-    funcPath = funcPathSeb
-    dataPath = dataPathSeb
-    savePath = savePathSeb
-    LOGDIR = SebLOGDIR
-
-whichTest = 8
-
-LOGDIR = LOGDIR + str(datetime.date.today()) + '/test-{}'.format(whichTest)
-#make a directory
-if not os.path.exists(LOGDIR):
-    os.makedirs(LOGDIR)
-
-os.chdir(funcPath)
+#first part of the next line goes one back in the directory
+os.chdir(os.path.normpath(os.getcwd() + os.sep + os.pardir) + '\\dataHandling')
 from classFileFunctions import fileFunc as fF 
+"""Define the user"""
+funcPath,dataPath,savePath,rootDIR = fF.whichUser('Seb')
 os.chdir("..")
+
+def makeDir(rootDIR,hparam):
+    """Makes a directory automatically to save tensorboard data to"""
+    testNum = 0
+    LOGDIR = rootDIR + str(datetime.date.today()) + '/test-{}'.format(testNum)
+    while os.path.exists(LOGDIR):
+        testNum += 1
+        LOGDIR = rootDIR + str(datetime.date.today()) + '/test-{}'.format(testNum)
+    #make a directory
+    os.makedirs(LOGDIR)
+    return LOGDIR
 
 #%%Get the data
 #set ration of data to be training and testing
@@ -63,9 +45,9 @@ print("splitting data...")
 startTime=t.time()
 #file to open
 
-dataPath = savePathSeb
+dataPath = savePath
 
-fileName="CharToNumList_10"
+fileName="1001-C"
 labels,images=fF.readNPZ(dataPath,fileName,"saveLabels","saveImages")
 dataLength=len(labels)
 #split the data into training and testing
@@ -119,7 +101,7 @@ def fc_layer(input, size_in, size_out, name="fc"):
 numOutputs = 3373
 inputDim = 40
 
-def mnist_model(learning_rate, hparam):
+def neural_net(LOGDIR, learning_rate, hparam):
   tf.reset_default_graph()
   sess = tf.InteractiveSession()
   with sess.as_default():
@@ -167,8 +149,12 @@ def mnist_model(learning_rate, hparam):
       
       """Initialise variables, key step, can only make tensorflow objects after this"""
       sess.run(tf.global_variables_initializer())
-      writer = tf.summary.FileWriter(os.path.join(LOGDIR, hparam))
-      writer.add_graph(sess.graph)
+      
+      """Create the writers"""
+      train_writer = tf.summary.FileWriter(os.path.join(LOGDIR,hparam)+'/train')
+      train_writer.add_graph(sess.graph)
+      test_writer = tf.summary.FileWriter(os.path.join(LOGDIR,hparam)+'/test')
+      test_writer.add_graph(sess.graph)
       
       print("Creating dataset tensors...")
       tensorCreation = t.time()
@@ -211,14 +197,14 @@ def mnist_model(learning_rate, hparam):
               [train_accuracy, s] = sess.run([accuracy, summ], \
                   feed_dict={x: next_image.eval(), \
                              y: tf.one_hot(next_label,3373).eval()})
-              writer.add_summary(s, i)
-          if i % 90 == 0:
+              train_writer.add_summary(s, i)
+          if i % 500 == 0:
               print('did 500, saving')
               [test_accuracy, s] = sess.run([accuracy, summ], \
                        feed_dict={x: next_val_image.eval()[:375],  \
                                   y: tf.one_hot(next_val_label,3373).eval()[:375]})
-              writer.add_summary(s, i)
-#              saver.save(sess, os.path.join(LOGDIR, "model.ckpt{}".format(learning_rate)), i)
+              test_writer.add_summary(s, i)
+              saver.save(sess, os.path.join(LOGDIR, "model.ckpt{}".format(learning_rate)), i)
           sess.run(train_step, \
                    feed_dict={x: next_image.eval(), \
                               y: tf.one_hot(next_label,3373).eval()})
@@ -235,9 +221,9 @@ def main():
         # Construct a hyperparameter string for each one (example: "lr_1E-3,fc=2,conv=2)
     hparam = make_hparam_string(learning_rate)
     print('Starting run for %s\n' % hparam)
-
-	    # Actually run with the new settings
-    mnist_model(learning_rate, hparam)
+    LOGDIR = makeDir(rootDIR,hparam)
+	 #Actually run with the new settings
+    neural_net(LOGDIR, learning_rate, hparam)
 
 
 if __name__ == '__main__':
