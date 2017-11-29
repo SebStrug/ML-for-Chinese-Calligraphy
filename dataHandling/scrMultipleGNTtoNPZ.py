@@ -8,7 +8,7 @@ This is a temporary script file.
 #file Path for functions
 
 #user = "Seb"
-user = "Elliot"
+user = "Seb"
 
 funcPathElliot = 'C:/Users/ellio/OneDrive/Documents/GitHub/ML-for-Chinese-Calligraphy/dataHandling'
 funcPathSeb = 'C:\\Users\\Sebastian\\Desktop\\GitHub\\ML-for-Chinese-Calligraphy\\dataHandling'
@@ -76,6 +76,7 @@ fF.saveNPZ(savePath,"CharToNumList_{}".format(numFiles),\
            saveLabels = labeledChars)
 
 #%% Check that the images and labels match up
+#savePath = C:\\Users\\Sebastian\\Desktop\\MLChinese\\CASIA\\Converted
 def checkImages(savePath,nameCharToNumList,charNumToCheck):
     from PIL import Image
     

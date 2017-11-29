@@ -1,10 +1,3 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Tue Nov 14 09:46:20 2017
-
-@author: Sebastian
-"""
-
 # Copyright 2017 Google, Inc. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -20,68 +13,28 @@ Created on Tue Nov 14 09:46:20 2017
 # limitations under the License.
 # ==============================================================================
 import os
+import os.path
+import shutil
 import tensorflow as tf
-import numpy as np
-import os
-import time as t
-import datetime
 
-LOGDIR = r'C:/Users/Sebastian/Anaconda3/Lib/site-packages/tensorflow/tmp/mnist_tutorial/'
+LOGDIR = "/tmp/mnist_tutorial/"
+LABELS = os.path.join(os.getcwd(), "labels_1024.tsv")
+SPRITES = os.path.join(os.getcwd(), "sprite_1024.png")
+### MNIST EMBEDDINGS ###
+mnist = tf.contrib.learn.datasets.mnist.read_data_sets(train_dir=LOGDIR + "data", one_hot=True)
+### Get a sprite and labels file for the embedding projector ###
 
-#%%Load Data
-#file Path for functions
-
-#user = "Elliot"
-user = "Seb"
-
-funcPathElliot = 'C:/Users/ellio/OneDrive/Documents/GitHub/ML-for-Chinese-Calligraphy/dataHandling'
-funcPathSeb = 'C:\\Users\\Sebastian\\Desktop\\GitHub\\ML-for-Chinese-Calligraphy\\dataHandling'
-dataPathElliot = 'C:/Users/ellio/Documents/training data/Machine Learning data/'
-dataPathSeb = 'C:\\Users\\Sebastian\\Desktop\\MLChinese\\CASIA\\Converted\\All C Files'
-savePathSeb = 'C:\\Users\\Sebastian\\Desktop\\MLChinese\\Saved script files'
-savePathElliot = 'C:\\Users\\ellio\OneDrive\\Documents\\University\\Year 4\\ML chinese caligraphy\\Graphs'
-
-if user == "Elliot":
-    funcPath = funcPathElliot
-    dataPath = dataPathElliot
-    savePath = savePathElliot
-else:
-    funcPath = funcPathSeb
-    dataPath = dataPathSeb
-    savePath = savePathSeb
+if not (os.path.isfile(LABELS) and os.path.isfile(SPRITES)):
+  print("Necessary data files were not found. Run this command from inside the "
+    "repo provided at "
+    "https://github.com/dandelionmane/tf-dev-summit-tensorboard-tutorial.")
+  exit(1)
 
 
-LOGDIR = r'C:/Users/Sebastian/Anaconda3/Lib/site-packages/tensorflow/tmp/ChineseCaligCNN/'
-LOGDIR = LOGDIR + str(datetime.date.today()) + '/test-1'
+# shutil.copyfile(LABELS, os.path.join(LOGDIR, LABELS))
+# shutil.copyfile(SPRITES, os.path.join(LOGDIR, SPRITES))
 
-os.chdir(funcPath)
-from classFileFunctions import fileFunc as fF 
-os.chdir("..")
 
-#%%Get the data
-#set ration of data to be training and testing
-trainRatio = 0.8
-numOutputs = 3755
-
-print("splitting data...")
-startTime=t.time()
-#file to open
-
-fileName="1001-1100C"
-labels,images=fF.readNPZ(dataPath,fileName,"saveLabels","saveImages")
-dataLength=len(labels)
-#split the data into training and testing
-#train data
-trainLabels = labels[0:int(dataLength*trainRatio)]
-trainImages = images[0:int(dataLength*trainRatio)]
-#test data
-testLabels =  oneHot(labels[int(dataLength*trainRatio):dataLength],numOutputs)
-testImages = images[int(dataLength*trainRatio):dataLength]
-labels = 0;
-images = 0;
-print("took ",t.time()-startTime," seconds\n")
-
-#%%
 def conv_layer(input, size_in, size_out, name="conv"):
   with tf.name_scope(name):
     w = tf.Variable(tf.truncated_normal([5, 5, size_in, size_out], stddev=0.1), name="W")
@@ -98,14 +51,14 @@ def fc_layer(input, size_in, size_out, name="fc"):
   with tf.name_scope(name):
     w = tf.Variable(tf.truncated_normal([size_in, size_out], stddev=0.1), name="W")
     b = tf.Variable(tf.constant(0.1, shape=[size_out]), name="B")
-    act = tf.nn.relu(tf.matmul(input, w) + b)
+    act = tf.matmul(input, w) + b
     tf.summary.histogram("weights", w)
     tf.summary.histogram("biases", b)
     tf.summary.histogram("activations", act)
     return act
 
 
-def mnist_model(learning_rate, use_two_conv, use_two_fc, hparam):
+def mnist_model(learning_rate, use_two_fc, use_two_conv, hparam):
   tf.reset_default_graph()
   sess = tf.Session()
 
@@ -127,7 +80,9 @@ def mnist_model(learning_rate, use_two_conv, use_two_fc, hparam):
 
   if use_two_fc:
     fc1 = fc_layer(flattened, 7 * 7 * 64, 1024, "fc1")
-    embedding_input = fc1
+    relu = tf.nn.relu(fc1)
+    embedding_input = relu
+    tf.summary.histogram("fc1/relu", relu)
     embedding_size = 1024
     logits = fc_layer(fc1, 1024, 10, "fc2")
   else:
@@ -157,26 +112,24 @@ def mnist_model(learning_rate, use_two_conv, use_two_fc, hparam):
   saver = tf.train.Saver()
 
   sess.run(tf.global_variables_initializer())
-  writer = tf.summary.FileWriter(os.path.join(LOGDIR, hparam))
+  writer = tf.summary.FileWriter(LOGDIR + hparam)
   writer.add_graph(sess.graph)
 
   config = tf.contrib.tensorboard.plugins.projector.ProjectorConfig()
   embedding_config = config.embeddings.add()
   embedding_config.tensor_name = embedding.name
-  embedding_config.sprite.image_path = os.path.join(LOGDIR,'sprite_1024.png')
-  embedding_config.metadata_path = os.path.join(LOGDIR,'labels_1024.tsv')
+  embedding_config.sprite.image_path = SPRITES
+  embedding_config.metadata_path = LABELS
   # Specify the width and height of a single thumbnail.
   embedding_config.sprite.single_image_dim.extend([28, 28])
   tf.contrib.tensorboard.plugins.projector.visualize_embeddings(writer, config)
 
   for i in range(2001):
-    #print('did a batch')
     batch = mnist.train.next_batch(100)
     if i % 5 == 0:
       [train_accuracy, s] = sess.run([accuracy, summ], feed_dict={x: batch[0], y: batch[1]})
       writer.add_summary(s, i)
     if i % 500 == 0:
-      print('did 500, saving')
       sess.run(assignment, feed_dict={x: mnist.test.images[:1024], y: mnist.test.labels[:1024]})
       saver.save(sess, os.path.join(LOGDIR, "model.ckpt"), i)
     sess.run(train_step, feed_dict={x: batch[0], y: batch[1]})
@@ -188,18 +141,22 @@ def make_hparam_string(learning_rate, use_two_fc, use_two_conv):
 
 def main():
   # You can try adding some more learning rates
-  for learning_rate in [1E-4]:
+  for learning_rate in [1E-3, 1E-4]:
 
     # Include "False" as a value to try different model architectures
-    for use_two_fc in [False]:
-      for use_two_conv in [False]:
-        # Construct a hyperparameter string for each one (example: "lr_1E-3,fc=2,conv=2)
+    for use_two_fc in [True]:
+      for use_two_conv in [False, True]:
+        # Construct a hyperparameter string for each one (example: "lr_1E-3,fc=2,conv=2")
         hparam = make_hparam_string(learning_rate, use_two_fc, use_two_conv)
         print('Starting run for %s' % hparam)
 
-	    # Actually run with the new settings
+        # Actually run with the new settings
         mnist_model(learning_rate, use_two_fc, use_two_conv, hparam)
-
+  print('Done training!')
+  print('Run `tensorboard --logdir=%s` to see the results.' % LOGDIR)
+  print('Running on mac? If you want to get rid of the dialogue asking to give '
+        'network permissions to TensorBoard, you can provide this flag: '
+        '--host=localhost')
 
 if __name__ == '__main__':
   main()

@@ -27,7 +27,7 @@ user = "Seb"
 funcPathElliot = 'C:/Users/ellio/OneDrive/Documents/GitHub/ML-for-Chinese-Calligraphy/dataHandling'
 funcPathSeb = 'C:\\Users\\Sebastian\\Desktop\\GitHub\\ML-for-Chinese-Calligraphy\\dataHandling'
 dataPathElliot = 'C:/Users/ellio/Documents/training data/Machine Learning data/'
-dataPathSeb = 'C:\\Users\\Sebastian\\Desktop\\MLChinese\\CASIA\\Converted\\All C Files'
+dataPathSeb = 'C:\\Users\\Sebastian\\Desktop\\MLChinese\\CASIA\\Converted\\'
 savePathSeb = 'C:\\Users\\Sebastian\\Desktop\\MLChinese\\Saved script files'
 savePathElliot = 'C:\\Users\\ellio\OneDrive\\Documents\\University\\Year 4\\ML chinese caligraphy\\Graphs'
 SebLOGDIR = r'C:/Users/Sebastian/Anaconda3/Lib/site-packages/tensorflow/tmp/ChineseCaligCNN/'
@@ -44,7 +44,7 @@ else:
     savePath = savePathSeb
     LOGDIR = SebLOGDIR
 
-whichTest = 7
+whichTest = 4
 
 LOGDIR = LOGDIR + str(datetime.date.today()) + '/test-{}'.format(whichTest)
 #make a directory
@@ -57,13 +57,13 @@ os.chdir("..")
 
 #%%Get the data
 #set ration of data to be training and testing
-trainRatio = 0.95
+trainRatio = 0.70
 
 print("splitting data...")
 startTime=t.time()
 #file to open
 
-dataPath = savePathSeb
+dataPath = dataPathSeb
 
 fileName="CharToNumList_10"
 labels,images=fF.readNPZ(dataPath,fileName,"saveLabels","saveImages")
@@ -116,7 +116,7 @@ def fc_layer(input, size_in, size_out, name="fc"):
     tf.summary.histogram("activations", act)
     return act
 
-numOutputs = 3373
+numOutputs = 3755
 inputDim = 40
 
 def mnist_model(learning_rate, hparam):
@@ -130,18 +130,18 @@ def mnist_model(learning_rate, hparam):
       y = tf.placeholder(tf.float32, shape=[None,numOutputs], name="labels")
       
       """With conv layer"""
-      conv1 = conv_layer(x_image, 1, 64, "conv")
-      #the next line pools it twice to keep it simple, reduce computational complexity
-      conv_out = tf.nn.max_pool(conv1, ksize=[1, 2, 2, 1], strides=[1, 2, 2, 1], padding="SAME")
-      flattened = tf.reshape(conv_out, [-1, 10 * 10 * 64])  #10*10 or 20*20
-      embedding_input = flattened
-      embedding_size = 10*10*64
-      logits = fc_layer(flattened, 10*10*64, 3373, "fc")
+#      conv1 = conv_layer(x_image, 1, 64, "conv")
+#      #the next line pools it twice to keep it simple, reduce computational complexity
+#      conv_out = tf.nn.max_pool(conv1, ksize=[1, 2, 2, 1], strides=[1, 2, 2, 1], padding="SAME")
+#      flattened = tf.reshape(conv_out, [-1, 10 * 10 * 64])  #10*10 or 20*20
+#      embedding_input = flattened
+#      embedding_size = 10*10*64
+#      logits = fc_layer(flattened, 10*10*64, 3373, "fc")
       
       """Without conv layer"""
-#      embedding_input = x
-#      embedding_size = pow(inputDim,2)
-#      logits = fc_layer(x, pow(inputDim,2), numOutputs, "fc")
+      embedding_input = x
+      embedding_size = pow(inputDim,2)
+      logits = fc_layer(x, pow(inputDim,2), numOutputs, "fc")
     
       with tf.name_scope("xent"):
         xent = tf.reduce_mean(
@@ -156,17 +156,37 @@ def mnist_model(learning_rate, hparam):
         correct_prediction = tf.equal(tf.argmax(logits, 1), tf.argmax(y, 1))
         accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
         tf.summary.scalar("accuracy", accuracy)
+
+#      with tf.name_scope("test_accuracy"):
+#        correct_prediction_test = tf.equal(tf.argmax(logits, 1), tf.argmax(y, 1))
+#        accuracy_test = tf.reduce_mean(tf.cast(correct_prediction_test, tf.float32))
+#        tf.summary.scalar("test_accuracy", accuracy_test)
+#    
+      merged_summary_op = tf.summary.merge_all()
     
-      summ = tf.summary.merge_all()
-    
-      embedding = tf.Variable(tf.zeros([375, embedding_size]), name="test_embedding")
+      embedding = tf.Variable(tf.zeros([len(testLabels), embedding_size]), name="test_embedding")
       assignment = embedding.assign(embedding_input)
       saver = tf.train.Saver()
       
       """Initialise variables, key step, can only make tensorflow objects after this"""
       sess.run(tf.global_variables_initializer())
-      writer = tf.summary.FileWriter(os.path.join(LOGDIR, hparam))
-      writer.add_graph(sess.graph)
+      
+      """Have separate writers for training and testing"""
+      train_writer = tf.summary.FileWriter(os.path.join(LOGDIR, 'train'))
+      train_writer.add_graph(sess.graph)
+      
+      test_writer = tf.summary.FileWriter(os.path.join(LOGDIR, 'test'))
+      test_writer.add_graph(sess.graph)
+      
+      """Work on the embedding"""
+#      config = tf.contrib.tensorboard.plugins.projector.ProjectorConfig()
+#      embedding_config = config.embeddings.add()
+#      embedding_config.tensor_name = embedding.name
+#      embedding_config.sprite.image_path = SPRITES
+#      embedding_config.metadata_path = LABELS
+#      # Specify the width and height of a single thumbnail.
+#      embedding_config.sprite.single_image_dim.extend([28, 28])
+#      tf.contrib.tensorboard.plugins.projector.visualize_embeddings(writer, config)
       
       print("Creating dataset tensors...")
       tensorCreation = t.time()
@@ -176,11 +196,10 @@ def mnist_model(learning_rate, hparam):
       #take a batch of 128
       tr_data = tr_data.batch(128)
       val_data = tf.data.Dataset.from_tensor_slices((testImages,testLabels))
+      val_data = val_data.batch(len(testLabels))
       val_data = val_data.shuffle(buffer_size=10000)
       #repeat the test dataset infinitely, so that we can loop over its test
       val_data = val_data.repeat()
-      #loop over the test value
-      val_data = val_data.batch(len(testLabels))
       print("took {} seconds\n".format(t.time()-tensorCreation))
       
       # create TensorFlow Iterator object
@@ -200,25 +219,52 @@ def mnist_model(learning_rate, hparam):
       sess.run(val_iterator.initializer)  
       print("took {} seconds\n".format(t.time()-iteratorInitialisation))
       
-      print(tf.one_hot(next_label,3373).eval())
-      print(len(tf.one_hot(next_label,3373).eval()))
+      """Print labels/images/tf.one_hot to check"""
+#      print(next_label.eval())
+#      print(tf.one_hot(next_label,3373).eval())
+#      print(len(tf.one_hot(next_label,3373).eval()))
+#      print(next_val_label.eval())
+#      print(tf.one_hot(next_val_label,3373).eval())
+#      print(len(tf.one_hot(next_val_label,3373).eval()))
       
-      for i in range(300001): #range 2001
+      for i in range(3001):
+#          if i % 30 == 0:  # Record summaries and test-set accuracy
+#              summary, acc = sess.run([merged_summary_op, accuracy], \
+#                                      feed_dict={x: next_val_image.eval(),  \
+#                                                 y: tf.one_hot(next_val_label,3755).eval()})
+#              test_writer.add_summary(summary, i)
+#              print('Accuracy at step %s: %s' % (i, acc))
+#          else:  # Record train set summaries, and train
+#            if i % 100 == 99:  # Record execution stats
+#              summary, _ = sess.run([merged_summary_op, train_step],
+#                                    feed_dict={x: next_image.eval(),  \
+#                                               y: tf.one_hot(next_label,3755).eval()})
+#              train_writer.add_summary(summary, i)
+#            else:  # Record a summary
+#              summary, _ = sess.run([merged_summary_op, train_step], \
+#                                    feed_dict={x: next_image.eval(),  \
+#                                               y: tf.one_hot(next_label,3755).eval()})
+#              train_writer.add_summary(summary, i)
+          
           if i % 30 == 0:
               print('calculating training accuracy... i={}'.format(i))
-              [train_accuracy, s] = sess.run([accuracy, summ], \
+              train_accuracy, train_summary = sess.run([accuracy, merged_summary_op], \
                   feed_dict={x: next_image.eval(), \
-                             y: tf.one_hot(next_label,3373).eval()})
-              writer.add_summary(s, i)
-          if i % 500 == 0:
-              print('did 500, saving')
+                             y: tf.one_hot(next_label,3755).eval()})
+              train_writer.add_summary(train_summary, i)
+          if i % 100 == 0:
+              print('calculating test accuracy and saving')
               sess.run(assignment, \
-                       feed_dict={x: next_val_image.eval()[:375],  \
-                                  y: tf.one_hot(next_val_label,3373).eval()[:375]})
+              #assign, test_accuracy, test_summary = sess.run([assignment, accuracy, merged_summary_op], \
+                       feed_dict={x: next_val_image.eval(),  \
+                                  y: tf.one_hot(next_val_label,3755).eval()})
+              #test_writer.add_summary(test_summary,i)
               saver.save(sess, os.path.join(LOGDIR, "model.ckpt{}".format(learning_rate)), i)
           sess.run(train_step, \
                    feed_dict={x: next_image.eval(), \
-                              y: tf.one_hot(next_label,3373).eval()})
+                              y: tf.one_hot(next_label,3755).eval()})
+      train_writer.close()
+      test_writer.close()
     
 def make_hparam_string(learning_rate):
   fc_param = "fc=1"
