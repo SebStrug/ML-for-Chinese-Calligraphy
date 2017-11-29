@@ -44,9 +44,9 @@ else:
     savePath = savePathSeb
     LOGDIR = SebLOGDIR
 
-whichTest = 4
 
-LOGDIR = LOGDIR + str(datetime.date.today()) + '/testMerged{}'.format(whichTest)
+whichTest = 1
+LOGDIR = LOGDIR + str(datetime.date.today()) + '/test{}'.format(whichTest)
 #make a directory
 if not os.path.exists(LOGDIR):
     os.makedirs(LOGDIR)
@@ -54,14 +54,34 @@ if not os.path.exists(LOGDIR):
 os.chdir(funcPath)
 from classFileFunctions import fileFunc as fF 
 os.chdir("..")
+#%% set Data size Parameters
+numConvOutputs = 64
+numOutputs = 3755
+inputDim = 40
 
+#%%
+def subSet(numClasses,images,labels):
+    labelsToExtract = list(range(numClasses))#list of labels that we want to extract
+    indicesToExtract = []#the indices that we want to extract from the original data
+    for i in range(len(labels)):
+        if labels[i] in labelsToExtract:
+            indicesToExtract.append(i)
+            #print(i)
+    #print(indicesToExtract)
+    subSetLabels=np.zeros(len(indicesToExtract))  
+    subSetImages=np.zeros((len(indicesToExtract),inputDim*inputDim))
+    j=0
+    for i in indicesToExtract:
+            subSetLabels[j]=labels[i]
+            subSetImages[j]=images[i]
+            j+=1
+    return subSetLabels,subSetImages
+        
+            
+        
+    
 #%%Get the data
 #set ration of data to be training and testing
-def oneHot(numberList,n):
-    oneHotArray=np.zeros((len(numberList),n));
-    for j in range(len(numberList)):
-        oneHotArray[j][numberList[j]] = 1;
-    return oneHotArray;
 
 trainRatio = 0.90
 
@@ -69,20 +89,25 @@ trainRatio = 0.90
 print("splitting data...")
 startTime=t.time()
 #file to open
-
 fileName="1001-1100C"
 labels,images=fF.readNPZ(dataPath,fileName,"saveLabels","saveImages")
+#############################################################
+#if taking a subset of the data
+subLabels,subImages = subSet(10,images,labels)
+labels,images = subLabels, subImages
+#############################################################
 dataLength=len(labels)
 #split the data into training and testing
 #train data
-#trainImages = images[0:int(dataLength*trainRatio)]
-#trainLabels = labels[0:int(dataLength*trainRatio)]
-#testImages = images[int(dataLength*trainRatio):dataLength]
-#testLabels = labels[int(dataLength*trainRatio):dataLength]
-trainImages = images[0:3000]
-trainLabels = labels[0:3000]
-testImages = images[0:3000]
-testLabels = labels[0:3000]
+trainImages = images[0:int(dataLength*trainRatio)]
+trainLabels = labels[0:int(dataLength*trainRatio)]
+testImages = images[int(dataLength*trainRatio):dataLength]
+testLabels = labels[int(dataLength*trainRatio):dataLength]
+# uncomment to take a small sample instead 
+#trainImages = images[0:3000]
+#trainLabels = labels[0:3000]
+#testImages = images[0:3000]
+#testLabels = labels[0:3000]
 trainLength = len(trainLabels)
 testLength = len(testLabels)
 labels = 0;
@@ -119,9 +144,7 @@ def fc_layer(input, size_in, size_out, name="fc",dropOut = False,keepProb = 0.5)
     tf.summary.histogram("activations", relu)
     return relu
 
-numConvOutputs = 64
-numOutputs = 3755
-inputDim = 40
+
 
 def mnist_model(learning_rate,batchSize, hparam):
   tf.reset_default_graph()
@@ -246,8 +269,8 @@ def mnist_model(learning_rate,batchSize, hparam):
           if i % testNum == 0 and i!=0:
               print('did 500, saving')
               sess.run(assignment, \
-                       feed_dict={x: next_val_image.eval()[:3800],  \
-                                  y: tf.one_hot(next_val_label,numOutputs).eval()[:3800]})
+                       feed_dict={x: next_val_image.eval()[:100],  \
+                                  y: tf.one_hot(next_val_label,numOutputs).eval()[:100]})
               saver.save(sess, os.path.join(LOGDIR, "model.ckpt"), i)
           sess.run(train_step, \
                    feed_dict={x: next_image.eval(), \
