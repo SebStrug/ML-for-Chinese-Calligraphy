@@ -9,6 +9,7 @@ import tensorflow as tf
 import numpy as np
 import time as t
 import datetime
+from PIL import Image
 
 #%%Notes
 """ .eval() converts a tensor within a session into its real output.
@@ -47,7 +48,7 @@ startTime=t.time()
 
 dataPath = savePath
 
-fileName="1001-C"
+fileName="1001to1100"
 labels,images=fF.readNPZ(dataPath,fileName,"saveLabels","saveImages")
 dataLength=len(labels)
 #split the data into training and testing
@@ -59,9 +60,36 @@ testLabels = labels[int(dataLength*trainRatio):dataLength]
 labels = 0;
 images = 0;
 print("took ",t.time()-startTime," seconds\n")
+ 
+#%%
+def createSpriteLabels(images,labels):
+    """Create a 32x32 image of sprites of the characters"""
+    spriteImages = images[0:32*32] #array form
+    convSpriteImage = [Image.fromarray(np.resize(i,(40,40)), 'L') for i in spriteImages] #convert to image
+    dimensions = 40*32
+    montage = Image.new(mode='RGBA', size=(dimensions, dimensions), color=(0,0,0,0))
+    offset_x = offset_y = 0
+    row_size = 32
+    i = 0
+    for image in convSpriteImage:
+        montage.paste(image, (offset_x, offset_y))
+        if i % row_size == row_size-1: 
+            offset_y += 40
+            offset_x = 0
+        else:
+            offset_x += 40
+        i += 1
+    montage.save(savePath + '/sprite_{}'.format(32**2), "png")
+    
+    spriteLabels = labels[0:32*32]
+    with open(savePath + "/spriteLabels.tsv", "w") as record_file:
+        record_file.write("Character\n")
+        for i in spriteLabels:
+            record_file.write('{}\n'.format(i))
+    return montage, record_file
+
 
 #%% Check images are correct
-#from PIL import Image
 #image0 = Image.fromarray(np.resize(trainImages[0],(40,40)), 'L')
 #label0 = trainLabels[0]
 #image3755 = Image.fromarray(np.resize(trainImages[3755],(40,40)), 'L')
@@ -98,7 +126,13 @@ def fc_layer(input, size_in, size_out, name="fc"):
     tf.summary.histogram("activations", act)
     return act
 
-numOutputs = 3373
+if len(set(trainLabels)) == len(set(testLabels)):
+    numOutputs = len(set(trainLabels))
+    print('{} outputs'.format(numOutputs))
+else:
+    print('\n\nERRR NUMBER OF UNIQUE TEST LABELS DOES NOT MATCH UNIQUE TRAIN LABELS\n\n')
+    
+#numOutputs = 3755
 inputDim = 40
 
 def neural_net(LOGDIR, learning_rate, hparam):
@@ -134,16 +168,14 @@ def neural_net(LOGDIR, learning_rate, hparam):
       with tf.name_scope("train"):
         train_step = tf.train.GradientDescentOptimizer(learning_rate).minimize(xent)
     
-      with tf.name_scope("training_accuracy"):
+      with tf.name_scope("accuracy"):
         correct_prediction = tf.equal(tf.argmax(logits, 1), tf.argmax(y, 1))
         accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
         tf.summary.scalar("accuracy", accuracy)
-      
-        ###CREATE ACCURACY VARIABLE FOR TESTING.
     
       summ = tf.summary.merge_all()
     
-      embedding = tf.Variable(tf.zeros([375, embedding_size]), name="test_embedding")
+      embedding = tf.Variable(tf.zeros([1000, embedding_size]), name="test_embedding")
       assignment = embedding.assign(embedding_input)
       saver = tf.train.Saver()
       
@@ -167,8 +199,8 @@ def neural_net(LOGDIR, learning_rate, hparam):
       val_data = val_data.shuffle(buffer_size=10000)
       #repeat the test dataset infinitely, so that we can loop over its test
       val_data = val_data.repeat()
-      #loop over the test value
-      val_data = val_data.batch(len(testLabels))
+      val_data  = val_data.batch(1000)
+    
       print("took {} seconds\n".format(t.time()-tensorCreation))
       
       # create TensorFlow Iterator object
@@ -188,26 +220,31 @@ def neural_net(LOGDIR, learning_rate, hparam):
       sess.run(val_iterator.initializer)  
       print("took {} seconds\n".format(t.time()-iteratorInitialisation))
       
-      print(tf.one_hot(next_label,3373).eval())
-      print(len(tf.one_hot(next_label,3373).eval()))
+      print(tf.one_hot(next_label,3755).eval())
+      print(len(tf.one_hot(next_label,3755).eval()))
       
+      numEpochs = 0
+      print('Number of iterations for one epoch: {}'.format(len(trainLabels)/128))
       for i in range(300001): #range 2001
           if i % 30 == 0:
               print('calculating training accuracy... i={}'.format(i))
               [train_accuracy, s] = sess.run([accuracy, summ], \
                   feed_dict={x: next_image.eval(), \
-                             y: tf.one_hot(next_label,3373).eval()})
+                             y: tf.one_hot(next_label,3755).eval()})
               train_writer.add_summary(s, i)
-          if i % 500 == 0:
+          if i % 90 == 0:
               print('did 500, saving')
-              [test_accuracy, s] = sess.run([accuracy, summ], \
-                       feed_dict={x: next_val_image.eval()[:375],  \
-                                  y: tf.one_hot(next_val_label,3373).eval()[:375]})
+              [assign, test_accuracy, s] = sess.run([assignment, accuracy, summ], \
+                       feed_dict={x: next_val_image.eval()[:1000],  \
+                                  y: tf.one_hot(next_val_label,3755).eval()[:1000]})
               test_writer.add_summary(s, i)
               saver.save(sess, os.path.join(LOGDIR, "model.ckpt{}".format(learning_rate)), i)
+          if i % (len(trainLabels)/128) == 0:
+              numEpochs += 1
+              print('Did {} epochs'.format(numEpochs))
           sess.run(train_step, \
                    feed_dict={x: next_image.eval(), \
-                              y: tf.one_hot(next_label,3373).eval()})
+                              y: tf.one_hot(next_label,3755).eval()})
     
 def make_hparam_string(learning_rate):
   fc_param = "fc=1"

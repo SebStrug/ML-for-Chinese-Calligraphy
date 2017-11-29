@@ -81,6 +81,10 @@ labels = 0;
 images = 0;
 print("took ",t.time()-startTime," seconds\n")
 
+
+    
+
+
 #%%
 def conv_layer(input, size_in, size_out, name="conv"):
   with tf.name_scope(name):
