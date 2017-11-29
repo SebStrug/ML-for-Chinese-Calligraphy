@@ -45,7 +45,7 @@ else:
     LOGDIR = SebLOGDIR
 
 
-whichTest = 1
+whichTest = 3
 LOGDIR = LOGDIR + str(datetime.date.today()) + '/10filetest{}'.format(whichTest)
 #make a directory
 if not os.path.exists(LOGDIR):
@@ -55,7 +55,7 @@ os.chdir(funcPath)
 from classFileFunctions import fileFunc as fF 
 os.chdir("..")
 #%% set Data size Parameters
-numConvOutputs = 1
+numConvOutputs = 16
 numOutputs = 3755
 inputDim = 40
 
