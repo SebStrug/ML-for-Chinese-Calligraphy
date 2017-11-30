@@ -27,28 +27,28 @@ from classFileFunctions import fileFunc as fF
 funcPath,dataPath,savePath,rootDIR = fF.whichUser('Seb')
 os.chdir("..")
 
-def makeDir(rootDIR,hparam):
+def makeDir(rootDIR,fileName,hparam):
     """Makes a directory automatically to save tensorboard data to"""
     testNum = 0
-    LOGDIR = rootDIR + str(datetime.date.today()) + '/test-{}'.format(testNum)
+    LOGDIR = rootDIR + str(datetime.date.today()) + '/' + fileName + '-test-{}'.format(testNum)
     while os.path.exists(LOGDIR):
         testNum += 1
-        LOGDIR = rootDIR + str(datetime.date.today()) + '/test-{}'.format(testNum)
+        LOGDIR = rootDIR + str(datetime.date.today()) + '/' + fileName + '-test-{}'.format(testNum)
     #make a directory
     os.makedirs(LOGDIR)
     return LOGDIR
 
+
 #%%Get the data
 #set ration of data to be training and testing
-trainRatio = 0.95
+trainRatio = 0.9
 
 print("splitting data...")
 startTime=t.time()
 #file to open
 
 dataPath = savePath
-
-fileName="1001to1100"
+fileName="1001-C"
 labels,images=fF.readNPZ(dataPath,fileName,"saveLabels","saveImages")
 dataLength=len(labels)
 #split the data into training and testing
@@ -60,47 +60,8 @@ testLabels = labels[int(dataLength*trainRatio):dataLength]
 labels = 0;
 images = 0;
 print("took ",t.time()-startTime," seconds\n")
- 
-#%%
-def createSpriteLabels(images,labels):
-    """Create a 32x32 image of sprites of the characters"""
-    spriteImages = images[0:32*32] #array form
-    convSpriteImage = [Image.fromarray(np.resize(i,(40,40)), 'L') for i in spriteImages] #convert to image
-    dimensions = 40*32
-    montage = Image.new(mode='RGBA', size=(dimensions, dimensions), color=(0,0,0,0))
-    offset_x = offset_y = 0
-    row_size = 32
-    i = 0
-    for image in convSpriteImage:
-        montage.paste(image, (offset_x, offset_y))
-        if i % row_size == row_size-1: 
-            offset_y += 40
-            offset_x = 0
-        else:
-            offset_x += 40
-        i += 1
-    montage.save(savePath + '/sprite_{}'.format(32**2), "png")
-    
-    spriteLabels = labels[0:32*32]
-    with open(savePath + "/spriteLabels.tsv", "w") as record_file:
-        record_file.write("Character\n")
-        for i in spriteLabels:
-            record_file.write('{}\n'.format(i))
-    return montage, record_file
 
 
-#%% Check images are correct
-#image0 = Image.fromarray(np.resize(trainImages[0],(40,40)), 'L')
-#label0 = trainLabels[0]
-#image3755 = Image.fromarray(np.resize(trainImages[3755],(40,40)), 'L')
-#label3755 = trainLabels[3755]
-#print(image0,label0)
-#print(image3755,label3755)
-#
-#for i in range(len(trainLabels)):
-#    if trainLabels[i] == 2604:
-#        print(i)
-    
 
 #%%
 print("Building network...")
@@ -132,7 +93,7 @@ if len(set(trainLabels)) == len(set(testLabels)):
 else:
     print('\n\nERRR NUMBER OF UNIQUE TEST LABELS DOES NOT MATCH UNIQUE TRAIN LABELS\n\n')
     
-#numOutputs = 3755
+numOutputs = 3373
 inputDim = 40
 
 def neural_net(LOGDIR, learning_rate, hparam):
@@ -175,7 +136,7 @@ def neural_net(LOGDIR, learning_rate, hparam):
     
       summ = tf.summary.merge_all()
     
-      embedding = tf.Variable(tf.zeros([1000, embedding_size]), name="test_embedding")
+      embedding = tf.Variable(tf.zeros([375, embedding_size]), name="test_embedding")
       assignment = embedding.assign(embedding_input)
       saver = tf.train.Saver()
       
@@ -188,6 +149,16 @@ def neural_net(LOGDIR, learning_rate, hparam):
       test_writer = tf.summary.FileWriter(os.path.join(LOGDIR,hparam)+'/test')
       test_writer.add_graph(sess.graph)
       
+      """Embedding for the projector"""
+      config = tf.contrib.tensorboard.plugins.projector.ProjectorConfig()
+      embedding_config = config.embeddings.add()
+      embedding_config.tensor_name = embedding.name
+      embedding_config.sprite.image_path = os.path.join(savePath,'sprite_1024')
+      embedding_config.metadata_path = os.path.join(savePath,'spriteLabels.tsv')
+      # Specify the width and height of a single thumbnail.
+      embedding_config.sprite.single_image_dim.extend([40, 40])
+      tf.contrib.tensorboard.plugins.projector.visualize_embeddings(test_writer, config)
+      
       print("Creating dataset tensors...")
       tensorCreation = t.time()
       #create dataset for training and validation
@@ -199,7 +170,7 @@ def neural_net(LOGDIR, learning_rate, hparam):
       val_data = val_data.shuffle(buffer_size=10000)
       #repeat the test dataset infinitely, so that we can loop over its test
       val_data = val_data.repeat()
-      val_data  = val_data.batch(1000)
+      val_data  = val_data.batch(375)
     
       print("took {} seconds\n".format(t.time()-tensorCreation))
       
@@ -220,31 +191,31 @@ def neural_net(LOGDIR, learning_rate, hparam):
       sess.run(val_iterator.initializer)  
       print("took {} seconds\n".format(t.time()-iteratorInitialisation))
       
-      print(tf.one_hot(next_label,3755).eval())
-      print(len(tf.one_hot(next_label,3755).eval()))
+      #check what our one_hot vectors look like
+#      print(tf.one_hot(next_label,3755).eval())
+#      print(len(tf.one_hot(next_label,3755).eval()))
       
-      numEpochs = 0
-      print('Number of iterations for one epoch: {}'.format(len(trainLabels)/128))
+      epochLength = int(len(trainLabels)/128))
+      print('Number of iterations for one epoch: {}'.format(epochLength)
       for i in range(300001): #range 2001
           if i % 30 == 0:
               print('calculating training accuracy... i={}'.format(i))
               [train_accuracy, s] = sess.run([accuracy, summ], \
                   feed_dict={x: next_image.eval(), \
-                             y: tf.one_hot(next_label,3755).eval()})
+                             y: tf.one_hot(next_label,3373).eval()})
               train_writer.add_summary(s, i)
-          if i % 90 == 0:
+          if i % 300 == 0:
               print('did 500, saving')
               [assign, test_accuracy, s] = sess.run([assignment, accuracy, summ], \
-                       feed_dict={x: next_val_image.eval()[:1000],  \
-                                  y: tf.one_hot(next_val_label,3755).eval()[:1000]})
+                       feed_dict={x: next_val_image.eval()[:375],  \
+                                  y: tf.one_hot(next_val_label,3373).eval()[:375]})
               test_writer.add_summary(s, i)
               saver.save(sess, os.path.join(LOGDIR, "model.ckpt{}".format(learning_rate)), i)
-          if i % (len(trainLabels)/128) == 0:
-              numEpochs += 1
-              print('Did {} epochs'.format(numEpochs))
+          if i % epochLength == 0 and i!=0:
+              print('Did {} epochs'.format(i/epochLength))
           sess.run(train_step, \
                    feed_dict={x: next_image.eval(), \
-                              y: tf.one_hot(next_label,3755).eval()})
+                              y: tf.one_hot(next_label,3373).eval()})
     
 def make_hparam_string(learning_rate):
   fc_param = "fc=1"
@@ -258,7 +229,7 @@ def main():
         # Construct a hyperparameter string for each one (example: "lr_1E-3,fc=2,conv=2)
     hparam = make_hparam_string(learning_rate)
     print('Starting run for %s\n' % hparam)
-    LOGDIR = makeDir(rootDIR,hparam)
+    LOGDIR = makeDir(rootDIR,fileName,hparam)
 	 #Actually run with the new settings
     neural_net(LOGDIR, learning_rate, hparam)
 
