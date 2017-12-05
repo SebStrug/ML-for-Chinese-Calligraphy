@@ -23,8 +23,8 @@ from PIL import Image
 
 #file Path for functions
 
-user = "Elliot"
-#user = "Seb"
+#user = "Elliot"
+user = "Seb"
 
 funcPathElliot = 'C:/Users/ellio/OneDrive/Documents/GitHub/ML-for-Chinese-Calligraphy/dataHandling'
 funcPathSeb = 'C:\\Users\\Sebastian\\Desktop\\GitHub\\ML-for-Chinese-Calligraphy\\dataHandling'
@@ -46,9 +46,8 @@ else:
     savePath = savePathSeb
     LOGDIR = SebLOGDIR
 
-
-whichTest = 8
-LOGDIR = LOGDIR + str(datetime.date.today()) + '/{}'.format(whichTest)
+whichTest = 2
+LOGDIR = LOGDIR + str(datetime.date.today()) + '/normalizedPixels_{}'.format(whichTest)
 
 #make a directory
 if not os.path.exists(LOGDIR):
@@ -92,6 +91,10 @@ def subSet(numClasses,images,labels):
               subImages.append(images[i])
               subLabels.append(labels[i])
       return np.asarray(subImages),np.asarray(subLabels)
+  
+def normalizePixels(trainImages):
+    trainImages = np.asarray(trainImages)
+    return trainImages/255
 
 dataPath = savePath
 fileName="1001to1100"
@@ -100,7 +103,7 @@ labels,images=fF.readNPZ(dataPath,fileName,"saveLabels","saveImages")
 nextLabels,nextImages = fF.readNPZ(dataPath,"1101to1200","saveLabels","saveImages")
 labels = np.concatenate((labels,nextLabels),axis=0)
 images = np.concatenate((images,nextImages),axis=0)
-nextLabels,nextImages = fF.readNPZ(dataPath,"1201-1300C","saveLabels","saveImages")
+nextLabels,nextImages = fF.readNPZ(dataPath,"1201to1300","saveLabels","saveImages")
 labels = np.concatenate((labels,nextLabels),axis=0)
 images = np.concatenate((images,nextImages),axis=0)
 dataLength=len(labels)
@@ -111,9 +114,11 @@ subImages, subLabels = subSet(10,images,labels)
 dataLength=len(subLabels)
 trainImages = subImages[0:int(dataLength*trainRatio)]
 trainImages = trainImages.astype(int)
+trainImages = normalizePixels(trainImages)
 trainLabels = subLabels[0:int(dataLength*trainRatio)]
 trainLabels = trainLabels.astype(int)
 testImages = subImages[int(dataLength*trainRatio):dataLength]
+testImages = normalizePixels(testImages)
 testLabels = subLabels[int(dataLength*trainRatio):dataLength]
 
 def saveImages(trainImages,trainLabels):
@@ -161,7 +166,7 @@ else:
     
 numOutputs = 10
 inputDim = 40
-trainBatchSize = len(trainLabels)
+trainBatchSize = 128
 
 def neural_net(LOGDIR, learning_rate, hparam):
   tf.reset_default_graph()
@@ -325,7 +330,7 @@ def make_hparam_string(learning_rate):
 
 def main():
   # You can try adding some more learning rates
-  for learning_rate in [1E-5,1E-4]:
+  for learning_rate in [1E-3]:
 
 
     # Include "False" as a value to try different model architectures

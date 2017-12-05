@@ -90,7 +90,10 @@ def subSet(numClasses,images,labels):
               subImages.append(images[i])
               subLabels.append(labels[i])
       return np.asarray(subImages),np.asarray(subLabels)
-
+  
+def normalizePixels(trainImages):
+    trainImages = np.asarray(trainImages)
+    return trainImages/255
 
 dataPath = savePath
 fileName="MNIST_data"
@@ -112,8 +115,10 @@ subImages, subLabels = subSet(10,images,labels)
 dataLength=len(subLabels)
 trainImages = subImages[0:int(dataLength*trainRatio)]
 trainLabels = subLabels[0:int(dataLength*trainRatio)]
+trainImages = normalizePixels(trainImages)
 testImages = subImages[int(dataLength*trainRatio):dataLength]
 testLabels = subLabels[int(dataLength*trainRatio):dataLength]
+testImages = normalizePixels(testImages)
 
 def saveImages(trainImages,trainLabels):
     """Check subset we are using is valid, by matching image to label"""
@@ -280,11 +285,15 @@ def neural_net(LOGDIR, learning_rate, hparam):
           if i % displayNum == 0:
               print('calculating training accuracy... i={}'.format(i))
               ###debug
-#              tempImage = next_image
-#              tempLabel = next_label
-#              print(tempImage.eval(),len(tempImage.eval()),len(tempImage.eval()[0]))
-#              print(tempLabel.eval(),len(tempLabel.eval()))
-#              print(tf.one_hot(tempLabel,numOutputs).eval(),len(tf.one_hot(tempLabel,numOutputs).eval()),len(tf.one_hot(tempLabel,numOutputs).eval()[0]))
+              """Idea: print the image for next_image, and for next_label, see they match
+              and that calling next_label doesn't get the next value from the iterator"""
+              """What if the shuffled dataset doesn't match up images/labels?"""
+              tempImage = next_image
+              tempLabel = next_label
+              print(tempImage.eval(),len(tempImage.eval()),len(tempImage.eval()[0]))
+              print([i for i in tempImage.eval()[0] if i != 0])
+              print(tempLabel.eval(),len(tempLabel.eval()))
+              print(tf.one_hot(tempLabel,numOutputs).eval(),len(tf.one_hot(tempLabel,numOutputs).eval()),len(tf.one_hot(tempLabel,numOutputs).eval()[0]))
               ###end debug
               train_accuracy, train_summary = sess.run([accuracy, merged_summary_op], \
                   feed_dict={x: next_image.eval(), \
