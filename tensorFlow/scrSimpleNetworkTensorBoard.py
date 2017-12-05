@@ -46,17 +46,10 @@ else:
     savePath = savePathSeb
     LOGDIR = SebLOGDIR
 
-<<<<<<< HEAD
-<<<<<<< HEAD
-whichTest = 3
-LOGDIR = LOGDIR + str(datetime.date.today()) + '/convDataType_{}'.format(whichTest)
-=======
-whichTest =8
-=======
-whichTest =11
->>>>>>> 477820535dd8cb0c3be296f722cafbd30b95aada
+
+whichTest = 8
 LOGDIR = LOGDIR + str(datetime.date.today()) + '/{}'.format(whichTest)
->>>>>>> 1e7406a14a03c637447f73fd998f91c31208f058
+
 #make a directory
 if not os.path.exists(LOGDIR):
     os.makedirs(LOGDIR)
@@ -100,19 +93,11 @@ def subSet(numClasses,images,labels):
               subLabels.append(labels[i])
       return np.asarray(subImages),np.asarray(subLabels)
 
-
-<<<<<<< HEAD
 dataPath = savePath
 fileName="1001to1100"
 labels,images=fF.readNPZ(dataPath,fileName,"saveLabels","saveImages")
 """for all 3 files"""
 nextLabels,nextImages = fF.readNPZ(dataPath,"1101to1200","saveLabels","saveImages")
-=======
-#dataPath = savePath
-fileName="CharToNumList_10"
-labels,images=fF.readNPZ(dataPath,"1001-1100C","saveLabels","saveImages")
-nextLabels,nextImages = fF.readNPZ(dataPath,"1101-1200C","saveLabels","saveImages")
->>>>>>> 1e7406a14a03c637447f73fd998f91c31208f058
 labels = np.concatenate((labels,nextLabels),axis=0)
 images = np.concatenate((images,nextImages),axis=0)
 nextLabels,nextImages = fF.readNPZ(dataPath,"1201-1300C","saveLabels","saveImages")
@@ -176,11 +161,7 @@ else:
     
 numOutputs = 10
 inputDim = 40
-<<<<<<< HEAD
 trainBatchSize = len(trainLabels)
-=======
-trainBatchSize = 20
->>>>>>> 1e7406a14a03c637447f73fd998f91c31208f058
 
 def neural_net(LOGDIR, learning_rate, hparam):
   tf.reset_default_graph()
@@ -254,11 +235,8 @@ def neural_net(LOGDIR, learning_rate, hparam):
       tensorCreation = t.time()
       #create dataset for training and validation
       tr_data = tf.data.Dataset.from_tensor_slices((trainImages,trainLabels))
-<<<<<<< HEAD
       #tr_data = tr_data.shuffle(buffer_size=10000)
-=======
       tr_data = tr_data.shuffle(buffer_size=100)
->>>>>>> 477820535dd8cb0c3be296f722cafbd30b95aada
       tr_data = tr_data.repeat()
       tr_data = tr_data.batch(trainBatchSize)
       
@@ -347,15 +325,8 @@ def make_hparam_string(learning_rate):
 
 def main():
   # You can try adding some more learning rates
-<<<<<<< HEAD
-<<<<<<< HEAD
   for learning_rate in [1E-5,1E-4]:
-=======
-  for learning_rate in [1E-2]:
->>>>>>> 1e7406a14a03c637447f73fd998f91c31208f058
-=======
-  for learning_rate in [1E-5]:
->>>>>>> 477820535dd8cb0c3be296f722cafbd30b95aada
+
 
     # Include "False" as a value to try different model architectures
         # Construct a hyperparameter string for each one (example: "lr_1E-3,fc=2,conv=2)
