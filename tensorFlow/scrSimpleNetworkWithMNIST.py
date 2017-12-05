@@ -46,8 +46,8 @@ else:
     savePath = savePathSeb
     LOGDIR = SebLOGDIR
 
-whichTest = 3
-LOGDIR = LOGDIR + str(datetime.date.today()) + '/convDataType_{}'.format(whichTest)
+whichTest = 2
+LOGDIR = LOGDIR + str(datetime.date.today()) + '/MNIST_attempt_{}'.format(whichTest)
 #make a directory
 if not os.path.exists(LOGDIR):
     os.makedirs(LOGDIR)
@@ -74,7 +74,7 @@ def makeDir(rootDIR,fileName,hparam):
 
 #%%Get the data
 #set ration of data to be training and testing
-trainRatio = 0.95
+trainRatio = 0.9
 
 
 print("splitting data...")
@@ -93,15 +93,17 @@ def subSet(numClasses,images,labels):
 
 
 dataPath = savePath
-fileName="1001to1100"
+fileName="MNIST_data"
 labels,images=fF.readNPZ(dataPath,fileName,"saveLabels","saveImages")
-"""for all 3 files"""
-nextLabels,nextImages = fF.readNPZ(dataPath,"1101to1200","saveLabels","saveImages")
-labels = np.concatenate((labels,nextLabels),axis=0)
-images = np.concatenate((images,nextImages),axis=0)
-nextLabels,nextImages = fF.readNPZ(dataPath,"1201to1300","saveLabels","saveImages")
-labels = np.concatenate((labels,nextLabels),axis=0)
-images = np.concatenate((images,nextImages),axis=0)
+
+"""Running over three files to get 3 times as many values"""
+#nextLabels,nextImages = fF.readNPZ(dataPath,"1101to1200","saveLabels","saveImages")
+#labels = np.concatenate((labels,nextLabels),axis=0)
+#images = np.concatenate((images,nextImages),axis=0)
+#nextLabels,nextImages = fF.readNPZ(dataPath,"1201to1300","saveLabels","saveImages")
+#labels = np.concatenate((labels,nextLabels),axis=0)
+#images = np.concatenate((images,nextImages),axis=0)
+
 dataLength=len(labels)
 #split the data into training and testing
 #train data
@@ -109,17 +111,15 @@ subImages, subLabels = subSet(10,images,labels)
 """Must convert to numpy array or tensorflow doesn't work!"""
 dataLength=len(subLabels)
 trainImages = subImages[0:int(dataLength*trainRatio)]
-trainImages = trainImages.astype(int)
 trainLabels = subLabels[0:int(dataLength*trainRatio)]
-trainLabels = trainLabels.astype(int)
 testImages = subImages[int(dataLength*trainRatio):dataLength]
 testLabels = subLabels[int(dataLength*trainRatio):dataLength]
 
 def saveImages(trainImages,trainLabels):
     """Check subset we are using is valid, by matching image to label"""
     os.chdir('C:\\Users\\Sebastian\\Desktop\\MLChinese\\Saved script files\\checkImages')
-    for i in range(len(trainImages)):
-        tmpImage = Image.fromarray(np.resize(trainImages[i],(40,40)), 'L')
+    for i in range(10):
+        tmpImage = Image.fromarray(np.resize(trainImages[i],(28,28)), 'L')
         tmpImage.save('{},label_{}.jpeg'.format(i,trainLabels[i]))
 
 labels = 0;
@@ -159,8 +159,8 @@ else:
     print('\n\nERRR NUMBER OF UNIQUE TEST LABELS DOES NOT MATCH UNIQUE TRAIN LABELS\n\n')
     
 numOutputs = 10
-inputDim = 40
-trainBatchSize = len(trainLabels)
+inputDim = 28
+trainBatchSize = 128
 
 def neural_net(LOGDIR, learning_rate, hparam):
   tf.reset_default_graph()
@@ -226,7 +226,7 @@ def neural_net(LOGDIR, learning_rate, hparam):
       embedding_config.sprite.image_path = os.path.join(savePath,'sprite_1024')
       embedding_config.metadata_path = os.path.join(savePath,'spriteLabels.tsv')
       # Specify the width and height of a single thumbnail.
-      embedding_config.sprite.single_image_dim.extend([40, 40])
+      embedding_config.sprite.single_image_dim.extend([inputDim, inputDim])
       tf.contrib.tensorboard.plugins.projector.visualize_embeddings(test_writer, config)
 
       
