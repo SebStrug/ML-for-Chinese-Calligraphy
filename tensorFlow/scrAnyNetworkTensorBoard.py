@@ -19,6 +19,7 @@ import datetime
     """
 
 #%%Load Data
+<<<<<<< HEAD
 #file Path for functions
 
 #user = "Elliot"
@@ -52,12 +53,35 @@ if not os.path.exists(LOGDIR):
     os.makedirs(LOGDIR)
 
 os.chdir(funcPath)
+=======
+#first part of the next line goes one back in the directory
+os.chdir(os.path.normpath(os.getcwd() + os.sep + os.pardir) + '\\dataHandling')
+>>>>>>> test-accuracy
 from classFileFunctions import fileFunc as fF 
+"""Define the user"""
+funcPath,dataPath,savePath,rootDIR = fF.whichUser('Seb')
 os.chdir("..")
+
+def makeDir(rootDIR,hparam):
+    """Makes a directory automatically to save tensorboard data to"""
+    testNum = 0
+    LOGDIR = rootDIR + str(datetime.date.today()) + '/test-{}'.format(testNum)
+    while os.path.exists(LOGDIR):
+        testNum += 1
+        LOGDIR = rootDIR + str(datetime.date.today()) + '/test-{}'.format(testNum)
+    #make a directory
+    os.makedirs(LOGDIR)
+    return LOGDIR
 
 #%%Get the data
 #set ration of data to be training and testing
+<<<<<<< HEAD
 trainRatio = 0.95
+=======
+
+trainRatio = 0.90
+
+>>>>>>> test-accuracy
 
 print("splitting data...")
 startTime=t.time()
@@ -116,7 +140,7 @@ numConvOutputs = 64
 numOutputs = 3755
 inputDim = 40
 
-def mnist_model(learning_rate,batchSize, hparam):
+def mnist_model(LOGDIR, learning_rate,batchSize, hparam):
   tf.reset_default_graph()
   sess = tf.InteractiveSession()
   with sess.as_default():
@@ -235,7 +259,7 @@ def mnist_model(learning_rate,batchSize, hparam):
           sess.run(train_step, \
                    feed_dict={x: next_image.eval(), \
                               y: tf.one_hot(next_label,numOutputs ).eval()})
-
+          
 def make_hparam_string(learning_rate,batchSize):
   fc_param = "fc=1"
   conv_param = "conv=1"
@@ -250,7 +274,7 @@ def main():
             # Construct a hyperparameter string for each one (example: "lr_1E-3,fc=2,conv=2)
         hparam = make_hparam_string(learning_rate,batchSize)
         print('Starting run for %s' % hparam)
-    
+        LOGDIR = makeDir(rootDIR,hparam)
     	    # Actually run with the new settings
         mnist_model(learning_rate,batchSize, hparam)
 

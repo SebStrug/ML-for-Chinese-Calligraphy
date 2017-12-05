@@ -16,6 +16,7 @@ import os
 import os.path
 import shutil
 import tensorflow as tf
+<<<<<<< HEAD
 
 LOGDIR = "/tmp/mnist_tutorial/"
 LABELS = os.path.join(os.getcwd(), "labels_1024.tsv")
@@ -35,6 +36,73 @@ if not (os.path.isfile(LABELS) and os.path.isfile(SPRITES)):
 # shutil.copyfile(SPRITES, os.path.join(LOGDIR, SPRITES))
 
 
+=======
+import numpy as np
+import os
+import time as t
+import datetime
+
+LOGDIR = r'C:/Users/Sebastian/Anaconda3/Lib/site-packages/tensorflow/tmp/mnist_tutorial/'
+
+#%%Load Data
+#file Path for functions
+
+#user = "Elliot"
+user = "Seb"
+
+funcPathElliot = 'C:/Users/ellio/OneDrive/Documents/GitHub/ML-for-Chinese-Calligraphy/dataHandling'
+funcPathSeb = 'C:\\Users\\Sebastian\\Desktop\\GitHub\\ML-for-Chinese-Calligraphy\\dataHandling'
+dataPathElliot = 'C:/Users/ellio/Documents/training data/Machine Learning data/'
+dataPathSeb = 'C:\\Users\\Sebastian\\Desktop\\MLChinese\\CASIA\\Converted\\All C Files'
+savePathSeb = 'C:\\Users\\Sebastian\\Desktop\\MLChinese\\Saved script files'
+savePathElliot = 'C:\\Users\\ellio\OneDrive\\Documents\\University\\Year 4\\ML chinese caligraphy\\Graphs'
+
+if user == "Elliot":
+    funcPath = funcPathElliot
+    dataPath = dataPathElliot
+    savePath = savePathElliot
+else:
+    funcPath = funcPathSeb
+    dataPath = dataPathSeb
+    savePath = savePathSeb
+
+
+LOGDIR = r'C:/Users/Sebastian/Anaconda3/Lib/site-packages/tensorflow/tmp/ChineseCaligCNN/'
+LOGDIR = LOGDIR + str(datetime.date.today()) + '/test-1'
+
+os.chdir(funcPath)
+from classFileFunctions import fileFunc as fF 
+os.chdir("..")
+
+#%%Get the data
+#set ration of data to be training and testing
+trainRatio = 0.8
+numOutputs = 3755
+
+print("splitting data...")
+startTime=t.time()
+#file to open
+
+fileName="1001-1100C"
+labels,images=fF.readNPZ(dataPath,fileName,"saveLabels","saveImages")
+dataLength=len(labels)
+#split the data into training and testing
+#train data
+trainLabels = labels[0:int(dataLength*trainRatio)]
+trainImages = images[0:int(dataLength*trainRatio)]
+#test data
+testLabels =  oneHot(labels[int(dataLength*trainRatio):dataLength],numOutputs)
+testImages = images[int(dataLength*trainRatio):dataLength]
+labels = 0;
+images = 0;
+print("took ",t.time()-startTime," seconds\n")
+
+
+    
+
+
+#%%
+>>>>>>> test-accuracy
 def conv_layer(input, size_in, size_out, name="conv"):
   with tf.name_scope(name):
     w = tf.Variable(tf.truncated_normal([5, 5, size_in, size_out], stddev=0.1), name="W")

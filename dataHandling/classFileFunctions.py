@@ -12,6 +12,27 @@ from collections import namedtuple
 
 class fileFunc(object):
     """Class of functions that perform on files"""
+    def whichUser(user):
+        funcPathElliot = 'C:/Users/ellio/OneDrive/Documents/GitHub/ML-for-Chinese-Calligraphy/dataHandling'
+        funcPathSeb = 'C:\\Users\\Sebastian\\Desktop\\GitHub\\ML-for-Chinese-Calligraphy\\dataHandling'
+        dataPathElliot = 'C:/Users/ellio/Documents/training data/Machine Learning data/'
+        dataPathSeb = 'C:\\Users\\Sebastian\\Desktop\\MLChinese\\Saved script files'
+        savePathSeb = 'C:\\Users\\Sebastian\\Desktop\\MLChinese\\Saved script files'
+        savePathElliot = 'C:\\Users\\ellio\OneDrive\\Documents\\University\\Year 4\\ML chinese caligraphy\\Graphs'
+        SebLOGDIR = r'C:/Users/Sebastian/Anaconda3/Lib/site-packages/tensorflow/tmp/ChineseCaligCNN/'
+        elliotLOGDIR = r'C:/Users/ellio/Anaconda3/Lib/site-packages/tensorflow/tmp/SimpleNetwork/'
+        if user == "Elliot":
+            funcPath = funcPathElliot
+            dataPath = dataPathElliot
+            savePath = savePathElliot
+            rootDIR = elliotLOGDIR
+        else:
+            funcPath = funcPathSeb
+            dataPath = dataPathSeb
+            savePath = savePathSeb
+            rootDIR = SebLOGDIR
+        return funcPath,dataPath,savePath,rootDIR
+    
     def byteToInt(byte,byteOrder='little'):
         return int.from_bytes(byte, byteorder=byteOrder)
 
