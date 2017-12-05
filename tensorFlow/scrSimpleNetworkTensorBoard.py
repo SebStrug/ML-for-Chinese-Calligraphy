@@ -46,7 +46,7 @@ else:
     savePath = savePathSeb
     LOGDIR = SebLOGDIR
 
-whichTest =6
+whichTest =8
 LOGDIR = LOGDIR + str(datetime.date.today()) + '/{}'.format(whichTest)
 #make a directory
 if not os.path.exists(LOGDIR):
@@ -142,10 +142,10 @@ def conv_layer(input, size_in, size_out, name="conv"):
 def fc_layer(input, size_in, size_out, name="fc"):
   with tf.name_scope(name):
     w = tf.Variable(tf.truncated_normal([size_in, size_out], stddev=0.03), name="W")
-    b = tf.Variable(tf.constant(1E-4, shape=[size_out]), name="B")
-    act = tf.nn.relu(tf.matmul(input, w) + b)
+    #b = tf.Variable(tf.constant(0.1, shape=[size_out]), name="B")
+    act = tf.nn.relu(tf.matmul(input, w))
     tf.summary.histogram("weights", w)
-    tf.summary.histogram("biases", b)
+    #tf.summary.histogram("biases", b)
     tf.summary.histogram("activations", act)
     return act
 
