@@ -47,10 +47,14 @@ else:
     LOGDIR = SebLOGDIR
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 whichTest = 3
 LOGDIR = LOGDIR + str(datetime.date.today()) + '/convDataType_{}'.format(whichTest)
 =======
 whichTest =8
+=======
+whichTest =11
+>>>>>>> 477820535dd8cb0c3be296f722cafbd30b95aada
 LOGDIR = LOGDIR + str(datetime.date.today()) + '/{}'.format(whichTest)
 >>>>>>> 1e7406a14a03c637447f73fd998f91c31208f058
 #make a directory
@@ -250,12 +254,16 @@ def neural_net(LOGDIR, learning_rate, hparam):
       tensorCreation = t.time()
       #create dataset for training and validation
       tr_data = tf.data.Dataset.from_tensor_slices((trainImages,trainLabels))
+<<<<<<< HEAD
       #tr_data = tr_data.shuffle(buffer_size=10000)
+=======
+      tr_data = tr_data.shuffle(buffer_size=100)
+>>>>>>> 477820535dd8cb0c3be296f722cafbd30b95aada
       tr_data = tr_data.repeat()
       tr_data = tr_data.batch(trainBatchSize)
       
       val_data = tf.data.Dataset.from_tensor_slices((testImages,testLabels))
-      val_data = val_data.shuffle(buffer_size=10000)
+      val_data = val_data.shuffle(buffer_size=100)
       val_data = val_data.repeat()
       val_data = val_data.batch(len(testLabels))
       #repeat the test dataset infinitely, so that we can loop over its test    
@@ -340,10 +348,14 @@ def make_hparam_string(learning_rate):
 def main():
   # You can try adding some more learning rates
 <<<<<<< HEAD
+<<<<<<< HEAD
   for learning_rate in [1E-5,1E-4]:
 =======
   for learning_rate in [1E-2]:
 >>>>>>> 1e7406a14a03c637447f73fd998f91c31208f058
+=======
+  for learning_rate in [1E-5]:
+>>>>>>> 477820535dd8cb0c3be296f722cafbd30b95aada
 
     # Include "False" as a value to try different model architectures
         # Construct a hyperparameter string for each one (example: "lr_1E-3,fc=2,conv=2)
