@@ -5,28 +5,25 @@ Created on Thu Nov 30 09:48:05 2017
 @author: Sebastian
 """
 import os
-import tensorflow as tf
 import numpy as np
-import time as t
-import datetime
 from PIL import Image
 
 #%%Load Data
 #first part of the next line goes one back in the directory
-os.chdir(os.path.normpath(os.getcwd() + os.sep + os.pardir) + '\\dataHandling')
+#os.chdir(os.path.normpath(os.getcwd() + os.sep + os.pardir) + '\\dataHandling')
+os.chdir('C:\\Users\\Sebastian\\Desktop\\GitHub\\ML-for-Chinese-Calligraphy\\dataHandling')
 from classFileFunctions import fileFunc as fF 
 """Define the user"""
 funcPath,dataPath,savePath,rootDIR = fF.whichUser('Seb')
-os.chdir("..")
+#os.chdir("..")
 
 #%%Get the data
 #set ration of data to be training and testing
 
 #file to open
 dataPath = savePath
-fileName="CharToNumList_10"
+fileName="1001to1100"
 labels,images=fF.readNPZ(dataPath,fileName,"saveLabels","saveImages")
-
 
 #%%
 def createSpriteLabels(images,labels):
@@ -55,19 +52,21 @@ def createSpriteLabels(images,labels):
             record_file.write('{}\n'.format(i))
     return montage, record_file
 
-#%% Check images are correct
+
 def checkImage(images,labels):
-    image0 = Image.fromarray(np.resize(images[0],(40,40)), 'L')
-    label0 = labels[0]
-    image3755 = Image.fromarray(np.resize(images[3755],(40,40)), 'L')
-    label3755 = labels[3755]
-    print(image0,label0)
-    print(image3755,label3755)
-    
+    """Checks images and labels are correct"""
     allImgs = []
     for i in range(len(labels)):
-        if labels[i] == 2604:
-            allImgs.append(Image.fromarray(np.resize(images[i],(40,40)), 'L'))
-            print(i)
+        allImgs.append([labels[i],Image.fromarray(np.resize(images[i],(40,40)), 'L')])
     return allImgs
     
+def subSet(numClasses,images,labels):
+    """return subset of characters, i.e. 10 characters with images and labels not 3755"""
+    subImages = []
+    subLabels = []
+    for i in range(len(images)):
+        if labels[i] in range(numClasses):
+            subImages.append(images[i])
+            subLabels.append(labels[i])
+    return np.asarray(subImages),np.asarray(subLabels)
+        

@@ -225,7 +225,7 @@ def mnist_model(LOGDIR, learning_rate,batchSize, hparam):
           sess.run(train_step, \
                    feed_dict={x: next_image.eval(), \
                               y: tf.one_hot(next_label,numOutputs ).eval()})
-
+          
 def make_hparam_string(learning_rate,batchSize):
   fc_param = "fc=1"
   conv_param = "conv=1"
