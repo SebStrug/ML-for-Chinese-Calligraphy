@@ -20,7 +20,7 @@ from PIL import Image
     """
 
 #%%Load Data
-<<<<<<< HEAD
+
 #file Path for functions
 
 #user = "Elliot"
@@ -47,7 +47,7 @@ else:
     LOGDIR = SebLOGDIR
 
 whichTest = 4
-=======
+
 #first part of the next line goes one back in the directory
 #os.chdir(os.path.normpath(os.getcwd() + os.sep + os.pardir) + '\\dataHandling')
 os.chdir('C:\\Users\\Sebastian\\Desktop\\GitHub\\ML-for-Chinese-Calligraphy\\dataHandling')
@@ -55,7 +55,7 @@ from classFileFunctions import fileFunc as fF
 """Define the user"""
 funcPath,dataPath,savePath,rootDIR = fF.whichUser('Seb')
 os.chdir("..")
->>>>>>> test-accuracy
+
 
 def makeDir(rootDIR,fileName,hparam):
     """Makes a directory automatically to save tensorboard data to"""
@@ -71,19 +71,13 @@ def makeDir(rootDIR,fileName,hparam):
 
 #%%Get the data
 #set ration of data to be training and testing
-<<<<<<< HEAD
-trainRatio = 0.70
-=======
 trainRatio = 0.9
->>>>>>> test-accuracy
+
 
 print("splitting data...")
 startTime=t.time()
 #file to open
 
-<<<<<<< HEAD
-dataPath = dataPathSeb
-=======
 def subSet(numClasses,images,labels):
       """return subset of characters, i.e. 10 characters with images and labels not 3755"""
       subImages = []
@@ -93,7 +87,7 @@ def subSet(numClasses,images,labels):
               subImages.append(images[i])
               subLabels.append(labels[i])
       return np.asarray(subImages),np.asarray(subLabels)
->>>>>>> test-accuracy
+
 
 dataPath = savePath
 fileName="1001to1100"
@@ -141,9 +135,9 @@ def fc_layer(input, size_in, size_out, name="fc"):
     tf.summary.histogram("activations", act)
     return act
 
-<<<<<<< HEAD
+
 numOutputs = 3755
-=======
+
 if len(set(trainLabels)) == len(set(testLabels)):
     numOutputs = len(set(trainLabels))
     print('{} outputs'.format(numOutputs))
@@ -151,7 +145,6 @@ else:
     print('\n\nERRR NUMBER OF UNIQUE TEST LABELS DOES NOT MATCH UNIQUE TRAIN LABELS\n\n')
     
 numOutputs = 10
->>>>>>> test-accuracy
 inputDim = 40
 
 def neural_net(LOGDIR, learning_rate, hparam):
@@ -198,38 +191,15 @@ def neural_net(LOGDIR, learning_rate, hparam):
 #        tf.summary.scalar("test_accuracy", accuracy_test)
 #    
       merged_summary_op = tf.summary.merge_all()
-    
-<<<<<<< HEAD
       embedding = tf.Variable(tf.zeros([len(testLabels), embedding_size]), name="test_embedding")
-=======
       summ = tf.summary.merge_all()
-    
       embedding = tf.Variable(tf.zeros([100, embedding_size]), name="test_embedding")
->>>>>>> test-accuracy
       assignment = embedding.assign(embedding_input)
       saver = tf.train.Saver()
       
       """Initialise variables, key step, can only make tensorflow objects after this"""
       sess.run(tf.global_variables_initializer())
-      
-<<<<<<< HEAD
-      """Have separate writers for training and testing"""
-      train_writer = tf.summary.FileWriter(os.path.join(LOGDIR, 'train'))
-      train_writer.add_graph(sess.graph)
-      
-      test_writer = tf.summary.FileWriter(os.path.join(LOGDIR, 'test'))
-      test_writer.add_graph(sess.graph)
-      
-      """Work on the embedding"""
-#      config = tf.contrib.tensorboard.plugins.projector.ProjectorConfig()
-#      embedding_config = config.embeddings.add()
-#      embedding_config.tensor_name = embedding.name
-#      embedding_config.sprite.image_path = SPRITES
-#      embedding_config.metadata_path = LABELS
-#      # Specify the width and height of a single thumbnail.
-#      embedding_config.sprite.single_image_dim.extend([28, 28])
-#      tf.contrib.tensorboard.plugins.projector.visualize_embeddings(writer, config)
-=======
+
       """Create the writers"""
       train_writer = tf.summary.FileWriter(os.path.join(LOGDIR,hparam)+'/train')
       train_writer.add_graph(sess.graph)
@@ -245,7 +215,7 @@ def neural_net(LOGDIR, learning_rate, hparam):
       # Specify the width and height of a single thumbnail.
       embedding_config.sprite.single_image_dim.extend([40, 40])
       tf.contrib.tensorboard.plugins.projector.visualize_embeddings(test_writer, config)
->>>>>>> test-accuracy
+
       
       print("Creating dataset tensors...")
       tensorCreation = t.time()
@@ -259,11 +229,8 @@ def neural_net(LOGDIR, learning_rate, hparam):
       val_data = val_data.shuffle(buffer_size=10000)
       #repeat the test dataset infinitely, so that we can loop over its test
       val_data = val_data.repeat()
-<<<<<<< HEAD
-=======
       val_data  = val_data.batch(100)
-    
->>>>>>> test-accuracy
+      
       print("took {} seconds\n".format(t.time()-tensorCreation))
       
       # create TensorFlow Iterator object
@@ -283,7 +250,6 @@ def neural_net(LOGDIR, learning_rate, hparam):
       sess.run(val_iterator.initializer)  
       print("took {} seconds\n".format(t.time()-iteratorInitialisation))
       
-<<<<<<< HEAD
       """Print labels/images/tf.one_hot to check"""
 #      print(next_label.eval())
 #      print(tf.one_hot(next_label,3373).eval())
@@ -292,39 +258,13 @@ def neural_net(LOGDIR, learning_rate, hparam):
 #      print(tf.one_hot(next_val_label,3373).eval())
 #      print(len(tf.one_hot(next_val_label,3373).eval()))
       
-      for i in range(3001):
-#          if i % 30 == 0:  # Record summaries and test-set accuracy
-#              summary, acc = sess.run([merged_summary_op, accuracy], \
-#                                      feed_dict={x: next_val_image.eval(),  \
-#                                                 y: tf.one_hot(next_val_label,3755).eval()})
-#              test_writer.add_summary(summary, i)
-#              print('Accuracy at step %s: %s' % (i, acc))
-#          else:  # Record train set summaries, and train
-#            if i % 100 == 99:  # Record execution stats
-#              summary, _ = sess.run([merged_summary_op, train_step],
-#                                    feed_dict={x: next_image.eval(),  \
-#                                               y: tf.one_hot(next_label,3755).eval()})
-#              train_writer.add_summary(summary, i)
-#            else:  # Record a summary
-#              summary, _ = sess.run([merged_summary_op, train_step], \
-#                                    feed_dict={x: next_image.eval(),  \
-#                                               y: tf.one_hot(next_label,3755).eval()})
-#              train_writer.add_summary(summary, i)
-          
-=======
-      #check what our one_hot vectors look like
-#      print(tf.one_hot(next_label,3755).eval())
-#      print(len(tf.one_hot(next_label,3755).eval()))
-      
       epochLength = int(len(trainLabels)/128)
       print('Number of iterations for one epoch: {}'.format(epochLength))
       for i in range(1201): #range 2001
->>>>>>> test-accuracy
           if i % 30 == 0:
               print('calculating training accuracy... i={}'.format(i))
               train_accuracy, train_summary = sess.run([accuracy, merged_summary_op], \
                   feed_dict={x: next_image.eval(), \
-<<<<<<< HEAD
                              y: tf.one_hot(next_label,3755).eval()})
               train_writer.add_summary(train_summary, i)
           if i % 100 == 0:
@@ -332,32 +272,18 @@ def neural_net(LOGDIR, learning_rate, hparam):
               sess.run(assignment, \
               #assign, test_accuracy, test_summary = sess.run([assignment, accuracy, merged_summary_op], \
                        feed_dict={x: next_val_image.eval(),  \
-                                  y: tf.one_hot(next_val_label,3755).eval()})
-              #test_writer.add_summary(test_summary,i)
-=======
-                             y: tf.one_hot(next_label,10).eval()})
-              train_writer.add_summary(s, i)
-          if i % 300 == 0:
-              print('did 500, saving')
-              [assign, test_accuracy, s] = sess.run([assignment, accuracy, summ], \
-                       feed_dict={x: next_val_image.eval()[:100],  \
-                                  y: tf.one_hot(next_val_label,10).eval()[:100]})
+                                  y: tf.one_hot(next_val_label,10).eval()})
               test_writer.add_summary(s, i)
->>>>>>> test-accuracy
-              saver.save(sess, os.path.join(LOGDIR, "model.ckpt{}".format(learning_rate)), i)
+              saver.save(sess, os.path.join(LOGDIR, "model.ckpt{}".format(learning_rate)), i)              
           if i % epochLength == 0 and i!=0:
               print('Did {} epochs'.format(i/epochLength))
           sess.run(train_step, \
                    feed_dict={x: next_image.eval(), \
-<<<<<<< HEAD
-                              y: tf.one_hot(next_label,3755).eval()})
+                              y: tf.one_hot(next_label,10).eval()})
       train_writer.close()
       test_writer.close()
-=======
-                              y: tf.one_hot(next_label,10).eval()})
           print(sess.run(logits,feed_dict={x: next_image.eval(), \
                               y: tf.one_hot(next_label,10).eval()}))
->>>>>>> test-accuracy
     
 def make_hparam_string(learning_rate):
   fc_param = "fc=1"
