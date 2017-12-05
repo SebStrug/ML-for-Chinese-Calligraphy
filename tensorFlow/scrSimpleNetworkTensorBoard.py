@@ -23,8 +23,8 @@ from PIL import Image
 
 #file Path for functions
 
-#user = "Elliot"
-user = "Seb"
+user = "Elliot"
+#user = "Seb"
 
 funcPathElliot = 'C:/Users/ellio/OneDrive/Documents/GitHub/ML-for-Chinese-Calligraphy/dataHandling'
 funcPathSeb = 'C:\\Users\\Sebastian\\Desktop\\GitHub\\ML-for-Chinese-Calligraphy\\dataHandling'
@@ -46,7 +46,7 @@ else:
     savePath = savePathSeb
     LOGDIR = SebLOGDIR
 
-whichTest = 4
+whichTest =6
 LOGDIR = LOGDIR + str(datetime.date.today()) + '/{}'.format(whichTest)
 #make a directory
 if not os.path.exists(LOGDIR):
@@ -54,11 +54,11 @@ if not os.path.exists(LOGDIR):
 
 #first part of the next line goes one back in the directory
 #os.chdir(os.path.normpath(os.getcwd() + os.sep + os.pardir) + '\\dataHandling')
-os.chdir('C:\\Users\\Sebastian\\Desktop\\GitHub\\ML-for-Chinese-Calligraphy\\dataHandling')
+os.chdir(funcPath)
 from classFileFunctions import fileFunc as fF 
 """Define the user"""
-funcPath,dataPath,savePath,rootDIR = fF.whichUser('Seb')
-os.chdir("..")
+#funcPath,dataPath,savePath,rootDIR = fF.whichUser('Seb')
+#os.chdir("..")
 
 def makeDir(rootDIR,fileName,hparam):
     """Makes a directory automatically to save tensorboard data to"""
@@ -92,13 +92,13 @@ def subSet(numClasses,images,labels):
       return np.asarray(subImages),np.asarray(subLabels)
 
 
-dataPath = savePath
+#dataPath = savePath
 fileName="CharToNumList_10"
-labels,images=fF.readNPZ(dataPath,"1001to1100","saveLabels","saveImages")
-nextLabels,nextImages = fF.readNPZ(dataPath,"1101to1200","saveLabels","saveImages")
+labels,images=fF.readNPZ(dataPath,"1001-1100C","saveLabels","saveImages")
+nextLabels,nextImages = fF.readNPZ(dataPath,"1101-1200C","saveLabels","saveImages")
 labels = np.concatenate((labels,nextLabels),axis=0)
 images = np.concatenate((images,nextImages),axis=0)
-nextLabels,nextImages = fF.readNPZ(dataPath,"1201to1300","saveLabels","saveImages")
+nextLabels,nextImages = fF.readNPZ(dataPath,"1201-1300C","saveLabels","saveImages")
 labels = np.concatenate((labels,nextLabels),axis=0)
 images = np.concatenate((images,nextImages),axis=0)
 dataLength=len(labels)
@@ -129,7 +129,7 @@ print("took ",t.time()-startTime," seconds\n")
 print("Building network...")
 def conv_layer(input, size_in, size_out, name="conv"):
   with tf.name_scope(name):
-    w = tf.Variable(tf.truncated_normal([5, 5, size_in, size_out], stddev=0.1), name="W")
+    w = tf.Variable(tf.truncated_normal([5, 5, size_in, size_out], stddev=1), name="W")
     b = tf.Variable(tf.constant(0.1, shape=[size_out]), name="B")
     conv = tf.nn.conv2d(input, w, strides=[1, 1, 1, 1], padding="SAME")
     act = tf.nn.relu(conv + b)
@@ -141,7 +141,7 @@ def conv_layer(input, size_in, size_out, name="conv"):
 
 def fc_layer(input, size_in, size_out, name="fc"):
   with tf.name_scope(name):
-    w = tf.Variable(tf.truncated_normal([size_in, size_out], stddev=0.1), name="W")
+    w = tf.Variable(tf.truncated_normal([size_in, size_out], stddev=0.03), name="W")
     b = tf.Variable(tf.constant(1E-4, shape=[size_out]), name="B")
     act = tf.nn.relu(tf.matmul(input, w) + b)
     tf.summary.histogram("weights", w)
@@ -157,7 +157,7 @@ else:
     
 numOutputs = 2
 inputDim = 40
-trainBatchSize = 128
+trainBatchSize = 20
 
 def neural_net(LOGDIR, learning_rate, hparam):
   tf.reset_default_graph()
@@ -304,6 +304,7 @@ def neural_net(LOGDIR, learning_rate, hparam):
               saver.save(sess, os.path.join(LOGDIR, "model.ckpt{}".format(learning_rate)), i)              
           if i % epochLength == 0 and i!=0:
               print('Did {} epochs'.format(i/epochLength))
+              learning_rate*=0.99
               
           sess.run(train_step, \
                    feed_dict={x: next_image.eval(), \
@@ -319,7 +320,7 @@ def make_hparam_string(learning_rate):
 
 def main():
   # You can try adding some more learning rates
-  for learning_rate in [1E-2,1E-1,1]:
+  for learning_rate in [1E-2]:
 
     # Include "False" as a value to try different model architectures
         # Construct a hyperparameter string for each one (example: "lr_1E-3,fc=2,conv=2)
