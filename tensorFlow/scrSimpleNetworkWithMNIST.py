@@ -46,8 +46,8 @@ else:
     savePath = savePathSeb
     LOGDIR = SebLOGDIR
 
-whichTest = 2
-LOGDIR = LOGDIR + str(datetime.date.today()) + '/MNIST_attempt_{}'.format(whichTest)
+whichTest = 1
+LOGDIR = LOGDIR + str(datetime.date.today()) + '/MNIST_decayedLearning_{}'.format(whichTest)
 #make a directory
 if not os.path.exists(LOGDIR):
     os.makedirs(LOGDIR)
@@ -74,12 +74,12 @@ def makeDir(rootDIR,fileName,hparam):
 
 #%%Get the data
 #set ration of data to be training and testing
-trainRatio = 0.9
+trainRatio = 0.001
 
 
 print("splitting data...")
 startTime=t.time()
-#file to open
+#file to open0
 
 def subSet(numClasses,images,labels):
       """return subset of characters, i.e. 10 characters with images and labels not 3755"""
@@ -94,6 +94,10 @@ def subSet(numClasses,images,labels):
 def normalizePixels(trainImages):
     trainImages = np.asarray(trainImages)
     return trainImages/255
+
+def antiNormalizePixels(trainImages):
+    trainImages = np.asarray(trainImages)
+    return trainImages*255
 
 dataPath = savePath
 fileName="MNIST_data"
@@ -110,14 +114,16 @@ labels,images=fF.readNPZ(dataPath,fileName,"saveLabels","saveImages")
 dataLength=len(labels)
 #split the data into training and testing
 #train data
-subImages, subLabels = subSet(10,images,labels)
+subImages, subLabels = subSet(2,images,labels)
 """Must convert to numpy array or tensorflow doesn't work!"""
 dataLength=len(subLabels)
 trainImages = subImages[0:int(dataLength*trainRatio)]
 trainLabels = subLabels[0:int(dataLength*trainRatio)]
+trainImages = antiNormalizePixels(trainImages)
 trainImages = normalizePixels(trainImages)
 testImages = subImages[int(dataLength*trainRatio):dataLength]
 testLabels = subLabels[int(dataLength*trainRatio):dataLength]
+testImages = antiNormalizePixels(testImages)
 testImages = normalizePixels(testImages)
 
 def saveImages(trainImages,trainLabels):
@@ -135,17 +141,6 @@ print("took ",t.time()-startTime," seconds\n")
 
 #%%
 print("Building network...")
-def conv_layer(input, size_in, size_out, name="conv"):
-  with tf.name_scope(name):
-    w = tf.Variable(tf.truncated_normal([5, 5, size_in, size_out], stddev=0.1), name="W")
-    b = tf.Variable(tf.constant(0.1, shape=[size_out]), name="B")
-    conv = tf.nn.conv2d(input, w, strides=[1, 1, 1, 1], padding="SAME")
-    act = tf.nn.relu(conv + b)
-    tf.summary.histogram("weights", w)
-    tf.summary.histogram("biases", b)
-    tf.summary.histogram("activations", act)
-    return tf.nn.max_pool(act, ksize=[1, 2, 2, 1], strides=[1, 2, 2, 1], padding="SAME")
-
 
 def fc_layer(input, size_in, size_out, name="fc"):
   with tf.name_scope(name):
@@ -163,9 +158,9 @@ if len(set(trainLabels)) == len(set(testLabels)):
 else:
     print('\n\nERRR NUMBER OF UNIQUE TEST LABELS DOES NOT MATCH UNIQUE TRAIN LABELS\n\n')
     
-numOutputs = 10
+numOutputs = 2
 inputDim = 28
-trainBatchSize = 128
+trainBatchSize = 6
 
 def neural_net(LOGDIR, learning_rate, hparam):
   tf.reset_default_graph()
@@ -198,7 +193,12 @@ def neural_net(LOGDIR, learning_rate, hparam):
         tf.summary.scalar("xent", xent)
     
       with tf.name_scope("train"):
-        train_step = tf.train.GradientDescentOptimizer(learning_rate).minimize(xent)
+        global_step = tf.Variable(0, trainable=False)
+        learning_rate = 1E-3
+        learning_rate = tf.train.exponential_decay(learning_rate, global_step,
+                                                   10, 0.8, staircase=True)
+        train_step = tf.train.GradientDescentOptimizer(learning_rate).\
+                        minimize(xent,global_step=global_step)
     
       with tf.name_scope("accuracy"):
         correct_prediction = tf.equal(tf.argmax(logits, 1), tf.argmax(y, 1))
@@ -244,7 +244,7 @@ def neural_net(LOGDIR, learning_rate, hparam):
       tr_data = tr_data.batch(trainBatchSize)
       
       val_data = tf.data.Dataset.from_tensor_slices((testImages,testLabels))
-      val_data = val_data.shuffle(buffer_size=10000)
+      #val_data = val_data.shuffle(buffer_size=10000)
       val_data = val_data.repeat()
       val_data = val_data.batch(len(testLabels))
       #repeat the test dataset infinitely, so that we can loop over its test    
@@ -278,8 +278,8 @@ def neural_net(LOGDIR, learning_rate, hparam):
       
       epochLength = int(len(trainLabels)/trainBatchSize)
       print('Number of iterations for one epoch: {}'.format(epochLength))
-      iterations = 1001
-      displayNum = 30
+      iterations = 3001
+      displayNum = 2
       testNum = 100
       for i in range(iterations): #range 2001
           if i % displayNum == 0:
@@ -290,11 +290,22 @@ def neural_net(LOGDIR, learning_rate, hparam):
               """What if the shuffled dataset doesn't match up images/labels?"""
               tempImage = next_image
               tempLabel = next_label
-              print(tempImage.eval(),len(tempImage.eval()),len(tempImage.eval()[0]))
-              print([i for i in tempImage.eval()[0] if i != 0])
-              print(tempLabel.eval(),len(tempLabel.eval()))
-              print(tf.one_hot(tempLabel,numOutputs).eval(),len(tf.one_hot(tempLabel,numOutputs).eval()),len(tf.one_hot(tempLabel,numOutputs).eval()[0]))
+#              print(tempImage.eval(),len(tempImage.eval()),len(tempImage.eval()[0]))
+#              print([i for i in tempImage.eval()[0] if i != 0])
+#              print(tempLabel.eval(),len(tempLabel.eval()))
+#              print(tf.one_hot(tempLabel,numOutputs).eval(),len(tf.one_hot(tempLabel,numOutputs).eval()),len(tf.one_hot(tempLabel,numOutputs).eval()[0]))
               ###end debug
+              
+              ###more debug
+              """Assign variables to next_image, next_label, return them and then analyse
+              them outside of the function"""
+              debugImages = next_image.eval()
+              holdLabel = next_label #can't evaluate it yet, need to pass it to one_hot
+              debugLabel = holdLabel.eval()
+              debugOneHotLabel = 0
+              #debugOneHotLabel = tf.one_hot(holdLabel,numOutputs).eval() #maybe this looks at the next one
+              ###end debug
+              
               train_accuracy, train_summary = sess.run([accuracy, merged_summary_op], \
                   feed_dict={x: next_image.eval(), \
                              y: tf.one_hot(next_label,numOutputs).eval()})
@@ -315,7 +326,7 @@ def neural_net(LOGDIR, learning_rate, hparam):
               test_writer.add_summary(test_summary, i)
               saver.save(sess, os.path.join(LOGDIR, "model.ckpt{}".format(learning_rate)), i)              
           if i % epochLength == 0 and i!=0:
-              print('Did {} epochs'.format(i/epochLength))
+              print('Did {} epochs, and {} iterations'.format(i/epochLength, i))
               
           sess.run(train_step, \
                    feed_dict={x: next_image.eval(), \
@@ -324,6 +335,7 @@ def neural_net(LOGDIR, learning_rate, hparam):
       test_writer.close()
 #          print(sess.run(logits,feed_dict={x: next_image.eval(), \
 #                              y: tf.one_hot(next_label,10).eval()}))
+      return debugImages, debugLabel, debugOneHotLabel
     
 def make_hparam_string(learning_rate):
   fc_param = "fc=1"
@@ -331,7 +343,7 @@ def make_hparam_string(learning_rate):
 
 def main():
   # You can try adding some more learning rates
-  for learning_rate in [1E-5,1E-4]:
+  for learning_rate in [1E-3]:
 
     # Include "False" as a value to try different model architectures
         # Construct a hyperparameter string for each one (example: "lr_1E-3,fc=2,conv=2)
@@ -339,7 +351,7 @@ def main():
     print('Starting run for %s\n' % hparam)
     #LOGDIR = makeDir(rootDIR,fileName,hparam)
 	 #Actually run with the new settings
-    neural_net(LOGDIR, learning_rate, hparam)
-
+    debugImages, debugLabel, debugOneHotLabel = neural_net(LOGDIR, learning_rate, hparam)
+    return debugImages, debugLabel, debugOneHotLabel
 if __name__ == '__main__':
-  main()
+  debugImages, debugLabel, debugOneHotLabel = main()
