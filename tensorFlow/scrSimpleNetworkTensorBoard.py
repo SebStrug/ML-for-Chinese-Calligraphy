@@ -23,8 +23,8 @@ from PIL import Image
 
 #file Path for functions
 
-#user = "Elliot"
-user = "Seb"
+user = "Elliot"
+#user = "Seb"
 
 funcPathElliot = 'C:/Users/ellio/OneDrive/Documents/GitHub/ML-for-Chinese-Calligraphy/dataHandling'
 funcPathSeb = 'C:\\Users\\Sebastian\\Desktop\\GitHub\\ML-for-Chinese-Calligraphy\\dataHandling'
@@ -46,7 +46,7 @@ else:
     savePath = savePathSeb
     LOGDIR = SebLOGDIR
 
-whichTest = 2
+whichTest = 4
 LOGDIR = LOGDIR + str(datetime.date.today()) + '/normalizedPixels_{}'.format(whichTest)
 
 #make a directory
@@ -96,20 +96,20 @@ def normalizePixels(trainImages):
     trainImages = np.asarray(trainImages)
     return trainImages/255
 
-dataPath = savePath
-fileName="1001to1100"
+#dataPath = savePath
+fileName="1001-1100C"
 labels,images=fF.readNPZ(dataPath,fileName,"saveLabels","saveImages")
 """for all 3 files"""
-nextLabels,nextImages = fF.readNPZ(dataPath,"1101to1200","saveLabels","saveImages")
+nextLabels,nextImages = fF.readNPZ(dataPath,"1101-1200C","saveLabels","saveImages")
 labels = np.concatenate((labels,nextLabels),axis=0)
 images = np.concatenate((images,nextImages),axis=0)
-nextLabels,nextImages = fF.readNPZ(dataPath,"1201to1300","saveLabels","saveImages")
+nextLabels,nextImages = fF.readNPZ(dataPath,"1201-1300C","saveLabels","saveImages")
 labels = np.concatenate((labels,nextLabels),axis=0)
 images = np.concatenate((images,nextImages),axis=0)
 dataLength=len(labels)
 #split the data into training and testing
 #train data
-subImages, subLabels = subSet(10,images,labels)
+subImages, subLabels = subSet(2,images,labels)
 """Must convert to numpy array or tensorflow doesn't work!"""
 dataLength=len(subLabels)
 trainImages = subImages[0:int(dataLength*trainRatio)]
@@ -164,9 +164,9 @@ if len(set(trainLabels)) == len(set(testLabels)):
 else:
     print('\n\nERRR NUMBER OF UNIQUE TEST LABELS DOES NOT MATCH UNIQUE TRAIN LABELS\n\n')
     
-numOutputs = 10
+numOutputs = 2
 inputDim = 40
-trainBatchSize = 128
+trainBatchSize = 20
 
 def neural_net(LOGDIR, learning_rate, hparam):
   tf.reset_default_graph()
@@ -199,7 +199,7 @@ def neural_net(LOGDIR, learning_rate, hparam):
         tf.summary.scalar("xent", xent)
     
       with tf.name_scope("train"):
-        train_step = tf.train.GradientDescentOptimizer(learning_rate).minimize(xent)
+        train_step = tf.train.AdamOptimizer(learning_rate).minimize(xent)
     
       with tf.name_scope("accuracy"):
         correct_prediction = tf.equal(tf.argmax(logits, 1), tf.argmax(y, 1))
