@@ -31,7 +31,7 @@ dataPathSeb = 'C:\\Users\\Sebastian\\Desktop\\MLChinese\\CASIA\\Converted\\All C
 savePathSeb = 'C:\\Users\\Sebastian\\Desktop\\MLChinese\\Saved script files'
 savePathElliot = 'C:\\Users\\ellio\OneDrive\\Documents\\University\\Year 4\\ML chinese caligraphy\\Graphs'
 SebLOGDIR = r'C:/Users/Sebastian/Anaconda3/Lib/site-packages/tensorflow/tmp/ChineseCaligCNN/'
-elliotLOGDIR = r'C:/Users/ellio/Anaconda3/Lib/site-packages/tensorflow/tmp/1LayerCNN/'
+elliotLOGDIR = r'C:/Users/ellio/Anaconda3/Lib/site-packages/tensorflow/tmp/10Class/'
 
 if user == "Elliot":
     funcPath = funcPathElliot
@@ -46,7 +46,7 @@ else:
 
 
 whichTest = 1
-LOGDIR = LOGDIR + str(datetime.date.today()) + '/10file1ConvOut{}'.format(whichTest)
+LOGDIR = LOGDIR + str(datetime.date.today()) + '/test{}'.format(whichTest)
 #make a directory
 if not os.path.exists(LOGDIR):
     os.makedirs(LOGDIR)
@@ -55,7 +55,9 @@ os.chdir(funcPath)
 from classFileFunctions import fileFunc as fF 
 os.chdir("..")
 #%% set Data size Parameters
-numConvOutputs = 1
+numConvOutputs1 = 32
+numConvOutputs2= 64
+numFcOutputs1 = 1024
 numOutputs = 10
 inputDim = 40
 
@@ -159,10 +161,12 @@ def mnist_model(learning_rate,batchSize, hparam):
     
       embedding_input = x
       embedding_size = pow(inputDim,2)
-      
-      conv_1 = conv_layer(x_image,1,numConvOutputs)
-      flatten = tf.reshape(conv_1,[-1,20*20*numConvOutputs])
-      logits = fc_layer(flatten, 20*20*numConvOutputs, numOutputs, "fc")
+      #define network structure here
+      conv_1 = conv_layer(x_image,1,numConvOutputs1)
+      conv_2 = conv_layer(conv_1,numConvOutputs1,numConvOutputs2)
+      flatten = tf.reshape(conv_2,[-1,10*10*numConvOutputs2])
+      fc_1 = fc_layer(flatten, 10*10*numConvOutputs2,numFcOutputs1,"fc1")
+      logits = fc_layer(fc_1, numFcOutputs1, numOutputs, "Output")
     
       with tf.name_scope("xent"):
         xent = tf.reduce_mean(
@@ -278,13 +282,13 @@ def mnist_model(learning_rate,batchSize, hparam):
                               y: tf.one_hot(next_label,numOutputs ).eval()})
 
 def make_hparam_string(learning_rate,batchSize):
-  fc_param = "fc=1"
-  conv_param = "conv=1"
+  fc_param = "fc=2"
+  conv_param = "conv=2"
   return "lr_%.0E,batch_%s,%s,%s" % (learning_rate,batchSize, fc_param, conv_param)
 
 def main():
   # You can try adding some more learning rates
-  for learning_rate in [1E-5]:
+  for learning_rate in [1E-4]:
       for batchSize in [128]:
 
         # Include "False" as a value to try different model architectures
