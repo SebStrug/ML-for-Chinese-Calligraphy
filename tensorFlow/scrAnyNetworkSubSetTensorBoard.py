@@ -10,6 +10,7 @@ import numpy as np
 import time as t
 import datetime
 
+
 #%%Notes
 """ .eval() converts a tensor within a session into its real output.
     so tf.one_hot(X).eval() turns the one_hot tensor into a numpy array as needed,
@@ -29,9 +30,9 @@ funcPathSeb = 'C:\\Users\\Sebastian\\Desktop\\GitHub\\ML-for-Chinese-Calligraphy
 dataPathElliot = 'C:/Users/ellio/Documents/training data/Machine Learning data/'
 dataPathSeb = 'C:\\Users\\Sebastian\\Desktop\\MLChinese\\CASIA\\Converted\\All C Files'
 savePathSeb = 'C:\\Users\\Sebastian\\Desktop\\MLChinese\\Saved script files'
-savePathElliot = 'C:\\Users\\ellio\OneDrive\\Documents\\University\\Year 4\\ML chinese caligraphy\\Graphs'
+savePathElliot = 'C:\\Users\\ellio\OneDrive\\Documents\\University\\Year 4\\ML chinese caligraphy\\Graphs\\'
 SebLOGDIR = r'C:/Users/Sebastian/Anaconda3/Lib/site-packages/tensorflow/tmp/ChineseCaligCNN/'
-elliotLOGDIR = r'C:/Users/ellio/Anaconda3/Lib/site-packages/tensorflow/tmp/10Class/'
+elliotLOGDIR = r'C:/Users/ellio/Anaconda3/Lib/site-packages/tensorflow/tmp/'
 
 if user == "Elliot":
     funcPath = funcPathElliot
@@ -46,13 +47,14 @@ else:
 
 
 whichTest = 1
-LOGDIR = LOGDIR + str(datetime.date.today()) + '/test{}'.format(whichTest)
+LOGDIR = LOGDIR + str(datetime.date.today()) + '10File/test{}'.format(whichTest)
 #make a directory
 if not os.path.exists(LOGDIR):
     os.makedirs(LOGDIR)
 
 os.chdir(funcPath)
 from classFileFunctions import fileFunc as fF 
+from classImageFunctions import imageFunc as im
 os.chdir("..")
 #%% set Data size Parameters
 numConvOutputs1 = 32
@@ -162,8 +164,8 @@ def mnist_model(learning_rate,batchSize, hparam):
       embedding_input = x
       embedding_size = pow(inputDim,2)
       #define network structure here
-      conv_1 = conv_layer(x_image,1,numConvOutputs1)
-      conv_2 = conv_layer(conv_1,numConvOutputs1,numConvOutputs2)
+      conv_1 = conv_layer(x_image,1,numConvOutputs1,**{"name":"conv1"})
+      conv_2 = conv_layer(conv_1,numConvOutputs1,numConvOutputs2,**{"name":"conv2"})
       flatten = tf.reshape(conv_2,[-1,10*10*numConvOutputs2])
       fc_1 = fc_layer(flatten, 10*10*numConvOutputs2,numFcOutputs1,"fc1")
       logits = fc_layer(fc_1, numFcOutputs1, numOutputs, "Output")
@@ -192,41 +194,12 @@ def mnist_model(learning_rate,batchSize, hparam):
       sess.run(tf.global_variables_initializer())
       writer = tf.summary.FileWriter(os.path.join(LOGDIR, hparam))
       writer.add_graph(sess.graph)
-      #initialise the tensors for the one hot vectors
-      #tf.TestLabels =  tf.one_hot(testLabels,numOutputs)
     
-    #  config = tf.contrib.tensorboard.plugins.projector.ProjectorConfig()
-    #  embedding_config = config.embeddings.add()
-    #  embedding_config.tensor_name = embedding.name
-    #  embedding_config.sprite.image_path = os.path.join(LOGDIR,'sprite_1024.png')
-    #  embedding_config.metadata_path = os.path.join(LOGDIR,'labels_1024.tsv')
-    #  # Specify the width and height of a single thumbnail.
-    #  embedding_config.sprite.single_image_dim.extend([28, 28])
-    #  tf.contrib.tensorboard.plugins.projector.visualize_embeddings(writer, config)
       batchSize = batchSize
       iterations = 3001
-      displayNum = 10
-      testNum = 3002
-#      i=0
-#      print("took ",t.time()-startTime," seconds\n")
-#      while i<iterations:
-#          print("ITERATION: ",i,"\n------------------------")
-#          batchImages = trainImages[i%dataLength:i%dataLength+batchSize]
-#          #batchLabels = tf.one_hot(trainLabels[i%dataLength:i%dataLength+batchSize],numOutputs)
-#          batchLabels = tf.one_hot(trainLabels[i%dataLength:i%dataLength+batchSize],numOutputs)
-#          if i % (displayNum) == 0:
-#              print("evaluating training accuracy...")
-#              [train_accuracy, s] = sess.run([accuracy, summ], feed_dict={x: batchImages, y: batchLabels.eval()})
-#              writer.add_summary(s, i)
-#              #train_accuracy = accuracy.eval(feed_dict={x: batchImages, y_: batchLabels, keep_prob: 1.0})
-#          if i%(testNum) == 0 and i!=0:
-#              print("evaluating test accuracy...")
-#              sess.run(assignment, feed_dict={x: testImages[:3800], y: tf.TestLabels[:3800].eval()})
-#              saver.save(sess, os.path.join(LOGDIR, "model.ckpt"), i)
-##              test_accuracy = accuracy.eval(feed_dict={x: testImages, y_: testLabels, keep_prob: 1.0})
-#          sess.run(train_step, feed_dict={x: batchImages, y: batchLabels.eval()})
-#          #train_step.run(feed_dict={x: batchImages, y: batchLabels, keep_prob: 0.5})
-#          i+=batchSize
+      displayNum = 5
+      testNum = 3005
+#
           
           
       print("Creating dataset tensors...")
@@ -261,15 +234,25 @@ def mnist_model(learning_rate,batchSize, hparam):
       sess.run(val_iterator.initializer)  
       print("took {} seconds\n".format(t.time()-iteratorInitialisation))
       
-      print(tf.one_hot(next_label,numOutputs).eval())
-      print(len(tf.one_hot(next_label,numOutputs).eval()))
+      #print(tf.one_hot(next_label,numOutputs).eval())
+      #print(len(tf.one_hot(next_label,numOutputs).eval()))
       
       for i in range(iterations): #range 2001
           if i % displayNum == 0:
               print('calculating training accuracy... i={}'.format(i))
+              tempIm = next_image.eval()
+              tempLabel = tf.one_hot(next_label,numOutputs).eval()
+              #print(tempIm)
+              #print(tempLabel)
+              element = 0
+              for i in range(len(tempLabel)):
+                  if tempLabel[i][element] == 1:
+                      im.arrayToImage(tempIm[i],40,40).show()#save(savePath+"{}.png".format(i))
+                      
               [train_accuracy, s] = sess.run([accuracy, summ], \
-                  feed_dict={x: next_image.eval(), \
-                             y: tf.one_hot(next_label,numOutputs).eval()})
+                  feed_dict={x: tempIm, \
+                             y: tempLabel})
+              
               writer.add_summary(s, i)
           if i % testNum == 0 and i!=0:
               print('did 500, saving')
@@ -288,8 +271,8 @@ def make_hparam_string(learning_rate,batchSize):
 
 def main():
   # You can try adding some more learning rates
-  for learning_rate in [1E-4]:
-      for batchSize in [128]:
+  for learning_rate in [1E-7,1E-6,1E-5,1E-4,1E-3]:
+      for batchSize in [100]:
 
         # Include "False" as a value to try different model architectures
             # Construct a hyperparameter string for each one (example: "lr_1E-3,fc=2,conv=2)
