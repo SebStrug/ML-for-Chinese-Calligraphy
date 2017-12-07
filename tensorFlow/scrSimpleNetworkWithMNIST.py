@@ -172,15 +172,6 @@ def neural_net(LOGDIR, learning_rate, hparam):
       tf.summary.image('input', x_image, 3)
       y = tf.placeholder(tf.float32, shape=[None,numOutputs], name="labels")
       
-      """With conv layer"""
-#      conv1 = conv_layer(x_image, 1, 64, "conv")
-#      #the next line pools it twice to keep it simple, reduce computational complexity
-#      conv_out = tf.nn.max_pool(conv1, ksize=[1, 2, 2, 1], strides=[1, 2, 2, 1], padding="SAME")
-#      flattened = tf.reshape(conv_out, [-1, 10 * 10 * 64])  #10*10 or 20*20
-#      embedding_input = flattened
-#      embedding_size = 10*10*64
-#      logits = fc_layer(flattened, 10*10*64, 3373, "fc")
-      
       """Without conv layer"""
       embedding_input = x
       embedding_size = pow(inputDim,2)
