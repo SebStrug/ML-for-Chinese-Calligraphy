@@ -5,11 +5,18 @@ Created on Fri Dec  8 20:43:52 2017
 @author: Sebastian
 Back to basics
 """
-#%% Imports, set directories
-funcPath = 'C:\\Users\\Sebastian\\Desktop\\GitHub\\ML-for-Chinese-Calligraphy\\dataHandling'
-savePath = 'C:\\Users\\Sebastian\\Desktop\\MLChinese\\Saved script files'
-workingPath = 'C:\\Users\\Sebastian\\Desktop\\GitHub\\ML-for-Chinese-Calligraphy\\tensorFlow'
-LOGDIR = r'C:/Users/Sebastian/Anaconda3/Lib/site-packages/tensorflow/tmp/ChineseCaligCNN/'
+#%% Imports, set directories, seb
+
+#funcPath = 'C:\\Users\\Sebastian\\Desktop\\GitHub\\ML-for-Chinese-Calligraphy\\dataHandling'
+#savePath = 'C:\\Users\\Sebastian\\Desktop\\MLChinese\\Saved script files'
+#workingPath = 'C:\\Users\\Sebastian\\Desktop\\GitHub\\ML-for-Chinese-Calligraphy\\tensorFlow'
+#LOGDIR = r'C:/Users/Sebastian/Anaconda3/Lib/site-packages/tensorflow/tmp/ChineseCaligCNN/'
+#%% Imports, set directories, Elliot
+funcPath = 'C:\\Users\\ellio\\OneDrive\\Documents\\GitHubPC\\ML-for-Chinese-Calligraphy\\dataHandling'
+savePath = 'C:\\Users\\ellio\\Documents\\training data\\Machine learning data'
+workingPath = 'C:\\Users\\ellio\\OneDrive\\Documents\\GitHubPC\\ML-for-Chinese-Calligraphy\\tensorFlow'
+LOGDIR = r'C:\\Users\\ellio\\Anaconda3\\Lib\\site-packages\\tensorflow\\tmp\\'
+#%%
 
 import os
 import tensorflow as tf
