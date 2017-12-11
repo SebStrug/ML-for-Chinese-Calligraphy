@@ -31,7 +31,7 @@ os.chdir(workingPath)
 from classDataManip import subSet
 
 #make a directory to save tensorboard information in 
-whichTest = 2
+whichTest = 3
 LOGDIR = LOGDIR + str(datetime.date.today()) + '/Chinese_conv_{}/LR1E-3'.format(whichTest)
 #make a directory if one does not exist
 if not os.path.exists(LOGDIR):
@@ -214,13 +214,15 @@ tr_data = tr_data.repeat()
 tr_data = tr_data.batch(trainBatchSize)
 val_data = tf.data.Dataset.from_tensor_slices((testImages,testLabels))
 #val_data = val_data.shuffle(buffer_size=100)
+val_data=val_data.repeat()
 val_data = val_data.batch(len(testLabels))
 
 #Create the training and validation iterators over batches
+
 tr_iterator = tr_data.make_initializable_iterator()
 tr_next_image, tr_next_label = tr_iterator.get_next()
 val_iterator = val_data.make_initializable_iterator()
-val_next_image, val_next_label = tr_iterator.get_next()
+val_next_image, val_next_label = val_iterator.get_next()
  
 #%% Open a tensorflow session
 print("Initialising the net...")
@@ -229,6 +231,7 @@ sess = tf.InteractiveSession()
 tf.global_variables_initializer().run()
 # Initailise the iterator
 sess.run(tr_iterator.initializer)
+sess.run(val_iterator.initializer)
 
 # Create a writer
 train_writer = tf.summary.FileWriter(os.path.join(LOGDIR)+'/train')
