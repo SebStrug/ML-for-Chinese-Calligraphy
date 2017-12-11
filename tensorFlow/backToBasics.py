@@ -31,7 +31,7 @@ os.chdir(workingPath)
 from classDataManip import subSet
 
 #make a directory to save tensorboard information in 
-whichTest = 1
+whichTest = 2
 LOGDIR = LOGDIR + str(datetime.date.today()) + '/Chinese_conv_{}'.format(whichTest)
 #make a directory if one does not exist
 if not os.path.exists(LOGDIR):
@@ -67,7 +67,7 @@ CharImages = np.concatenate((CharImages,nextImages),axis=0)
 del nextLabels; del nextImages;
 
 #define images and labels as a subset of the data
-numOutputs = 10
+numOutputs = 20
 trainRatio = 0.9
 images, labels = subSet(numOutputs,CharImages,CharLabels)
 dataLength = len(labels) #how many labels/images do we have?
@@ -239,8 +239,9 @@ print("Starting training!")
 epochLength = int(len(trainLabels)/trainBatchSize) #no. of iterations per epoch
 whichEpoch = 0
 print("Number of iterations per epoch: {}".format(epochLength))
-iterations = 200
+iterations = 400
 displayNum = 5
+testNum = 20
 for i in range(iterations):
     """Check a random value in the batch matches its label"""
     batchImages, batchLabels = tr_next_image, tr_next_label
