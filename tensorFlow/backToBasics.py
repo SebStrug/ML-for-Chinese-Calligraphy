@@ -31,8 +31,8 @@ os.chdir(workingPath)
 from classDataManip import subSet
 
 #make a directory to save tensorboard information in 
-whichTest = 1
-LOGDIR = LOGDIR + str(datetime.date.today()) + '/Chinese_conv_{}'.format(whichTest)
+whichTest = 2
+LOGDIR = LOGDIR + str(datetime.date.today()) + '/Chinese_conv_{}/LR1E-3'.format(whichTest)
 #make a directory if one does not exist
 if not os.path.exists(LOGDIR):
     os.makedirs(LOGDIR)
@@ -233,15 +233,17 @@ sess.run(tr_iterator.initializer)
 # Create a writer
 train_writer = tf.summary.FileWriter(os.path.join(LOGDIR)+'/train')
 train_writer.add_graph(sess.graph)
+test_writer = tf.summary.FileWriter(os.path.join(LOGDIR)+'/test')
+test_writer.add_graph(sess.graph)
 
 #%% Start training!
 print("Starting training!")
 epochLength = int(len(trainLabels)/trainBatchSize) #no. of iterations per epoch
 whichEpoch = 0
 print("Number of iterations per epoch: {}".format(epochLength))
-iterations = 400
-displayNum = 5
-testNum = 20
+iterations = 200
+displayNum = 2
+testNum = 10
 for i in range(iterations):
     """Check a random value in the batch matches its label"""
     batchImages, batchLabels = tr_next_image, tr_next_label
@@ -249,29 +251,33 @@ for i in range(iterations):
 #    print(display(batchImages.eval()[randomIndex], inputDim),batchLabels.eval()[randomIndex])
     
     if i % displayNum == 0:
-        train_accuracy, train_summary = \
-            sess.run([accuracy, mergedSummaryOp], \
-                     feed_dict={x: batchImages.eval(), \
-                                y_: tf.one_hot(batchLabels,numOutputs).eval(), \
-                                keep_prob: 1.0})
+        train_accuracy, train_summary =sess.run([accuracy, mergedSummaryOp], \
+                     feed_dict={x: batchImages.eval(), y_: tf.one_hot(batchLabels,numOutputs).eval(),keep_prob: 1.0})
         train_writer.add_summary(train_summary, i)
+        
+    if i % testNum ==0:
+        print("Testing the net...")
+        testBatchImages, testBatchLabels = val_next_image, val_next_label
+        test_accuracy, test_summary = sess.run([accuracy,mergedSummaryOp], \
+                       feed_dict={x: testBatchImages.eval(),y_: tf.one_hot(testBatchLabels,numOutputs).eval(),keep_prob: 1.0})
+        test_writer.add_summary(test_summary, i)
         saver.save(sess, os.path.join(LOGDIR, "model.ckpt{}".format(learningRate)), i)
-
-    # run a training step
+        
+    if i % epochLength == 0 and i != 0:
+        whichEpoch += 1
+        print("Did {} epochs".format(whichEpoch))
+    # run a training step   
     sess.run(train_step, \
              feed_dict={x: batchImages.eval(), \
                         y_: tf.one_hot(batchLabels,numOutputs).eval(), \
                         keep_prob: 0.5})
-    if i % epochLength == 0 and i != 0:
-        whichEpoch += 1
-        print("Did {} epochs".format(whichEpoch))
 train_writer.close()
 
 #%% Test trained model
-print("Testing the net...")
-testBatchImages, testBatchLabels = val_next_image, val_next_label
-print(sess.run(accuracy, \
-               feed_dict={x: testBatchImages.eval(), \
-                          y_: tf.one_hot(testBatchLabels,numOutputs).eval(), \
-                          keep_prob: 1.0}))
+#print("Testing the net...")
+#testBatchImages, testBatchLabels = val_next_image, val_next_label
+#print(sess.run(accuracy, \
+#               feed_dict={x: testBatchImages.eval(), \
+#                          y_: tf.one_hot(testBatchLabels,numOutputs).eval(), \
+#                          keep_prob: 1.0}))
 
