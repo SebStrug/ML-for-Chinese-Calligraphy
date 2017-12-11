@@ -32,7 +32,7 @@ from classDataManip import subSet
 
 #make a directory to save tensorboard information in 
 whichTest = 3
-LOGDIR = LOGDIR + str(datetime.date.today()) + '/Chinese_conv_{}/LR1E-3'.format(whichTest)
+LOGDIR = LOGDIR + str(datetime.date.today()) + '/Chinese_conv_{}/LR1E-3BatchFull-1'.format(whichTest)
 #make a directory if one does not exist
 if not os.path.exists(LOGDIR):
     os.makedirs(LOGDIR)
@@ -87,7 +87,7 @@ print("Building the net...")
 tf.reset_default_graph()
 inputDim = 40
 learningRate = 1e-3
-trainBatchSize = len(trainLabels)
+trainBatchSize = len(trainLabels)-1
 
 # function to create weights and biases automatically
 # want slightly positive weights/biases for relu to avoid dead nurons
@@ -244,7 +244,7 @@ print("Starting training!")
 epochLength = int(len(trainLabels)/trainBatchSize) #no. of iterations per epoch
 whichEpoch = 0
 print("Number of iterations per epoch: {}".format(epochLength))
-iterations = 200
+iterations = 600
 displayNum = 2
 testNum = 10
 for i in range(iterations):
