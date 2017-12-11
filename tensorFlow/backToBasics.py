@@ -31,7 +31,7 @@ os.chdir(workingPath)
 from classDataManip import subSet
 
 #make a directory to save tensorboard information in 
-whichTest = 2
+whichTest = 1
 LOGDIR = LOGDIR + str(datetime.date.today()) + '/Chinese_conv_{}'.format(whichTest)
 #make a directory if one does not exist
 if not os.path.exists(LOGDIR):
@@ -67,7 +67,7 @@ CharImages = np.concatenate((CharImages,nextImages),axis=0)
 del nextLabels; del nextImages;
 
 #define images and labels as a subset of the data
-numOutputs = 20
+numOutputs = 10
 trainRatio = 0.9
 images, labels = subSet(numOutputs,CharImages,CharLabels)
 dataLength = len(labels) #how many labels/images do we have?
@@ -86,7 +86,7 @@ print("Building the net...")
 #Reset the graph (since we are not creating this in a function!)
 tf.reset_default_graph()
 inputDim = 40
-learningRate = 1e-4
+learningRate = 1e-3
 trainBatchSize = len(trainLabels)
 
 # function to create weights and biases automatically
