@@ -68,7 +68,7 @@ del nextLabels; del nextImages;
 
 #define images and labels as a subset of the data
 numOutputs = 10
-trainRatio = 0.7
+trainRatio = 0.9
 images, labels = subSet(numOutputs,CharImages,CharLabels)
 dataLength = len(labels) #how many labels/images do we have?
 #del MNISTLabels; del MNISTImages; 
