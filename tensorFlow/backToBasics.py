@@ -290,8 +290,8 @@ for i in range(iterations):
         train_writer.add_summary(train_summary, i)
         #summary and assignment for the embedding
         assign, embedding_summary = sess.run([assignment,mergedSummaryOp], \
-                     feed_dict={x: testBatchImages.eval()[:1024],\
-                                y_: tf.one_hot(testBatchLabels,numOutputs).eval()[:1024],\
+                     feed_dict={x: testBatchImages.eval()[:int(len(testLabels)**0.5)],\
+                                y_: tf.one_hot(testBatchLabels,numOutputs).eval()[:int(len(testLabels)**0.5)],\
                                 keep_prob: 1.0})
         embedding_writer.add_summary(embedding_summary,i)
         
