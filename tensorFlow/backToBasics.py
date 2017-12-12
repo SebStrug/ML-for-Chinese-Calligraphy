@@ -78,8 +78,8 @@ del images; del labels;
 #%% Create sprites and labels for the embedding
 os.chdir(workingPath)
 from classDataManip import createSpriteLabels
-# We eventually just want to run this for a set of 1024!
-montage, record_file = createSpriteLabels(testImages,testLabels)
+# How many sprites do we want to create (must be a square) > last value in function
+montage, record_file = createSpriteLabels(testImages,testLabels,int(len(testLabels)**0.5))
 del montage; del record_file #don't need to save these, waste space
 
 #%%Build the network
@@ -91,7 +91,7 @@ learningRate = 1e-3
 trainBatchSize = len(trainLabels)
 
 #make a directory to save tensorboard information in 
-whichTest = 4
+whichTest = 5
 LOGDIR = LOGDIR + str(datetime.date.today()) + \
             '/Chinese_conv_{}/Outputs{}_LR{}_Batch{}'\
             .format(whichTest,numOutputs,learningRate,trainBatchSize)
@@ -248,6 +248,8 @@ train_writer = tf.summary.FileWriter(os.path.join(LOGDIR)+'/train')
 train_writer.add_graph(sess.graph)
 test_writer = tf.summary.FileWriter(os.path.join(LOGDIR)+'/test')
 test_writer.add_graph(sess.graph)
+embedding_writer = tf.summary.FileWriter(LOGDIR)
+embedding_writer.add_graph(sess.graph)
 
 #%% Embedding for the projector
 """To have the embedding save properly, we need to initialise its own summary,
@@ -258,11 +260,11 @@ config = projector.ProjectorConfig()
 embedding = config.embeddings.add()
 embedding.tensor_name = embedding_var.name
 # Link the tensor to the label and sprite path
-embedding.sprite.image_path = os.path.join(savePath,'sprite_1024')
+embedding.sprite.image_path = os.path.join(savePath,'spriteImages')
 embedding.metadata_path = os.path.join(savePath,'spriteLabels.tsv')
 # Specify the width and height of a single thumbnail.
 embedding.sprite.single_image_dim.extend([40, 40])
-tf.contrib.tensorboard.plugins.projector.visualize_embeddings(test_writer, config)
+projector.visualize_embeddings(embedding_writer, config)
 
 
 #%% Start training!
@@ -276,6 +278,7 @@ testNum = 10
 for i in range(iterations):
     """Check a random value in the batch matches its label"""
     batchImages, batchLabels = tr_next_image, tr_next_label
+    testBatchImages, testBatchLabels = val_next_image, val_next_label
 #    randomIndex = random.randint(0,trainBatchSize-1)
 #    print(display(batchImages.eval()[randomIndex], inputDim),batchLabels.eval()[randomIndex])
     
@@ -285,13 +288,18 @@ for i in range(iterations):
                                 y_: tf.one_hot(batchLabels,numOutputs).eval(),\
                                 keep_prob: 1.0})
         train_writer.add_summary(train_summary, i)
+        #summary and assignment for the embedding
+        assign, embedding_summary = sess.run([assignment,mergedSummaryOp], \
+                     feed_dict={x: testBatchImages.eval()[:1024],\
+                                y_: tf.one_hot(testBatchLabels,numOutputs).eval()[:1024],\
+                                keep_prob: 1.0})
+        embedding_writer.add_summary(embedding_summary,i)
         
-    if i % testNum ==0:
+    if i % testNum == 0:
         print("Testing the net...")
-        testBatchImages, testBatchLabels = val_next_image, val_next_label
-        assign, test_accuracy, test_summary = sess.run([assignment,accuracy,mergedSummaryOp], \
-                       feed_dict={x: testBatchImages.eval()[:1024],\
-                                  y_: tf.one_hot(testBatchLabels,numOutputs).eval()[:1024],\
+        test_accuracy, test_summary = sess.run([accuracy,mergedSummaryOp], \
+                       feed_dict={x: testBatchImages.eval(),\
+                                  y_: tf.one_hot(testBatchLabels,numOutputs).eval(),\
                                   keep_prob: 1.0})
         test_writer.add_summary(test_summary, i)
         saver.save(sess, os.path.join(LOGDIR, "LR{}_Iter{}_TestAcc{}.ckpt".format(learningRate,i,test_accuracy)))

@@ -27,14 +27,18 @@ fileName="1001to1100"
 labels,images=fF.readNPZ(dataPath,fileName,"saveLabels","saveImages")
 
 #%%
-def createSpriteLabels(images,labels):
-    """Create a 32x32 image of sprites of the characters"""
-    spriteImages = images[0:32*32] #array form
+def createSpriteLabels(images,labels,howMany):
+    """Create a nxn image of sprites of the characters"""
+    # Don't let the number of sprites be greater than 32 or the projector
+    #   won't be able to handle it
+    if howMany > 32:
+        howMany == 32
+    spriteImages = images[0:howMany**2] #array form
     convSpriteImage = [Image.fromarray(np.resize(i,(40,40)), 'L') for i in spriteImages] #convert to image
-    dimensions = 40*32
+    dimensions = 40*howMany
     montage = Image.new(mode='RGBA', size=(dimensions, dimensions), color=(0,0,0,0))
     offset_x = offset_y = 0
-    row_size = 32
+    row_size = howMany
     i = 0
     for image in convSpriteImage:
         montage.paste(image, (offset_x, offset_y))
@@ -44,7 +48,7 @@ def createSpriteLabels(images,labels):
         else:
             offset_x += 40
         i += 1
-    montage.save(savePath + '/sprite_{}'.format(32**2), "png")
+    montage.save(savePath + '/spriteImages'.format(howMany**2), "png")
     
     spriteLabels = labels[0:32*32]
     with open(savePath + "/spriteLabels.tsv", "w") as record_file:
@@ -70,4 +74,25 @@ def subSet(numClasses,images,labels):
             subImages.append(images[i])
             subLabels.append(labels[i])
     return np.asarray(subImages),np.asarray(subLabels)
+
+def makeDir(rootDIR,fileName,hparam):
+    """Makes a directory automatically to save tensorboard data to"""
+    testNum = 0
+    LOGDIR = rootDIR + str(datetime.date.today()) + '/' + fileName + '-test-{}'.format(testNum)
+    while os.path.exists(LOGDIR):
+        testNum += 1
+        LOGDIR = rootDIR + str(datetime.date.today()) + '/' + fileName + '-test-{}'.format(testNum)
+    #make a directory
+    os.makedirs(LOGDIR)
+    return LOGDIR
         
+def normalizePixels(trainImages):
+    trainImages = np.asarray(trainImages)
+    return trainImages/255
+
+def saveImages(trainImages,trainLabels):
+    """Check subset we are using is valid, by matching image to label"""
+    os.chdir('C:\\Users\\Sebastian\\Desktop\\MLChinese\\Saved script files\\checkImages')
+    for i in range(len(trainImages)):
+        tmpImage = Image.fromarray(np.resize(trainImages[i],(40,40)), 'L')
+        tmpImage.save('{},label_{}.jpeg'.format(i,trainLabels[i]))
