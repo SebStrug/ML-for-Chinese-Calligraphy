@@ -12,9 +12,9 @@ Back to basics
 #workingPath = 'C:\\Users\\Sebastian\\Desktop\\GitHub\\ML-for-Chinese-Calligraphy\\tensorFlow'
 #LOGDIR = r'C:/Users/Sebastian/Anaconda3/Lib/site-packages/tensorflow/tmp/ChineseCaligCNN/'
 #%% Imports, set directories, Elliot
-funcPath = 'C:\\Users\\ellio\\OneDrive\\Documents\\GitHubPC\\ML-for-Chinese-Calligraphy\\dataHandling'
+funcPath = 'C:\\Users\\ellio\\OneDrive\\Documents\\GitHub\\ML-for-Chinese-Calligraphy\\dataHandling'
 savePath = 'C:\\Users\\ellio\\Documents\\training data\\Machine learning data'
-workingPath = 'C:\\Users\\ellio\\OneDrive\\Documents\\GitHubPC\\ML-for-Chinese-Calligraphy\\tensorFlow'
+workingPath = 'C:\\Users\\ellio\\OneDrive\\Documents\\GitHub\\ML-for-Chinese-Calligraphy\\tensorFlow'
 LOGDIR = r'C:\\Users\\ellio\\Anaconda3\\Lib\\site-packages\\tensorflow\\tmp\\'
 #%%
 
@@ -32,7 +32,7 @@ from classDataManip import subSet
 
 #make a directory to save tensorboard information in 
 whichTest = 3
-LOGDIR = LOGDIR + str(datetime.date.today()) + '/Chinese_conv_{}/LR1E-3BatchFull-1'.format(whichTest)
+LOGDIR = LOGDIR + str(datetime.date.today()) + '/Chinese_conv_{}/LR1E-3BatchFull'.format(whichTest)
 #make a directory if one does not exist
 if not os.path.exists(LOGDIR):
     os.makedirs(LOGDIR)
@@ -87,7 +87,7 @@ print("Building the net...")
 tf.reset_default_graph()
 inputDim = 40
 learningRate = 1e-3
-trainBatchSize = len(trainLabels)-1
+trainBatchSize = len(trainLabels)
 
 # function to create weights and biases automatically
 # want slightly positive weights/biases for relu to avoid dead nurons
@@ -264,7 +264,7 @@ for i in range(iterations):
         test_accuracy, test_summary = sess.run([accuracy,mergedSummaryOp], \
                        feed_dict={x: testBatchImages.eval(),y_: tf.one_hot(testBatchLabels,numOutputs).eval(),keep_prob: 1.0})
         test_writer.add_summary(test_summary, i)
-        saver.save(sess, os.path.join(LOGDIR, "model.ckpt{}".format(learningRate)), i)
+        saver.save(sess, os.path.join(LOGDIR, "model.ckpt{}".format(learningRate)),"iter:",i,"acc:",test_accuracy)
         
     if i % epochLength == 0 and i != 0:
         whichEpoch += 1
@@ -275,6 +275,7 @@ for i in range(iterations):
                         y_: tf.one_hot(batchLabels,numOutputs).eval(), \
                         keep_prob: 0.5})
 train_writer.close()
+test_writer.close()
 
 #%% Test trained model
 #print("Testing the net...")
