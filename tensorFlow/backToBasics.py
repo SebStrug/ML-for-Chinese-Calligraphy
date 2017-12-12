@@ -20,6 +20,7 @@ LOGDIR = r'C:/Users/Sebastian/Anaconda3/Lib/site-packages/tensorflow/tmp/Chinese
 
 import os
 import tensorflow as tf
+from tensorflow.contrib.tensorboard.plugins import projector
 import numpy as np
 import time as t
 import datetime
@@ -74,6 +75,13 @@ testImages = images[int(dataLength*trainRatio):dataLength]
 testLabels = labels[int(dataLength*trainRatio):dataLength]
 del images; del labels;        
 
+#%% Create sprites and labels for the embedding
+os.chdir(workingPath)
+from classDataManip import createSpriteLabels
+# We eventually just want to run this for a set of 1024!
+montage, record_file = createSpriteLabels(testImages,testLabels)
+del montage; del record_file #don't need to save these, waste space
+
 #%%Build the network
 print("Building the net...")
 #Reset the graph (since we are not creating this in a function!)
@@ -83,7 +91,7 @@ learningRate = 1e-3
 trainBatchSize = len(trainLabels)
 
 #make a directory to save tensorboard information in 
-whichTest = 1
+whichTest = 4
 LOGDIR = LOGDIR + str(datetime.date.today()) + \
             '/Chinese_conv_{}/Outputs{}_LR{}_Batch{}'\
             .format(whichTest,numOutputs,learningRate,trainBatchSize)
@@ -115,6 +123,9 @@ def max_pool_2x2(x):
 
 # Define the placeholders for images and labels
 x = tf.placeholder(tf.float32, [None, inputDim**2], name="images")
+x_image = tf.reshape(x, [-1, inputDim, inputDim, 1])
+# Show 4 examples of output images
+tf.summary.image('input', x_image, 4)
 y_ = tf.placeholder(tf.float32, [None,numOutputs], name="labels")
 
 with tf.name_scope('reshape'):
@@ -199,7 +210,10 @@ with tf.name_scope("accuracy"):
 
 # Merge all summary operators
 mergedSummaryOp = tf.summary.merge_all()
-# Create a saver to save these summary operations
+# Embedding variables for the projector
+embedding_var = tf.Variable(tf.zeros([len(testLabels), 1024]), name="test_embedding")
+assignment = embedding_var.assign(h_fc1)
+# Create a saver to save these summary operations AND the embedding
 saver = tf.train.Saver()
 
 #%%Create the dataset tensors for training and validation data
@@ -229,11 +243,27 @@ tf.global_variables_initializer().run()
 sess.run(tr_iterator.initializer)
 sess.run(val_iterator.initializer)
 
-# Create a writer
+# Create writers
 train_writer = tf.summary.FileWriter(os.path.join(LOGDIR)+'/train')
 train_writer.add_graph(sess.graph)
 test_writer = tf.summary.FileWriter(os.path.join(LOGDIR)+'/test')
 test_writer.add_graph(sess.graph)
+
+#%% Embedding for the projector
+"""To have the embedding save properly, we need to initialise its own summary,
+which needs to write just to the base LOGDIR, otherwise we will have problems loading it"""
+# embedding for the projection of higher dimensional space
+config = projector.ProjectorConfig()
+# Can have multiple embeddings, this only adds one
+embedding = config.embeddings.add()
+embedding.tensor_name = embedding_var.name
+# Link the tensor to the label and sprite path
+embedding.sprite.image_path = os.path.join(savePath,'sprite_1024')
+embedding.metadata_path = os.path.join(savePath,'spriteLabels.tsv')
+# Specify the width and height of a single thumbnail.
+embedding.sprite.single_image_dim.extend([40, 40])
+tf.contrib.tensorboard.plugins.projector.visualize_embeddings(test_writer, config)
+
 
 #%% Start training!
 print("Starting training!")
@@ -251,14 +281,18 @@ for i in range(iterations):
     
     if i % displayNum == 0:
         train_accuracy, train_summary =sess.run([accuracy, mergedSummaryOp], \
-                     feed_dict={x: batchImages.eval(), y_: tf.one_hot(batchLabels,numOutputs).eval(),keep_prob: 1.0})
+                     feed_dict={x: batchImages.eval(),\
+                                y_: tf.one_hot(batchLabels,numOutputs).eval(),\
+                                keep_prob: 1.0})
         train_writer.add_summary(train_summary, i)
         
     if i % testNum ==0:
         print("Testing the net...")
         testBatchImages, testBatchLabels = val_next_image, val_next_label
-        test_accuracy, test_summary = sess.run([accuracy,mergedSummaryOp], \
-                       feed_dict={x: testBatchImages.eval(),y_: tf.one_hot(testBatchLabels,numOutputs).eval(),keep_prob: 1.0})
+        assign, test_accuracy, test_summary = sess.run([assignment,accuracy,mergedSummaryOp], \
+                       feed_dict={x: testBatchImages.eval()[:1024],\
+                                  y_: tf.one_hot(testBatchLabels,numOutputs).eval()[:1024],\
+                                  keep_prob: 1.0})
         test_writer.add_summary(test_summary, i)
         saver.save(sess, os.path.join(LOGDIR, "LR{}_Iter{}_TestAcc{}.ckpt".format(learningRate,i,test_accuracy)))
         
