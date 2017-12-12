@@ -30,13 +30,6 @@ from classFileFunctions import fileFunc as fF
 os.chdir(workingPath)
 from classDataManip import subSet
 
-#make a directory to save tensorboard information in 
-whichTest = 1
-LOGDIR = LOGDIR + str(datetime.date.today()) + '/Chinese_conv_{}/LR1E-3BatchFull'.format(whichTest)
-#make a directory if one does not exist
-if not os.path.exists(LOGDIR):
-    os.makedirs(LOGDIR)
-
 #%%Display a MNIST image
 def display(img, inputDim, threshold=200):
     """Run as print(display(image_array))"""
@@ -88,6 +81,15 @@ tf.reset_default_graph()
 inputDim = 40
 learningRate = 1e-3
 trainBatchSize = len(trainLabels)
+
+#make a directory to save tensorboard information in 
+whichTest = 1
+LOGDIR = LOGDIR + str(datetime.date.today()) + \
+            '/Chinese_conv_{}/Outputs{}_LR{}_Batch{}'\
+            .format(whichTest,numOutputs,learningRate,trainBatchSize)
+#make a directory if one does not exist
+if not os.path.exists(LOGDIR):
+    os.makedirs(LOGDIR)
 
 # function to create weights and biases automatically
 # want slightly positive weights/biases for relu to avoid dead nurons
