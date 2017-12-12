@@ -11,11 +11,11 @@ from PIL import Image
 #%%Load Data
 #first part of the next line goes one back in the directory
 #os.chdir(os.path.normpath(os.getcwd() + os.sep + os.pardir) + '\\dataHandling')
-#os.chdir('C:\\Users\\Sebastian\\Desktop\\GitHub\\ML-for-Chinese-Calligraphy\\dataHandling')
-os.chdir('C:\\Users\\ellio\\OneDrive\\Documents\\GitHub\\ML-for-Chinese-Calligraphy\\dataHandling')
+os.chdir('C:\\Users\\Sebastian\\Desktop\\GitHub\\ML-for-Chinese-Calligraphy\\dataHandling')
+#os.chdir('C:\\Users\\ellio\\OneDrive\\Documents\\GitHub\\ML-for-Chinese-Calligraphy\\dataHandling')
 from classFileFunctions import fileFunc as fF 
 """Define the user"""
-funcPath,dataPath,savePath,rootDIR = fF.whichUser('Elliot')
+funcPath,dataPath,savePath,rootDIR = fF.whichUser('Seb')
 #os.chdir("..")
 
 #%%Get the data

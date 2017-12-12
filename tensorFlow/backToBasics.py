@@ -7,15 +7,15 @@ Back to basics
 """
 #%% Imports, set directories, seb
 
-#funcPath = 'C:\\Users\\Sebastian\\Desktop\\GitHub\\ML-for-Chinese-Calligraphy\\dataHandling'
-#savePath = 'C:\\Users\\Sebastian\\Desktop\\MLChinese\\Saved script files'
-#workingPath = 'C:\\Users\\Sebastian\\Desktop\\GitHub\\ML-for-Chinese-Calligraphy\\tensorFlow'
-#LOGDIR = r'C:/Users/Sebastian/Anaconda3/Lib/site-packages/tensorflow/tmp/ChineseCaligCNN/'
+funcPath = 'C:\\Users\\Sebastian\\Desktop\\GitHub\\ML-for-Chinese-Calligraphy\\dataHandling'
+savePath = 'C:\\Users\\Sebastian\\Desktop\\MLChinese\\Saved script files'
+workingPath = 'C:\\Users\\Sebastian\\Desktop\\GitHub\\ML-for-Chinese-Calligraphy\\tensorFlow'
+LOGDIR = r'C:/Users/Sebastian/Anaconda3/Lib/site-packages/tensorflow/tmp/ChineseCaligCNN/'
 #%% Imports, set directories, Elliot
-funcPath = 'C:\\Users\\ellio\\OneDrive\\Documents\\GitHub\\ML-for-Chinese-Calligraphy\\dataHandling'
-savePath = 'C:\\Users\\ellio\\Documents\\training data\\Machine learning data'
-workingPath = 'C:\\Users\\ellio\\OneDrive\\Documents\\GitHub\\ML-for-Chinese-Calligraphy\\tensorFlow'
-LOGDIR = r'C:\\Users\\ellio\\Anaconda3\\Lib\\site-packages\\tensorflow\\tmp\\'
+#funcPath = 'C:\\Users\\ellio\\OneDrive\\Documents\\GitHub\\ML-for-Chinese-Calligraphy\\dataHandling'
+#savePath = 'C:\\Users\\ellio\\Documents\\training data\\Machine learning data'
+#workingPath = 'C:\\Users\\ellio\\OneDrive\\Documents\\GitHub\\ML-for-Chinese-Calligraphy\\tensorFlow'
+#LOGDIR = r'C:\\Users\\ellio\\Anaconda3\\Lib\\site-packages\\tensorflow\\tmp\\'
 #%%
 
 import os
@@ -31,7 +31,7 @@ os.chdir(workingPath)
 from classDataManip import subSet
 
 #make a directory to save tensorboard information in 
-whichTest = 3
+whichTest = 1
 LOGDIR = LOGDIR + str(datetime.date.today()) + '/Chinese_conv_{}/LR1E-3BatchFull'.format(whichTest)
 #make a directory if one does not exist
 if not os.path.exists(LOGDIR):
@@ -94,11 +94,13 @@ trainBatchSize = len(trainLabels)
 def weight_variable(shape):
     """weight_variable generates a weight variable of a given shape."""
     initial = tf.truncated_normal(shape, stddev=0.1)
+    tf.summary.histogram("weights", initial)
     return tf.Variable(initial)
 
 def bias_variable(shape):
     """bias_variable generates a bias variable of a given shape."""
     initial = tf.constant(0.1, shape=shape)
+    tf.summary.histogram("biases", initial)
     return tf.Variable(initial)
 
 def conv2d(x, W):
@@ -108,18 +110,6 @@ def conv2d(x, W):
 def max_pool_2x2(x):
     """max_pool_2x2 downsamples a feature map by 2X."""
     return tf.nn.max_pool(x, ksize=[1, 2, 2, 1],strides=[1, 2, 2, 1], padding='SAME')
-
-def fc_layer(input, size_in, size_out, name="fc"):
-    with tf.name_scope(name):
-        W = tf.Variable(tf.truncated_normal([size_in, size_out], stddev=0.03), name="W")
-        b = tf.Variable(tf.constant(0.1, shape=[size_out]), name="B")
-        tf.summary.histogram("weights", W)
-        tf.summary.histogram("biases", b)
-        """can't end on a relu!"""
-        #act = tf.nn.relu(tf.matmul(input,W) + b)        
-        act = tf.matmul(input,W)+b
-        tf.summary.histogram("activations", act)
-        return act
 
 # Define the placeholders for images and labels
 x = tf.placeholder(tf.float32, [None, inputDim**2], name="images")
@@ -137,6 +127,7 @@ with tf.name_scope('conv1'):
     b_conv1 = bias_variable([32])
     # convolve x with the weight tensor, add bias and apply ReLU function
     h_conv1 = tf.nn.relu(conv2d(x_image, W_conv1) + b_conv1)
+    tf.summary.histogram("activations", h_conv1)
     
 with tf.name_scope('pool1'):
     """Pooling layer, downsamples by 2x"""
@@ -151,6 +142,7 @@ with tf.name_scope('conv2'):
     b_conv2 = bias_variable([64])
     # convolve again
     h_conv2 = tf.nn.relu(conv2d(h_pool1, W_conv2) + b_conv2)
+    tf.summary.histogram("activations", h_conv2)
 
 with tf.name_scope('pool2'):
     """Second pooling layer"""
@@ -167,6 +159,7 @@ with tf.name_scope('fc1'):
     h_pool2_flat = tf.reshape(h_pool2, [-1, 10*10*64])
     # do a matmul and apply a ReLu
     h_fc1 = tf.nn.relu(tf.matmul(h_pool2_flat, W_fc1) + b_fc1)
+    tf.summary.histogram("activations", h_fc1)
 
 with tf.name_scope('dropout'):
     """Dropout controls the complexity of the model, prevents co-adaptation of features"""
@@ -182,6 +175,7 @@ with tf.name_scope('fc2'):
     b_fc2 = bias_variable([numOutputs])
     # calculate the convolution
     y_conv = tf.matmul(h_fc1_drop, W_fc2) + b_fc2
+    tf.summary.histogram("activations", y_conv)
 
 
 # Calculate entropy on the raw outputs of y then average across the batch size
@@ -264,7 +258,7 @@ for i in range(iterations):
         test_accuracy, test_summary = sess.run([accuracy,mergedSummaryOp], \
                        feed_dict={x: testBatchImages.eval(),y_: tf.one_hot(testBatchLabels,numOutputs).eval(),keep_prob: 1.0})
         test_writer.add_summary(test_summary, i)
-        saver.save(sess, os.path.join(LOGDIR, "model.ckpt{}".format(learningRate)),"iter:",i,"acc:",test_accuracy)
+        saver.save(sess, os.path.join(LOGDIR, "LR{}_Iter{}_TestAcc{}.ckpt".format(learningRate,i,test_accuracy)))
         
     if i % epochLength == 0 and i != 0:
         whichEpoch += 1
