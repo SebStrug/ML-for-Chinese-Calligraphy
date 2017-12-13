@@ -31,8 +31,7 @@ from classFileFunctions import fileFunc as fF
 os.chdir(workingPath)
 from classDataManip import subSet
 
-<<<<<<< HEAD:tensorFlow/backToBasics.py
-=======
+
 #make a directory to save tensorboard information in 
 whichTest = 6
 LOGDIR = LOGDIR + str(datetime.date.today()) + '/Chinese_conv_{}/LR1E-3BatchFull'.format(whichTest)
@@ -40,7 +39,7 @@ LOGDIR = LOGDIR + str(datetime.date.today()) + '/Chinese_conv_{}/LR1E-3BatchFull
 if not os.path.exists(LOGDIR):
     os.makedirs(LOGDIR)
 
->>>>>>> own-batching-system:tensorFlow/backToBasicsBatching.py
+
 #%%Display a MNIST image
 def display(img, inputDim, threshold=200):
     """Run as print(display(image_array))"""
@@ -329,24 +328,13 @@ displayNum = 2
 testNum = 10
 for i in range(iterations):
     """Check a random value in the batch matches its label"""
-<<<<<<< HEAD:tensorFlow/backToBasics.py
-    batchImages, batchLabels = tr_next_image, tr_next_label
-    testBatchImages, testBatchLabels = val_next_image, val_next_label
-#    randomIndex = random.randint(0,trainBatchSize-1)
-#    print(display(batchImages.eval()[randomIndex], inputDim),batchLabels.eval()[randomIndex])
-    
-    if i % displayNum == 0:
-        train_accuracy, train_summary =sess.run([accuracy, mergedSummaryOp], \
-                     feed_dict={x: batchImages.eval(),\
-                                y_: tf.one_hot(batchLabels,numOutputs).eval(),\
-                                keep_prob: 1.0})
-=======
+
     batchImages, batchLabels = trainData.nextImageBatch(trainBatchSize), trainData.nextOneHotLabelBatch(trainBatchSize,numOutputs)
     
     if i % displayNum == 0:
         train_accuracy, train_summary =sess.run([accuracy, mergedSummaryOp], \
                      feed_dict={x: batchImages, y_: batchLabels,keep_prob: 1.0})
->>>>>>> own-batching-system:tensorFlow/backToBasicsBatching.py
+
         train_writer.add_summary(train_summary, i)
         #summary and assignment for the embedding
         assign, embedding_summary = sess.run([assignment,mergedSummaryOp], \
@@ -358,17 +346,11 @@ for i in range(iterations):
     if i % testNum == 0:
         print("Testing the net...")
         test_accuracy, test_summary = sess.run([accuracy,mergedSummaryOp], \
-<<<<<<< HEAD:tensorFlow/backToBasics.py
-                       feed_dict={x: testBatchImages.eval(),\
-                                  y_: tf.one_hot(testBatchLabels,numOutputs).eval(),\
-                                  keep_prob: 1.0})
-        test_writer.add_summary(test_summary, i)
-        saver.save(sess, os.path.join(LOGDIR, "LR{}_Iter{}_TestAcc{}.ckpt".format(learningRate,i,test_accuracy)))
-=======
+
                        feed_dict={x: testImages,y_: oneHot(testLabels,numOutputs),keep_prob: 1.0})
         test_writer.add_summary(test_summary, i)
         saver.save(sess, os.path.join(LOGDIR,"model.ckpt{}".format(i)))
->>>>>>> own-batching-system:tensorFlow/backToBasicsBatching.py
+
         
     if i % epochLength == 0 and i != 0:
         whichEpoch += 1
