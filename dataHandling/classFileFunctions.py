@@ -20,7 +20,7 @@ class fileFunc(object):
         savePathSeb = 'C:\\Users\\Sebastian\\Desktop\\MLChinese\\Saved script files'
         savePathElliot = 'C:\\Users\\ellio\\Documents\\training data\\Machine learning data'
         SebLOGDIR = r'C:/Users/Sebastian/Anaconda3/Lib/site-packages/tensorflow/tmp/ChineseCaligCNN/'
-        elliotLOGDIR = r'C:/Users/ellio/Anaconda3/Lib/site-packages/tensorflow/tmp/SimpleNetwork/'
+        elliotLOGDIR = r'C:/Users/ellio/Anaconda3/Lib/site-packages/tensorflow/tmp/'
         if user == "Elliot":
             funcPath = funcPathElliot
             dataPath = dataPathElliot
