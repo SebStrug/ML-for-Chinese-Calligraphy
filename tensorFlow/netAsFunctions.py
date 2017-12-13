@@ -7,15 +7,15 @@ Back to basics
 """
 #%% Imports, set directories, seb
 
-funcPath = 'C:\\Users\\Sebastian\\Desktop\\GitHub\\ML-for-Chinese-Calligraphy\\dataHandling'
-savePath = 'C:\\Users\\Sebastian\\Desktop\\MLChinese\\Saved script files'
-workingPath = 'C:\\Users\\Sebastian\\Desktop\\GitHub\\ML-for-Chinese-Calligraphy\\tensorFlow'
-LOGDIR = r'C:/Users/Sebastian/Anaconda3/Lib/site-packages/tensorflow/tmp/ChineseCaligCNN/'
+#funcPath = 'C:\\Users\\Sebastian\\Desktop\\GitHub\\ML-for-Chinese-Calligraphy\\dataHandling'
+#savePath = 'C:\\Users\\Sebastian\\Desktop\\MLChinese\\Saved script files'
+#workingPath = 'C:\\Users\\Sebastian\\Desktop\\GitHub\\ML-for-Chinese-Calligraphy\\tensorFlow'
+#LOGDIR = r'C:/Users/Sebastian/Anaconda3/Lib/site-packages/tensorflow/tmp/ChineseCaligCNN/'
 #%% Imports, set directories, Elliot
-#funcPath = 'C:\\Users\\ellio\\OneDrive\\Documents\\GitHub\\ML-for-Chinese-Calligraphy\\dataHandling'
-#savePath = 'C:\\Users\\ellio\\Documents\\training data\\Machine learning data'
-#workingPath = 'C:\\Users\\ellio\\OneDrive\\Documents\\GitHub\\ML-for-Chinese-Calligraphy\\tensorFlow'
-#LOGDIR = r'C:\\Users\\ellio\\Anaconda3\\Lib\\site-packages\\tensorflow\\tmp\\'
+funcPath = 'C:\\Users\\ellio\\OneDrive\\Documents\\GitHubPC\\ML-for-Chinese-Calligraphy\\dataHandling'
+savePath = 'C:\\Users\\ellio\\Documents\\training data\\Machine learning data'
+workingPath = 'C:\\Users\\ellio\\OneDrive\\Documents\\GitHubPC\\ML-for-Chinese-Calligraphy\\tensorFlow'
+LOGDIR = r'C:\\Users\\ellio\\Anaconda3\\Lib\\site-packages\\tensorflow\\tmp\\'
 #%%
 
 import os
@@ -29,7 +29,8 @@ import random
 os.chdir(funcPath)
 from classFileFunctions import fileFunc as fF 
 os.chdir(workingPath)
-from classDataManip import subSet
+from classDataManip import subSet,oneHot,makeDir,Data,createSpriteLabels
+
 
 #%%Display a MNIST image
 def display(img, inputDim, threshold=200):
@@ -43,7 +44,55 @@ def display(img, inputDim, threshold=200):
         else:
             render += '.'
     return render
+
     
+#class Data:
+#    def __init__(self,images,labels,i=0):
+#        self.images = images
+#        self.labels = labels 
+#        self.i=i
+#    def nextImageBatch(self,batchSize):
+#        print("Image Data Position",self.i)
+#        if batchSize < len(self.images)-self.i:
+#            oldi=self.i
+#            self.i+=batchSize
+#            return self.images[oldi:self.i]
+#            
+#        elif batchSize == len(self.images)-self.i:
+#            oldi=self.i
+#            self.i=0
+#            return self.images[oldi:]
+#        else:
+#            firstHalf = self.images[self.i:]
+#            secondHalf = self.images[0:self.i+batchSize-len(self.images)]
+#            self.i+=batchSize-len(self.images)
+#            return np.concatenate(firstHalf,secondHalf)
+#           
+#            
+#    
+#        
+#    def nextOneHotLabelBatch(self,batchSize,numOutputs):
+#         print("Label Data Position",self.i)
+#         if batchSize < len(self.labels)-self.i:
+#            oldi=self.i
+#            self.i+=batchSize
+#            print(self.labels[oldi:self.i])
+#            print(len(self.labels[oldi:self.i]))
+#            print(numOutputs)
+#            return oneHot((self.labels)[oldi:self.i],numOutputs)
+#            
+#         elif batchSize == len(self.labels)-self.i:
+#            oldi=self.i
+#            self.i=0
+#            return oneHot(self.labels[oldi:],numOutputs)
+#         else:
+#            firstHalf = self.labels[self.i:]
+#            secondHalf = self.labels[0:self.i+batchSize-len(self.labels)]
+#            self.i+=batchSize-len(self.labels)
+#            return oneHot(np.concatenate(firstHalf,secondHalf),numOutputs)
+#            
+    
+                
 #%%Import the data
 print("Importing the data...")
 #MNIST data
@@ -60,48 +109,54 @@ CharLabels = np.concatenate((CharLabels,nextLabels),axis=0)
 CharImages = np.concatenate((CharImages,nextImages),axis=0)
 del nextLabels; del nextImages;
 
+inputDim = 40
 #define images and labels as a subset of the data
-numOutputs = 10
-trainRatio = 0.9
-images, labels = subSet(numOutputs,CharImages,CharLabels)
-dataLength = len(labels) #how many labels/images do we have?
-#del MNISTLabels; del MNISTImages; 
-del CharLabels; del CharImages; #free up memory
+#this function splits the data and prepares it for use in the network, can be used to loop
+#over several numOutputs
+def prepareDataSet(numOutputs,trainRatio,CharImages,CharLabels):
 
-#define the training and testing images
-trainImages = images[0:int(dataLength*trainRatio)]
-trainLabels = labels[0:int(dataLength*trainRatio)]
-testImages = images[int(dataLength*trainRatio):dataLength]
-testLabels = labels[int(dataLength*trainRatio):dataLength]
-del images; del labels;        
+    images, labels = subSet(numOutputs,CharImages,CharLabels)
+    dataLength = len(labels) #how many labels/images do we have?
+    #del MNISTLabels; del MNISTImages; 
+    del CharLabels; del CharImages; #free up memory
+    
+    #define the training and testing images
+    trainImages = images[0:int(dataLength*trainRatio)]
+    trainLabels = labels[0:int(dataLength*trainRatio)]
+    testImages = images[int(dataLength*trainRatio):dataLength]
+    testLabels = labels[int(dataLength*trainRatio):dataLength]
+    del images; del labels;        
+    
+    trainData = Data(trainImages,trainLabels)
+    del trainImages,trainLabels
+    #%% Create sprites and labels for the embedding
+    #os.chdir(workingPath)
+    #from classDataManip import createSpriteLabels
+    # How many sprites do we want to create (must be a square) > last value in function
+    montage, record_file = createSpriteLabels(testImages,testLabels,int(len(testLabels)**0.5),savePath)
+    del montage; del record_file #don't need to save these, waste space
+    return trainData, testLabels, testImages
 
-#%% Create sprites and labels for the embedding
-os.chdir(workingPath)
-from classDataManip import createSpriteLabels
-# How many sprites do we want to create (must be a square) > last value in function
-montage, record_file = createSpriteLabels(testImages,testLabels,int(len(testLabels)**0.5))
-del montage; del record_file #don't need to save these, waste space
 
 #%%Build the network
 print("Building the net...")
 #Reset the graph (since we are not creating this in a function!)
-inputDim = 40
-learningRate = 1e-3
-trainBatchSize = len(trainLabels)
 
-def makeDir(LOGDIR,whichTest,numOutputs,learningRate,trainBatchSize):
-    #make a directory to save tensorboard information in 
-    #whichTest = 5
-    LOGDIR = LOGDIR + str(datetime.date.today()) + \
-                '/Chinese_conv_{}/Outputs{}_LR{}_Batch{}'\
-                .format(whichTest,numOutputs,learningRate,trainBatchSize)
-    #make a directory if one does not exist
-    if not os.path.exists(LOGDIR):
-        os.makedirs(LOGDIR)
-    return LOGDIR
+
+
+#def makeDir(LOGDIR,whichTest,numOutputs,learningRate,trainBatchSize):
+#    #make a directory to save tensorboard information in 
+#    #whichTest = 5
+#    LOGDIR = LOGDIR + str(datetime.date.today()) + \
+#                '/Chinese_conv_{}/Outputs{}_LR{}_Batch{}'\
+#                .format(whichTest,numOutputs,learningRate,trainBatchSize)
+#    #make a directory if one does not exist
+#    if not os.path.exists(LOGDIR):
+#        os.makedirs(LOGDIR)
+#    return LOGDIR
 
 def neural_net(LOGDIR,whichTest,numOutputs,learningRate,trainBatchSize,\
-               iterations,trainImages,trainLabels,testImages,testLabels):
+               iterations,trainData,testImages,testLabels):
     tf.reset_default_graph()
     LOGDIR = makeDir(LOGDIR,whichTest,numOutputs,learningRate,trainBatchSize)
     # function to create weights and biases automatically
@@ -221,32 +276,14 @@ def neural_net(LOGDIR,whichTest,numOutputs,learningRate,trainBatchSize,\
     # Create a saver to save these summary operations AND the embedding
     saver = tf.train.Saver()
     
-    #%%Create the dataset tensors for training and validation data
-    print("Creating dataset tensors...")
-    tr_data = tf.data.Dataset.from_tensor_slices((trainImages,trainLabels))
-    #tr_data = tr_data.shuffle(buffer_size=100,seed=2)
-    tr_data = tr_data.repeat()
-    tr_data = tr_data.batch(trainBatchSize)
-    val_data = tf.data.Dataset.from_tensor_slices((testImages,testLabels))
-    #val_data = val_data.shuffle(buffer_size=100)
-    val_data=val_data.repeat()
-    val_data = val_data.batch(len(testLabels))
-    
-    #Create the training and validation iterators over batches
-    
-    tr_iterator = tr_data.make_initializable_iterator()
-    tr_next_image, tr_next_label = tr_iterator.get_next()
-    val_iterator = val_data.make_initializable_iterator()
-    val_next_image, val_next_label = val_iterator.get_next()
+  
      
     #%% Open a tensorflow session
     print("Initialising the net...")
     sess = tf.InteractiveSession()
     # Initialise all variables
     tf.global_variables_initializer().run()
-    # Initailise the iterator
-    sess.run(tr_iterator.initializer)
-    sess.run(val_iterator.initializer)
+
     
     # Create writers
     train_writer = tf.summary.FileWriter(os.path.join(LOGDIR)+'/train')
@@ -268,71 +305,59 @@ def neural_net(LOGDIR,whichTest,numOutputs,learningRate,trainBatchSize,\
     embedding.sprite.image_path = os.path.join(savePath,'spriteImages')
     embedding.metadata_path = os.path.join(savePath,'spriteLabels.tsv')
     # Specify the width and height of a single thumbnail.
-    embedding.sprite.single_image_dim.extend([40, 40])
+    embedding.sprite.single_image_dim.extend([inputDim,inputDim])
     projector.visualize_embeddings(embedding_writer, config)
     
     
     #%% Start training!
     print("Starting training!")
-    epochLength = int(len(trainLabels)/trainBatchSize) #no. of iterations per epoch
+    epochLength = int(len(trainData.labels)/trainBatchSize) #no. of iterations per epoch
     whichEpoch = 0
     print("Number of iterations per epoch: {}".format(epochLength))
-    iterations = 3
     displayNum = 2
     testNum = 10
     for i in range(iterations):
         """Check a random value in the batch matches its label"""
-        batchImages, batchLabels = tr_next_image, tr_next_label
-        testBatchImages, testBatchLabels = val_next_image, val_next_label
+        batchImages, batchLabels = trainData.nextImageBatch(trainBatchSize), trainData.nextOneHotLabelBatch(trainBatchSize,numOutputs)
+
     #    randomIndex = random.randint(0,trainBatchSize-1)
     #    print(display(batchImages.eval()[randomIndex], inputDim),batchLabels.eval()[randomIndex])
         
         if i % displayNum == 0:
             train_accuracy, train_summary =sess.run([accuracy, mergedSummaryOp], \
-                         feed_dict={x: batchImages.eval(),\
-                                    y_: tf.one_hot(batchLabels,numOutputs).eval(),\
-                                    keep_prob: 1.0})
+                         feed_dict={x: batchImages, y_: batchLabels,keep_prob: 1.0})
             train_writer.add_summary(train_summary, i)
-            #summary and assignment for the embedding
-            assign, embedding_summary = sess.run([assignment,mergedSummaryOp], \
-                        #complex powers so that it matches up with number of sprites generated
-                         feed_dict={x: testBatchImages.eval()[:1024],\
-                                    y_: tf.one_hot(testBatchLabels,numOutputs).eval()[:1024],\
-                                    keep_prob: 1.0})
-            embedding_writer.add_summary(embedding_summary,i)
             
         if i % testNum == 0:
             print("Testing the net...")
             test_accuracy, test_summary = sess.run([accuracy,mergedSummaryOp], \
-                           feed_dict={x: testBatchImages.eval(),\
-                                      y_: tf.one_hot(testBatchLabels,numOutputs).eval(),\
-                                      keep_prob: 1.0})
+                           feed_dict={x: testImages,y_: oneHot(testLabels,numOutputs),keep_prob: 1.0})
             test_writer.add_summary(test_summary, i)
             saver.save(sess, os.path.join(LOGDIR, "LR{}_Iter{}_TestAcc{}.ckpt".format(learningRate,i,test_accuracy)))
+            #summary and assignment for the embedding
+            assign, embedding_summary = sess.run([assignment,mergedSummaryOp], \
+                        #complex powers so that it matches up with number of sprites generated
+                         feed_dict={x: testImages[:1024],y_: oneHot(testLabels,numOutputs)[:1024],keep_prob: 1.0})
+            embedding_writer.add_summary(embedding_summary,i)
             
         if i % epochLength == 0 and i != 0:
             whichEpoch += 1
             print("Did {} epochs".format(whichEpoch))
         # run a training step   
-        sess.run(train_step, \
-                 feed_dict={x: batchImages.eval(), \
-                            y_: tf.one_hot(batchLabels,numOutputs).eval(), \
-                            keep_prob: 0.5})
+        sess.run(train_step,feed_dict={x: batchImages,y_: batchLabels, keep_prob: 0.5})
     train_writer.close()
     test_writer.close()
 
-#%% Test trained model
-#print("Testing the net...")
-#testBatchImages, testBatchLabels = val_next_image, val_next_label
-#print(sess.run(accuracy, \
-#               feed_dict={x: testBatchImages.eval(), \
-#                          y_: tf.one_hot(testBatchLabels,numOutputs).eval(), \
-#                          keep_prob: 1.0}))
 
 #%% Run model function multiple times
-for learning_rate in [1E-4,1E-3,1E-2]:
-    for trainBatchSize in [len(trainLabels)]:
-        for numOutputs in [10,20,30]:
+whichTest = 1
+iterations = 5
+trainRatio = 0.9
+for numOutputs in [10,20,30]:
+    trainData,testLabels,testImages = prepareDataSet(numOutputs,trainRatio,CharImages,CharLabels)
+    for learning_rate in [1E-4,1E-3,1E-2]:
+        for trainBatchSize in [len(trainData.labels)]:
+        
             #LOGDIR, whichTest, numOutputs, learningRate, trainBatchSize, iterations
-            neural_net(LOGDIR,7,numOutputs,learning_rate,trainBatchSize,5,\
-                       trainImages,trainLabels,testImages,testLabels)
+            neural_net(LOGDIR,whichTest,numOutputs,learning_rate,trainBatchSize,iterations,\
+                       trainData,testImages,testLabels)
