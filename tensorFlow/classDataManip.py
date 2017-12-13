@@ -7,27 +7,28 @@ Created on Thu Nov 30 09:48:05 2017
 import os
 import numpy as np
 from PIL import Image
+import datetime
 
-#%%Load Data
-#first part of the next line goes one back in the directory
-#os.chdir(os.path.normpath(os.getcwd() + os.sep + os.pardir) + '\\dataHandling')
-os.chdir('C:\\Users\\Sebastian\\Desktop\\GitHub\\ML-for-Chinese-Calligraphy\\dataHandling')
-#os.chdir('C:\\Users\\ellio\\OneDrive\\Documents\\GitHub\\ML-for-Chinese-Calligraphy\\dataHandling')
-from classFileFunctions import fileFunc as fF 
-"""Define the user"""
-funcPath,dataPath,savePath,rootDIR = fF.whichUser('Seb')
-#os.chdir("..")
-
-#%%Get the data
-#set ration of data to be training and testing
-
-#file to open
-dataPath = savePath
-fileName="1001to1100"
-labels,images=fF.readNPZ(dataPath,fileName,"saveLabels","saveImages")
+##%%Load Data
+##first part of the next line goes one back in the directory
+##os.chdir(os.path.normpath(os.getcwd() + os.sep + os.pardir) + '\\dataHandling')
+#os.chdir('C:\\Users\\Sebastian\\Desktop\\GitHub\\ML-for-Chinese-Calligraphy\\dataHandling')
+##os.chdir('C:\\Users\\ellio\\OneDrive\\Documents\\GitHub\\ML-for-Chinese-Calligraphy\\dataHandling')
+#from classFileFunctions import fileFunc as fF 
+#"""Define the user"""
+#funcPath,dataPath,savePath,rootDIR = fF.whichUser('Elliot')
+##os.chdir("..")
+#
+##%%Get the data
+##set ration of data to be training and testing
+#
+##file to open
+#dataPath = savePath
+#fileName="1001to1100"
+#labels,images=fF.readNPZ(dataPath,fileName,"saveLabels","saveImages")
 
 #%%
-def createSpriteLabels(images,labels,howMany):
+def createSpriteLabels(images,labels,howMany,savePath):
     """Create a nxn image of sprites of the characters"""
     # Don't let the number of sprites be greater than 32 or the projector
     #   won't be able to handle it
@@ -75,16 +76,32 @@ def subSet(numClasses,images,labels):
             subLabels.append(labels[i])
     return np.asarray(subImages),np.asarray(subLabels)
 
-def makeDir(rootDIR,fileName,hparam):
-    """Makes a directory automatically to save tensorboard data to"""
-    testNum = 0
-    LOGDIR = rootDIR + str(datetime.date.today()) + '/' + fileName + '-test-{}'.format(testNum)
-    while os.path.exists(LOGDIR):
-        testNum += 1
-        LOGDIR = rootDIR + str(datetime.date.today()) + '/' + fileName + '-test-{}'.format(testNum)
-    #make a directory
-    os.makedirs(LOGDIR)
+def oneHot(labelList,numOutputs):
+        oneHots = np.zeros((len(labelList),numOutputs))
+        oneHots[np.arange(len(labelList)), labelList] = 1
+        return oneHots
+    
+#def makeDir(rootDIR,fileName,hparam):
+#    """Makes a directory automatically to save tensorboard data to"""
+#    testNum = 0
+#    LOGDIR = rootDIR + str(datetime.date.today()) + '/' + fileName + '-test-{}'.format(testNum)
+#    while os.path.exists(LOGDIR):
+#        testNum += 1
+#        LOGDIR = rootDIR + str(datetime.date.today()) + '/' + fileName + '-test-{}'.format(testNum)
+#    #make a directory
+#    os.makedirs(LOGDIR)
+#    return LOGDIR
+def makeDir(LOGDIR,whichTest,numOutputs,learningRate,trainBatchSize):
+    #make a directory to save tensorboard information in 
+    #whichTest = 5
+    LOGDIR = LOGDIR + str(datetime.date.today()) + \
+                '/Chinese_conv_{}/Outputs{}_LR{}_Batch{}'\
+                .format(whichTest,numOutputs,learningRate,trainBatchSize)
+    #make a directory if one does not exist
+    if not os.path.exists(LOGDIR):
+        os.makedirs(LOGDIR)
     return LOGDIR
+
         
 def normalizePixels(trainImages):
     trainImages = np.asarray(trainImages)
@@ -96,3 +113,49 @@ def saveImages(trainImages,trainLabels):
     for i in range(len(trainImages)):
         tmpImage = Image.fromarray(np.resize(trainImages[i],(40,40)), 'L')
         tmpImage.save('{},label_{}.jpeg'.format(i,trainLabels[i]))
+        
+class Data:
+    def __init__(self,images,labels,i=0):
+        self.images = images
+        self.labels = labels 
+        self.i=i
+    def nextImageBatch(self,batchSize):
+        print("Image Data Position",self.i)
+        if batchSize < len(self.images)-self.i:
+            oldi=self.i
+            self.i+=batchSize
+            return self.images[oldi:self.i]
+            
+        elif batchSize == len(self.images)-self.i:
+            oldi=self.i
+            self.i=0
+            return self.images[oldi:]
+        else:
+            firstHalf = self.images[self.i:]
+            secondHalf = self.images[0:self.i+batchSize-len(self.images)]
+            self.i+=batchSize-len(self.images)
+            return np.concatenate(firstHalf,secondHalf)
+           
+            
+    
+        
+    def nextOneHotLabelBatch(self,batchSize,numOutputs):
+         print("Label Data Position",self.i)
+         if batchSize < len(self.labels)-self.i:
+            oldi=self.i
+            self.i+=batchSize
+            print(self.labels[oldi:self.i])
+            print(len(self.labels[oldi:self.i]))
+            print(numOutputs)
+            return oneHot((self.labels)[oldi:self.i],numOutputs)
+            
+         elif batchSize == len(self.labels)-self.i:
+            oldi=self.i
+            self.i=0
+            return oneHot(self.labels[oldi:],numOutputs)
+         else:
+            firstHalf = self.labels[self.i:]
+            secondHalf = self.labels[0:self.i+batchSize-len(self.labels)]
+            self.i+=batchSize-len(self.labels)
+            return oneHot(np.concatenate(firstHalf,secondHalf),numOutputs)
+            
