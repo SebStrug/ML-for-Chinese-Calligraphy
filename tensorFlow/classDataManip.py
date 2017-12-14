@@ -124,7 +124,7 @@ class Data:
             firstHalf = self.images[self.i:]
             secondHalf = self.images[0:self.i+batchSize-len(self.images)]
             self.i+=batchSize-len(self.images)
-            return np.concatenate(firstHalf,secondHalf)
+            return np.concatenate((firstHalf,secondHalf))
            
             
     
@@ -147,5 +147,5 @@ class Data:
             firstHalf = self.labels[self.i:]
             secondHalf = self.labels[0:self.i+batchSize-len(self.labels)]
             self.i+=batchSize-len(self.labels)
-            return oneHot(np.concatenate(firstHalf,secondHalf),numOutputs)
+            return oneHot(np.concatenate((firstHalf,secondHalf)),numOutputs)
             
