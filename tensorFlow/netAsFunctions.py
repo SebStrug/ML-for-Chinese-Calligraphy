@@ -95,6 +95,7 @@ def display(img, inputDim, threshold=200):
                 
 #%%Import the data
 print("Importing the data...")
+inputDim = 40
 #MNIST data
 #fileName="MNIST_data"
 #MNISTLabels,MNISTImages=fF.readNPZ(savePath,fileName,"saveLabels","saveImages")
@@ -109,7 +110,6 @@ CharLabels = np.concatenate((CharLabels,nextLabels),axis=0)
 CharImages = np.concatenate((CharImages,nextImages),axis=0)
 del nextLabels; del nextImages;
 
-inputDim = 40
 #define images and labels as a subset of the data
 #this function splits the data and prepares it for use in the network, can be used to loop
 #over several numOutputs
@@ -356,7 +356,7 @@ trainRatio = 0.9
 for numOutputs in [10,20,30]:
     trainData,testLabels,testImages = prepareDataSet(numOutputs,trainRatio,CharImages,CharLabels)
     for learning_rate in [1E-4,1E-3,1E-2]:
-        for trainBatchSize in [len(trainData.labels)]:
+        for trainBatchSize in [64,128,256,512]:
         
             #LOGDIR, whichTest, numOutputs, learningRate, trainBatchSize, iterations
             neural_net(LOGDIR,whichTest,numOutputs,learning_rate,trainBatchSize,iterations,\

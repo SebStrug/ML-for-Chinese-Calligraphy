@@ -80,17 +80,7 @@ def oneHot(labelList,numOutputs):
         oneHots = np.zeros((len(labelList),numOutputs))
         oneHots[np.arange(len(labelList)), labelList] = 1
         return oneHots
-    
-#def makeDir(rootDIR,fileName,hparam):
-#    """Makes a directory automatically to save tensorboard data to"""
-#    testNum = 0
-#    LOGDIR = rootDIR + str(datetime.date.today()) + '/' + fileName + '-test-{}'.format(testNum)
-#    while os.path.exists(LOGDIR):
-#        testNum += 1
-#        LOGDIR = rootDIR + str(datetime.date.today()) + '/' + fileName + '-test-{}'.format(testNum)
-#    #make a directory
-#    os.makedirs(LOGDIR)
-#    return LOGDIR
+
 def makeDir(LOGDIR,whichTest,numOutputs,learningRate,trainBatchSize):
     #make a directory to save tensorboard information in 
     #whichTest = 5
