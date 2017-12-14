@@ -46,52 +46,7 @@ def display(img, inputDim, threshold=200):
     return render
 
     
-#class Data:
-#    def __init__(self,images,labels,i=0):
-#        self.images = images
-#        self.labels = labels 
-#        self.i=i
-#    def nextImageBatch(self,batchSize):
-#        print("Image Data Position",self.i)
-#        if batchSize < len(self.images)-self.i:
-#            oldi=self.i
-#            self.i+=batchSize
-#            return self.images[oldi:self.i]
-#            
-#        elif batchSize == len(self.images)-self.i:
-#            oldi=self.i
-#            self.i=0
-#            return self.images[oldi:]
-#        else:
-#            firstHalf = self.images[self.i:]
-#            secondHalf = self.images[0:self.i+batchSize-len(self.images)]
-#            self.i+=batchSize-len(self.images)
-#            return np.concatenate(firstHalf,secondHalf)
-#           
-#            
-#    
-#        
-#    def nextOneHotLabelBatch(self,batchSize,numOutputs):
-#         print("Label Data Position",self.i)
-#         if batchSize < len(self.labels)-self.i:
-#            oldi=self.i
-#            self.i+=batchSize
-#            print(self.labels[oldi:self.i])
-#            print(len(self.labels[oldi:self.i]))
-#            print(numOutputs)
-#            return oneHot((self.labels)[oldi:self.i],numOutputs)
-#            
-#         elif batchSize == len(self.labels)-self.i:
-#            oldi=self.i
-#            self.i=0
-#            return oneHot(self.labels[oldi:],numOutputs)
-#         else:
-#            firstHalf = self.labels[self.i:]
-#            secondHalf = self.labels[0:self.i+batchSize-len(self.labels)]
-#            self.i+=batchSize-len(self.labels)
-#            return oneHot(np.concatenate(firstHalf,secondHalf),numOutputs)
-#            
-    
+
                 
 #%%Import the data
 print("Importing the data...")
@@ -142,18 +97,6 @@ def prepareDataSet(numOutputs,trainRatio,CharImages,CharLabels):
 print("Building the net...")
 #Reset the graph (since we are not creating this in a function!)
 
-
-
-#def makeDir(LOGDIR,whichTest,numOutputs,learningRate,trainBatchSize):
-#    #make a directory to save tensorboard information in 
-#    #whichTest = 5
-#    LOGDIR = LOGDIR + str(datetime.date.today()) + \
-#                '/Chinese_conv_{}/Outputs{}_LR{}_Batch{}'\
-#                .format(whichTest,numOutputs,learningRate,trainBatchSize)
-#    #make a directory if one does not exist
-#    if not os.path.exists(LOGDIR):
-#        os.makedirs(LOGDIR)
-#    return LOGDIR
 
 def neural_net(LOGDIR,whichTest,numOutputs,learningRate,trainBatchSize,\
                iterations,trainData,testImages,testLabels):
@@ -350,13 +293,13 @@ def neural_net(LOGDIR,whichTest,numOutputs,learningRate,trainBatchSize,\
 
 
 #%% Run model function multiple times
-whichTest = 1
-iterations = 5
+whichTest = 2
+iterations = 10
 trainRatio = 0.9
 for numOutputs in [10,20,30]:
     trainData,testLabels,testImages = prepareDataSet(numOutputs,trainRatio,CharImages,CharLabels)
-    for learning_rate in [1E-4,1E-3,1E-2]:
-        for trainBatchSize in [64,128,256,512]:
+    for learning_rate in [1E-4,1E-3]:
+        for trainBatchSize in [256,512]:
         
             #LOGDIR, whichTest, numOutputs, learningRate, trainBatchSize, iterations
             neural_net(LOGDIR,whichTest,numOutputs,learning_rate,trainBatchSize,iterations,\
