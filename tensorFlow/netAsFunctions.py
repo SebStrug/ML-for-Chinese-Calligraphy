@@ -254,6 +254,7 @@ def neural_net(LOGDIR,whichTest,numOutputs,learningRate,trainBatchSize,\
     
     #%% Start training!
     print("Starting training!")
+    trainData.i=0
     epochLength = int(len(trainData.labels)/trainBatchSize) #no. of iterations per epoch
     whichEpoch = 0
     print("Number of iterations per epoch: {}".format(epochLength))
@@ -269,19 +270,19 @@ def neural_net(LOGDIR,whichTest,numOutputs,learningRate,trainBatchSize,\
         if i % displayNum == 0:
             train_accuracy, train_summary =sess.run([accuracy, mergedSummaryOp], \
                          feed_dict={x: batchImages, y_: batchLabels,keep_prob: 1.0})
-            train_writer.add_summary(train_summary, i)
+            train_writer.add_summary(train_summary, i*trainBatchSize)
             
         if i % testNum == 0:
             print("Testing the net...")
             test_accuracy, test_summary = sess.run([accuracy,mergedSummaryOp], \
                            feed_dict={x: testImages,y_: oneHot(testLabels,numOutputs),keep_prob: 1.0})
-            test_writer.add_summary(test_summary, i)
+            test_writer.add_summary(test_summary, i*trainBatchSize)
             saver.save(sess, os.path.join(LOGDIR, "LR{}_Iter{}_TestAcc{}.ckpt".format(learningRate,i,test_accuracy)))
             #summary and assignment for the embedding
             assign, embedding_summary = sess.run([assignment,mergedSummaryOp], \
                         #complex powers so that it matches up with number of sprites generated
                          feed_dict={x: testImages[:1024],y_: oneHot(testLabels,numOutputs)[:1024],keep_prob: 1.0})
-            embedding_writer.add_summary(embedding_summary,i)
+            embedding_writer.add_summary(embedding_summary,i*trainBatchSize)
             
         if i % epochLength == 0 and i != 0:
             whichEpoch += 1
@@ -297,9 +298,9 @@ whichTest = 3
 trainRatio = 0.8
 for numOutputs in [10,20,30]:
     trainData,testLabels,testImages = prepareDataSet(numOutputs,trainRatio,CharImages,CharLabels)
-    for learning_rate in [1E-4,1E-3,1E-2]:
-        for trainBatchSize in [128,256,512]:
-            iterations = 200*len(trainData.labels)/trainBatchSize
+    for learning_rate in [1E-4,1E-3]:
+        for trainBatchSize in [128,256]:
+            iterations = 200*epochLength
         
             #LOGDIR, whichTest, numOutputs, learningRate, trainBatchSize, iterations
             neural_net(LOGDIR,whichTest,numOutputs,learning_rate,trainBatchSize,iterations,\
