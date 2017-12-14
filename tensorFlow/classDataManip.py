@@ -105,47 +105,48 @@ def saveImages(trainImages,trainLabels):
         tmpImage.save('{},label_{}.jpeg'.format(i,trainLabels[i]))
         
 class Data:
-    def __init__(self,images,labels,i=0):
+    def __init__(self,images,labels,imagePos=0,labelPos=0):
         self.images = images
         self.labels = labels 
-        self.i=i
+        self.imagePos=imagePos
+        self.labelPos=labelPos
     def nextImageBatch(self,batchSize):
-        print("Image Data Position",self.i)
-        if batchSize < len(self.images)-self.i:
-            oldi=self.i
-            self.i+=batchSize
-            return self.images[oldi:self.i]
+        print("Image Data Position",self.imagePos)
+        if batchSize < len(self.images)-self.imagePos:
+            oldi=self.imagePos
+            self.imagePos+=batchSize
+            return self.images[oldi:self.imagePos]
             
-        elif batchSize == len(self.images)-self.i:
-            oldi=self.i
-            self.i=0
+        elif batchSize == len(self.images)-self.imagePos:
+            oldi=self.imagePos
+            self.imagePos=0
             return self.images[oldi:]
         else:
-            firstHalf = self.images[self.i:]
-            secondHalf = self.images[0:self.i+batchSize-len(self.images)]
-            self.i+=batchSize-len(self.images)
+            firstHalf = self.images[self.imagePos:]
+            secondHalf = self.images[0:self.imagePos+batchSize-len(self.images)]
+            self.imagePos+=batchSize-len(self.images)
             return np.concatenate((firstHalf,secondHalf))
            
             
     
         
     def nextOneHotLabelBatch(self,batchSize,numOutputs):
-         print("Label Data Position",self.i)
-         if batchSize < len(self.labels)-self.i:
-            oldi=self.i
-            self.i+=batchSize
-            print(self.labels[oldi:self.i])
-            print(len(self.labels[oldi:self.i]))
+         print("Label Data Position",self.labelPos)
+         if batchSize < len(self.labels)-self.labelPos:
+            oldi=self.labelPos
+            self.labelPos+=batchSize
+            print(self.labels[oldi:self.labelPos])
+            print(len(self.labels[oldi:self.labelPos]))
             print(numOutputs)
-            return oneHot((self.labels)[oldi:self.i],numOutputs)
+            return oneHot((self.labels)[oldi:self.labelPos],numOutputs)
             
-         elif batchSize == len(self.labels)-self.i:
-            oldi=self.i
-            self.i=0
+         elif batchSize == len(self.labels)-self.labelPos:
+            oldi=self.labelPos
+            self.labelPos=0
             return oneHot(self.labels[oldi:],numOutputs)
          else:
-            firstHalf = self.labels[self.i:]
-            secondHalf = self.labels[0:self.i+batchSize-len(self.labels)]
-            self.i+=batchSize-len(self.labels)
+            firstHalf = self.labels[self.labelPos:]
+            secondHalf = self.labels[0:self.labelPos+batchSize-len(self.labels)]
+            self.labelPos+=batchSize-len(self.labels)
             return oneHot(np.concatenate((firstHalf,secondHalf)),numOutputs)
             

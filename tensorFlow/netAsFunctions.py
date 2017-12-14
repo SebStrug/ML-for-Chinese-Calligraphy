@@ -254,7 +254,8 @@ def neural_net(LOGDIR,whichTest,numOutputs,learningRate,trainBatchSize,\
     
     #%% Start training!
     print("Starting training!")
-    trainData.i=0
+    trainData.imagePos=0
+    trainData.labelPos=0
     epochLength = int(len(trainData.labels)/trainBatchSize) #no. of iterations per epoch
     whichEpoch = 0
     print("Number of iterations per epoch: {}".format(epochLength))
@@ -294,13 +295,13 @@ def neural_net(LOGDIR,whichTest,numOutputs,learningRate,trainBatchSize,\
 
 
 #%% Run model function multiple times
-whichTest = 3
+whichTest = 5
 trainRatio = 0.8
 for numOutputs in [10,20,30]:
     trainData,testLabels,testImages = prepareDataSet(numOutputs,trainRatio,CharImages,CharLabels)
-    for learning_rate in [1E-4,1E-3]:
-        for trainBatchSize in [128,256]:
-            iterations = 200*epochLength
+    for learning_rate in [1E-4,1E-3,1E-2]:
+        for trainBatchSize in [128,256,512]:
+            iterations = 200*int(len(trainData.labels)/trainBatchSize)
         
             #LOGDIR, whichTest, numOutputs, learningRate, trainBatchSize, iterations
             neural_net(LOGDIR,whichTest,numOutputs,learning_rate,trainBatchSize,iterations,\
