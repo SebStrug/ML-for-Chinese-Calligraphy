@@ -36,8 +36,7 @@ from classFileFunctions import fileFunc as fF
 #%% Extract data
 #file path for data
 #dataPath = 'C:\\Users\\ellio\\Documents\\training data\\forConversion'
-#dataPath = 'C:\\Users\\Sebastian\\Desktop\\MLChinese\\CASIA\\HWDtest1'
-#dataPath = 'C:\\Users\\Sebastian\\Desktop\\MLChinese\\CASIA\\HWDtest2\\EnglishFiles'
+dataPath = 'C:\\Users\\Sebastian\\Desktop\\MLChinese\\Saved script files'
 numFiles = len([filenames for subdir, dirs, filenames in os.walk(dataPath)][0])
     
 #get info on gnt file

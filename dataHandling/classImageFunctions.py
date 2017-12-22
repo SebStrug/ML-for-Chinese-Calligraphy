@@ -122,7 +122,8 @@ class imageFunc(object):
         return img;
 
     def resizeImage(image,newWidth,newHeight ):
-        """Resizes an image"""
+        """Resizes an image
+        Takes in a PIL, or scipy etc image NOT AN ARRAY"""
         newim=Image.new("L",(newWidth,newHeight)) #create new white canvas
         #Paste old image, centred onto new canvas
         newim.paste(image,(int((newWidth-image.size[0])/2),int((newHeight-image.size[1])/2)))
