@@ -6,16 +6,16 @@ Created on Fri Dec  8 20:43:52 2017
 Back to basics
 """
 #%% Imports, set directories, seb
-
-#funcPath = 'C:\\Users\\Sebastian\\Desktop\\GitHub\\ML-for-Chinese-Calligraphy\\dataHandling'
-#savePath = 'C:\\Users\\Sebastian\\Desktop\\MLChinese\\Saved script files'
-#workingPath = 'C:\\Users\\Sebastian\\Desktop\\GitHub\\ML-for-Chinese-Calligraphy\\tensorFlow'
-#LOGDIR = r'C:/Users/Sebastian/Anaconda3/Lib/site-packages/tensorflow/tmp/ChineseCaligCNN/'
+name = 'Admin'
+funcPath = 'C:\\Users\\'+name+'\\Desktop\\GitHub\\ML-for-Chinese-Calligraphy\\dataHandling'
+savePath = 'C:\\Users\\'+name+'\\Desktop\\MLChinese\\Saved script files'
+workingPath = 'C:\\Users\\'+name+'\\Desktop\\GitHub\\ML-for-Chinese-Calligraphy\\tensorFlow'
+LOGDIR = r'C:/Users/'+name+'/Anaconda3/Lib/site-packages/tensorflow/tmp/ChineseCaligCNN/'
 #%% Imports, set directories, Elliot
-funcPath = 'C:\\Users\\ellio\\OneDrive\\Documents\\GitHubPC\\ML-for-Chinese-Calligraphy\\dataHandling'
-savePath = 'C:\\Users\\ellio\\Documents\\training data\\Machine learning data'
-workingPath = 'C:\\Users\\ellio\\OneDrive\\Documents\\GitHubPC\\ML-for-Chinese-Calligraphy\\tensorFlow'
-LOGDIR = r'C:\\Users\\ellio\\Anaconda3\\Lib\\site-packages\\tensorflow\\tmp\\'
+#funcPath = 'C:\\Users\\ellio\\OneDrive\\Documents\\GitHubPC\\ML-for-Chinese-Calligraphy\\dataHandling'
+#savePath = 'C:\\Users\\ellio\\Documents\\training data\\Machine learning data'
+#workingPath = 'C:\\Users\\ellio\\OneDrive\\Documents\\GitHubPC\\ML-for-Chinese-Calligraphy\\tensorFlow'
+#LOGDIR = r'C:\\Users\\ellio\\Anaconda3\\Lib\\site-packages\\tensorflow\\tmp\\'
 #%%
 
 import os
@@ -44,9 +44,6 @@ def display(img, inputDim, threshold=200):
         else:
             render += '.'
     return render
-
-    
-
                 
 #%%Import the data
 print("Importing the data...")
@@ -88,7 +85,7 @@ def prepareDataSet(numOutputs,trainRatio,CharImages,CharLabels):
     #os.chdir(workingPath)
     #from classDataManip import createSpriteLabels
     # How many sprites do we want to create (must be a square) > last value in function
-    montage, record_file = createSpriteLabels(testImages,testLabels,int(len(testLabels)**0.5),savePath)
+    montage, record_file = createSpriteLabels(testImages,testLabels,1024,savePath)
     del montage; del record_file #don't need to save these, waste space
     return trainData, testLabels, testImages
 
@@ -99,9 +96,9 @@ print("Building the net...")
 
 
 def neural_net(LOGDIR,whichTest,numOutputs,learningRate,trainBatchSize,\
-               iterations,trainData,testImages,testLabels):
+               iterations,trainData,testImages,testLabels,trainRatio):
     tf.reset_default_graph()
-    LOGDIR = makeDir(LOGDIR,whichTest,numOutputs,learningRate,trainBatchSize)
+    LOGDIR = makeDir(LOGDIR,whichTest,numOutputs,learningRate,trainBatchSize,trainRatio)
     # function to create weights and biases automatically
     # want slightly positive weights/biases for relu to avoid dead nurons
     def weight_variable(shape):
@@ -215,7 +212,7 @@ def neural_net(LOGDIR,whichTest,numOutputs,learningRate,trainBatchSize,\
     mergedSummaryOp = tf.summary.merge_all()
     # Embedding variables for the projector
     embedding_var = tf.Variable(tf.zeros([len(testLabels), 1024]), name="test_embedding")
-    assignment = embedding_var.assign(h_fc1)
+    #assignment = embedding_var.assign(h_fc1)
     # Create a saver to save these summary operations AND the embedding
     saver = tf.train.Saver()
     
@@ -233,24 +230,24 @@ def neural_net(LOGDIR,whichTest,numOutputs,learningRate,trainBatchSize,\
     train_writer.add_graph(sess.graph)
     test_writer = tf.summary.FileWriter(os.path.join(LOGDIR)+'/test')
     test_writer.add_graph(sess.graph)
-    embedding_writer = tf.summary.FileWriter(LOGDIR)
-    embedding_writer.add_graph(sess.graph)
-    
-    #%% Embedding for the projector
-    """To have the embedding save properly, we need to initialise its own summary,
-    which needs to write just to the base LOGDIR, otherwise we will have problems loading it"""
-    # embedding for the projection of higher dimensional space
-    config = projector.ProjectorConfig()
-    # Can have multiple embeddings, this only adds one
-    embedding = config.embeddings.add()
-    embedding.tensor_name = embedding_var.name
-    # Link the tensor to the label and sprite path
-    embedding.sprite.image_path = os.path.join(savePath,'spriteImages')
-    embedding.metadata_path = os.path.join(savePath,'spriteLabels.tsv')
-    # Specify the width and height of a single thumbnail.
-    embedding.sprite.single_image_dim.extend([inputDim,inputDim])
-    projector.visualize_embeddings(embedding_writer, config)
-    
+#    embedding_writer = tf.summary.FileWriter(LOGDIR)
+#    embedding_writer.add_graph(sess.graph)
+#    
+#    #%% Embedding for the projector
+#    """To have the embedding save properly, we need to initialise its own summary,
+#    which needs to write just to the base LOGDIR, otherwise we will have problems loading it"""
+#    # embedding for the projection of higher dimensional space
+#    config = projector.ProjectorConfig()
+#    # Can have multiple embeddings, this only adds one
+#    embedding = config.embeddings.add()
+#    embedding.tensor_name = embedding_var.name
+#    # Link the tensor to the label and sprite path
+#    embedding.sprite.image_path = os.path.join(savePath,'spriteImages')
+#    embedding.metadata_path = os.path.join(savePath,'spriteLabels.tsv')
+#    # Specify the width and height of a single thumbnail.
+#    embedding.sprite.single_image_dim.extend([inputDim,inputDim])
+#    projector.visualize_embeddings(embedding_writer, config)
+#    
     
     #%% Start training!
     print("Starting training!")
@@ -259,8 +256,8 @@ def neural_net(LOGDIR,whichTest,numOutputs,learningRate,trainBatchSize,\
     epochLength = int(len(trainData.labels)/trainBatchSize) #no. of iterations per epoch
     whichEpoch = 0
     print("Number of iterations per epoch: {}".format(epochLength))
-    displayNum = 2
-    testNum = 10
+    displayNum = 30
+    testNum = 200
     for i in range(iterations):
         """Check a random value in the batch matches its label"""
         batchImages, batchLabels = trainData.nextImageBatch(trainBatchSize), trainData.nextOneHotLabelBatch(trainBatchSize,numOutputs)
@@ -270,20 +267,20 @@ def neural_net(LOGDIR,whichTest,numOutputs,learningRate,trainBatchSize,\
         
         if i % displayNum == 0:
             train_accuracy, train_summary =sess.run([accuracy, mergedSummaryOp], \
-                         feed_dict={x: batchImages, y_: batchLabels,keep_prob: 1.0})
+                         feed_dict={x: batchImages, y_: batchLabels, keep_prob: 1.0})
             train_writer.add_summary(train_summary, i*trainBatchSize)
             
         if i % testNum == 0:
             print("Testing the net...")
             test_accuracy, test_summary = sess.run([accuracy,mergedSummaryOp], \
-                           feed_dict={x: testImages,y_: oneHot(testLabels,numOutputs),keep_prob: 1.0})
+                           feed_dict={x: testImages,y_: oneHot(testLabels,numOutputs), keep_prob: 1.0})
             test_writer.add_summary(test_summary, i*trainBatchSize)
             saver.save(sess, os.path.join(LOGDIR, "LR{}_Iter{}_TestAcc{}.ckpt".format(learningRate,i,test_accuracy)))
             #summary and assignment for the embedding
-            assign, embedding_summary = sess.run([assignment,mergedSummaryOp], \
-                        #complex powers so that it matches up with number of sprites generated
-                         feed_dict={x: testImages[:1024],y_: oneHot(testLabels,numOutputs)[:1024],keep_prob: 1.0})
-            embedding_writer.add_summary(embedding_summary,i*trainBatchSize)
+#            assign, embedding_summary = sess.run([assignment,mergedSummaryOp], \
+#                        #complex powers so that it matches up with number of sprites generated
+#                         feed_dict={x: testImages[:1024],y_: oneHot(testLabels,numOutputs)[:1024],keep_prob: 1.0})
+#            embedding_writer.add_summary(embedding_summary,i*trainBatchSize)
             
         if i % epochLength == 0 and i != 0:
             whichEpoch += 1
@@ -295,14 +292,14 @@ def neural_net(LOGDIR,whichTest,numOutputs,learningRate,trainBatchSize,\
 
 
 #%% Run model function multiple times
-whichTest = 5
-trainRatio = 0.8
-for numOutputs in [10,20,30]:
-    trainData,testLabels,testImages = prepareDataSet(numOutputs,trainRatio,CharImages,CharLabels)
-    for learning_rate in [1E-4,1E-3,1E-2]:
-        for trainBatchSize in [128,256,512]:
-            iterations = 200*int(len(trainData.labels)/trainBatchSize)
-        
-            #LOGDIR, whichTest, numOutputs, learningRate, trainBatchSize, iterations
-            neural_net(LOGDIR,whichTest,numOutputs,learning_rate,trainBatchSize,iterations,\
-                       trainData,testImages,testLabels)
+whichTest = 3
+#trainRatio = 0.8
+for numOutputs in [30]:
+    for trainRatio in [0.8]:
+        trainData,testLabels,testImages = prepareDataSet(numOutputs,trainRatio,CharImages,CharLabels)
+        for learning_rate in [1E-3]:
+            for trainBatchSize in [512]:      
+                iterations = 600*int(len(trainData.labels)/trainBatchSize)
+                #LOGDIR, whichTest, numOutputs, learningRate, trainBatchSize, iterations
+                neural_net(LOGDIR,whichTest,numOutputs,learning_rate,trainBatchSize,iterations,\
+                           trainData,testImages,testLabels,trainRatio)
