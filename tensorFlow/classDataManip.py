@@ -111,7 +111,7 @@ class Data:
         self.imagePos=imagePos
         self.labelPos=labelPos
     def nextImageBatch(self,batchSize):
-        print("Image Data Position",self.imagePos)
+#        print("Image Data Position",self.imagePos)
         if batchSize < len(self.images)-self.imagePos:
             oldi=self.imagePos
             self.imagePos+=batchSize
@@ -135,9 +135,9 @@ class Data:
          if batchSize < len(self.labels)-self.labelPos:
             oldi=self.labelPos
             self.labelPos+=batchSize
-            print(self.labels[oldi:self.labelPos])
-            print(len(self.labels[oldi:self.labelPos]))
-            print(numOutputs)
+#            print(self.labels[oldi:self.labelPos])
+#            print(len(self.labels[oldi:self.labelPos]))
+#            print(numOutputs)
             return oneHot((self.labels)[oldi:self.labelPos],numOutputs)
             
          elif batchSize == len(self.labels)-self.labelPos:
