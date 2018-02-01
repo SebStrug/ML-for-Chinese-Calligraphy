@@ -291,11 +291,11 @@ def neural_net(LOGDIR,whichTest,numOutputs,learningRate,trainBatchSize,\
 #%% Run model function multiple times
 whichTest = 3
 #trainRatio = 0.8
-for numOutputs in [30]:
+for numOutputs in [10]:
     for trainRatio in [0.8]:
         trainData,testLabels,testImages = prepareDataSet(numOutputs,trainRatio,CharImages,CharLabels)
         for learning_rate in [1E-3]:
-            for trainBatchSize in [512]:      
+            for trainBatchSize in [128]:      
                 iterations = 600*int(len(trainData.labels)/trainBatchSize)
                 #LOGDIR, whichTest, numOutputs, learningRate, trainBatchSize, iterations
                 neural_net(LOGDIR,whichTest,numOutputs,learning_rate,trainBatchSize,iterations,\
