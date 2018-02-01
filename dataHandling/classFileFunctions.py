@@ -17,18 +17,16 @@ class fileFunc(object):
         dataPathElliot = 'C:/Users/ellio/Documents/training data/Machine Learning data/'
         dataPathSeb = 'C:\\Users\\Sebastian\\Desktop\\MLChinese\\Saved script files'
         savePathSeb = 'C:\\Users\\Sebastian\\Desktop\\MLChinese\\Saved script files'
-        savePathElliot = 'C:\\Users\\ellio\\Documents\\training data\\Machine learning data'
         SebLOGDIR = r'C:/Users/Sebastian/Anaconda3/Lib/site-packages/tensorflow/tmp/ChineseCaligCNN/'
         elliotLOGDIR = r'C:/Users/ellio/Anaconda3/Lib/site-packages/tensorflow/tmp/'
         if user == "Elliot":
             dataPath = dataPathElliot
-            savePath = savePathElliot
             LOGDIR = elliotLOGDIR
         else:
             dataPath = dataPathSeb
             savePath = savePathSeb
             LOGDIR = SebLOGDIR
-        return funcPath,dataPath,savePath,rootDIR
+        return dataPath,LOGDIR
     
     def byteToInt(byte,byteOrder='little'):
         return int.from_bytes(byte, byteorder=byteOrder)
