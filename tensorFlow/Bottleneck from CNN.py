@@ -262,7 +262,7 @@ def neural_net(LOGDIR,whichTest,numOutputs,learningRate,trainBatchSize,\
     #    print(display(batchImages.eval()[randomIndex], inputDim),batchLabels.eval()[randomIndex])
         
         if i % displayNum == 0:
-            train_accuracy, train_summary,bottleneck =sess.run([accuracy, mergedSummaryOp, h_pool2_flat], \
+            train_accuracy, train_summary,bottleneck =sess.run([accuracy, mergedSummaryOp, h_fc1], \
                          feed_dict={x: batchImages, y_: batchLabels, keep_prob: 1.0})
             train_writer.add_summary(train_summary, i*trainBatchSize)
             print(bottleneck)
