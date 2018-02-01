@@ -47,7 +47,7 @@ del data #delete data in raw byte form
 
 #%% Check our characters and their labels are lining up in the original data file
 characters = dataForSaving[0]
-images = dataForSaving[5]
+images = dataForSaving[1]
 #del dataForSaving #clear memory
 for i in range(len(characters)):
     if characters[i] == characters[0]:
@@ -71,7 +71,7 @@ labeledChars = [np.where(uniqueChars == i)[0][0] for i in characters]
 
 #save a file containing our images (as arrays) and corresponding labels
 fF.saveNPZ(savePath,"CharToNumList_{}".format(numFiles),\
-           saveImages = dataForSaving[5], \
+           saveImages = dataForSaving[1], \
            saveLabels = labeledChars)
 
 #%% Check that the images and labels match up

@@ -67,6 +67,8 @@ class imageFunc(object):
         reducedArray = imageFunc.downscaleArray(whiteImage,blockSize,blockSize)
         #show the image from the array with
         #img = Image.fromarray(upscaledArray).show()
+        #apply padding
+        #reducedArray = np.pad(reducedArray,(2,2),'constant',constant_values=(255,255))
         return reducedArray
 
     def binarizeArray(array,threshold):

@@ -71,8 +71,9 @@ class fileFunc(object):
         totalSamples = int(np.sum(info.numSamples));
         characters = np.zeros(totalSamples,np.unicode);
         #images = np.zeros((totalSamples,info.maxWidth*info.maxHeight))
-        reducedSize = 40
+        reducedSize = 46
         images = np.zeros((totalSamples,reducedSize*reducedSize)) #images saved as reduced versions
+        testImages = []
         #place data into arrays
         k=0
         for j in range(len(info.numSamples)):
@@ -90,16 +91,20 @@ class fileFunc(object):
                 #make all images the same size and reshape them into a 1D vector
                 imageReduced = iF.scaleImage(image,reducedSize)
                 images[k] = np.reshape(imageReduced,reducedSize*reducedSize)
+                testImages.append(image)
+                
                 #images[k] = iF.binarizeArray(images[k],255)
                 #im = iF.arrayToImage(image,height,width)
                 #imResize=iF.resizeImage(im,info.maxWidth,info.maxHeight)
                 #images[k] = iF.PIL2array(imResize);
                 #print(images[k],k)
                 k+=1
-        return [characters, image, width, height, imageReduced, images.astype(np.uint8), info.maxHeight,info.maxWidth]
+                """Only image.astype(np.uint8) can be outputted as an image"""
+        testImages = np.asarray(testImages)
+        return [characters, images.astype(np.uint8), info.maxHeight,info.maxWidth, testImages]
 
-    #find max width, max height and number of samples from a byte array holding gnt data
     def infoGNT(array,totalFiles):
+        """find max width, max height and number of samples from a byte array holding gnt data"""
         #array = array[0] #must set as this;
         print("infoGNT")
         totalSize = 0;
@@ -120,8 +125,9 @@ class fileFunc(object):
         info = infoStruct(numSamples,maxHeight,maxWidth,totalSize)
         print (info)
         return info
-    #function to read several gnt files into an array in byte form    
+        
     def iterateOverFiles(path):
+        """function to read several gnt files into an array in byte form"""
         #path is the folder containing subfolders containing all .gnt files
         totalFiles = 0
         for subdir, dirs, filenames in os.walk(path):
