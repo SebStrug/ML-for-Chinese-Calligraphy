@@ -47,7 +47,7 @@ def display(img, inputDim, threshold=200):
                 
 #%%Import the data
 print("Importing the data...")
-inputDim = 40
+inputDim = 48
 #MNIST data
 #fileName="MNIST_data"
 #MNISTLabels,MNISTImages=fF.readNPZ(savePath,fileName,"saveLabels","saveImages")

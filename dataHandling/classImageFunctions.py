@@ -48,7 +48,10 @@ class imageFunc(object):
         #downscaleSize is the dimensions of the smaller image we want
         """Takes an image, upscales it to an appropriate size,
         adds white space so it forms a square,
-        finally downscales it to a useable size"""
+        finally downscales it to a useable size.
+        This includes 2 pixels padding on the edges"""
+        padding = 2
+        downscaleSize = downscaleSize - (padding*2) #padding on both sides
         height = image.shape[0]
         width = image.shape[1]
         #we must scale the larger dimension
@@ -68,7 +71,7 @@ class imageFunc(object):
         #show the image from the array with
         #img = Image.fromarray(upscaledArray).show()
         #apply padding
-        #reducedArray = np.pad(reducedArray,(2,2),'constant',constant_values=(255,255))
+        reducedArray = np.pad(reducedArray,(2,2),'constant',constant_values=(255,255))
         return reducedArray
 
     def binarizeArray(array,threshold):

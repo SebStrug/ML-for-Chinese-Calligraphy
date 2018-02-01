@@ -68,68 +68,83 @@ class fileFunc(object):
                 np.savez(ofs,**namedArrays)
         ofs.close();
 
-    def arraysFromGNT(fullFile,info):
+    def arraysFromGNT(fullFile,info,imageSize):
         print("arraysFromGNT")
         #create arrays to store data read in
         totalSamples = int(np.sum(info.numSamples));
         characters = np.zeros(totalSamples,np.unicode);
         #images = np.zeros((totalSamples,info.maxWidth*info.maxHeight))
-        reducedSize = 46
+        reducedSize = imageSize
         images = np.zeros((totalSamples,reducedSize*reducedSize)) #images saved as reduced versions
-        testImages = []
         #place data into arrays
         k=0
-        for j in range(len(info.numSamples)):
-            position = 0;
-            for i in range(int(info.numSamples[j])):
-                sampleSize = fileFunc.byteToInt(fullFile[j][position:position+4]);
-                characters[k] = fullFile[j][position+4:position+6].decode('gbk');
-                width = fileFunc.byteToInt(fullFile[j][position+6:position+8]);
-                height = fileFunc.byteToInt(fullFile[j][position+8:position+10]);
-                image = np.zeros((height,width))
-                for row in range(0,height):
-                    for column in range(0,width):
-                        image[row][column]=fullFile[j][position+10+row*width+column];
-                position +=sampleSize;
-                #make all images the same size and reshape them into a 1D vector
-                imageReduced = iF.scaleImage(image,reducedSize)
-                images[k] = np.reshape(imageReduced,reducedSize*reducedSize)
-                testImages.append(image)
-                
-                #images[k] = iF.binarizeArray(images[k],255)
-                #im = iF.arrayToImage(image,height,width)
-                #imResize=iF.resizeImage(im,info.maxWidth,info.maxHeight)
-                #images[k] = iF.PIL2array(imResize);
-                #print(images[k],k)
-                k+=1
-                """Only image.astype(np.uint8) can be outputted as an image"""
-        testImages = np.asarray(testImages)
-        return [characters, images.astype(np.uint8), info.maxHeight,info.maxWidth, testImages]
+        position = 0;
+        for i in range(int(info.numSamples)):
+            sampleSize = fileFunc.byteToInt(fullFile[position:position+4]);
+            characters[k] = fullFile[position+4:position+6].decode('gbk');
+            width = fileFunc.byteToInt(fullFile[position+6:position+8]);
+            height = fileFunc.byteToInt(fullFile[position+8:position+10]);
+            image = np.zeros((height,width))
+            for row in range(0,height):
+                for column in range(0,width):
+                    image[row][column]=fullFile[position+10+row*width+column];
+            position +=sampleSize;
+            #make all images the same size and reshape them into a 1D vector
+            imageReduced = iF.scaleImage(image,reducedSize)
+            images[k] = np.reshape(imageReduced,reducedSize*reducedSize)
+            #images[k] = iF.binarizeArray(images[k],255)
+            #im = iF.arrayToImage(image,height,width)
+            #imResize=iF.resizeImage(im,info.maxWidth,info.maxHeight)
+            #images[k] = iF.PIL2array(imResize);
+            #print(images[k],k)
+            k+=1
+            """Only image.astype(np.uint8) can be outputted as an image"""
+        return [characters, images.astype(np.uint8), info.maxHeight,info.maxWidth]
 
-    def infoGNT(array,totalFiles):
+    def infoGNT(array):
         """find max width, max height and number of samples from a byte array holding gnt data"""
         #array = array[0] #must set as this;
         print("infoGNT")
         totalSize = 0;
         maxWidth=0;
         maxHeight=0;
-        numSamples=np.zeros(totalFiles)
-        for i in range (0,totalFiles):
-            position = 0;
-            while position < len(array[i]):
-                sampleSize = fileFunc.byteToInt(array[i][position:position+4]);
-                maxWidth = max(fileFunc.byteToInt(array[i][position+6:position+8]),maxWidth)
-                maxHeight = max(fileFunc.byteToInt(array[i][position+8:position+10]),maxHeight)
-                numSamples[i]+=1;
-                position += sampleSize
-                totalSize +=sampleSize;
-            numSamples[i] =int(numSamples[i]-1);#remove excess bytes
-        infoStruct = namedtuple("myStruct","numSamples maxHeight, maxWidth, totalSize")
-        info = infoStruct(numSamples,maxHeight,maxWidth,totalSize)
+        minWidth = 400; #arbitrarily large number
+        minHeight = 400;
+        position = 0;
+        numSamples=0
+        while position < len(array):
+            sampleSize = fileFunc.byteToInt(array[position:position+4]);
+            maxWidth = max(fileFunc.byteToInt(array[position+6:position+8]),maxWidth)
+            maxHeight = max(fileFunc.byteToInt(array[position+8:position+10]),maxHeight)
+            minWidth = min(fileFunc.byteToInt(array[position+6:position+8]),minWidth)
+            minHeight = min(fileFunc.byteToInt(array[position+8:position+10]),minHeight)
+            numSamples += 1;
+            position += sampleSize
+            totalSize += sampleSize;
+        numSamples = int(numSamples-1);#remove excess bytes
+        infoStruct = namedtuple("myStruct","numSamples maxHeight, maxWidth, minHeight, minWidth, totalSize")
+        info = infoStruct(numSamples,maxHeight,maxWidth,minHeight,minWidth,totalSize)
         print (info)
         return info
         
     def iterateOverFiles(path):
+        """function to read several gnt files into an array in byte form"""
+        #path is the folder containing subfolders containing all .gnt files
+        totalFiles = 0
+        for subdir, dirs, filenames in os.walk(path):
+            totalFiles += len(filenames)
+        print("total Files:",totalFiles)
+        
+        fullFile = [None]*totalFiles
+        for subdir, dirs, filenames in os.walk(path):
+            for file in filenames:
+                fullpath = os.path.join(subdir, file)
+                with open(fullpath, 'rb') as openFile:
+                    fullFile[filenames.index(file)] = fileFunc.readByte(fullpath)
+                    openFile.close()
+        return fullFile,totalFiles
+
+    def iterateOverFilesSingle(path):
         """function to read several gnt files into an array in byte form"""
         #path is the folder containing subfolders containing all .gnt files
         totalFiles = 0

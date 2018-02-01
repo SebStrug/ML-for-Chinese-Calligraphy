@@ -42,7 +42,7 @@ numFiles = len([filenames for subdir, dirs, filenames in os.walk(dataPath)][0])
 #get info on gnt file
 data,tot = fF.iterateOverFiles(dataPath)
 dataInfo = fF.infoGNT(data,tot)
-dataForSaving = fF.arraysFromGNT(data,dataInfo)
+dataForSaving = fF.arraysFromGNT(data,dataInfo) #create images that are 48x48
 del data #delete data in raw byte form 
 
 #%% Check our characters and their labels are lining up in the original data file
