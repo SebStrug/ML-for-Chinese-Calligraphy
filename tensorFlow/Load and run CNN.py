@@ -11,11 +11,6 @@ funcPath = 'C:\\Users\\'+name+'\\Desktop\\GitHub\\ML-for-Chinese-Calligraphy\\da
 savePath = 'C:\\Users\\'+name+'\\Desktop\\MLChinese\\Saved script files'
 workingPath = 'C:\\Users\\'+name+'\\Desktop\\GitHub\\ML-for-Chinese-Calligraphy\\tensorFlow'
 LOGDIR = r'C:/Users/'+name+'/Anaconda3/Lib/site-packages/tensorflow/tmp/ChineseCaligCNN/'
-#%% Imports, set directories, Elliot
-#funcPath = 'C:\\Users\\ellio\\OneDrive\\Documents\\GitHubPC\\ML-for-Chinese-Calligraphy\\dataHandling'
-#savePath = 'C:\\Users\\ellio\\Documents\\training data\\Machine learning data'
-#workingPath = 'C:\\Users\\ellio\\OneDrive\\Documents\\GitHubPC\\ML-for-Chinese-Calligraphy\\tensorFlow'
-#LOGDIR = r'C:\\Users\\ellio\\Anaconda3\\Lib\\site-packages\\tensorflow\\tmp\\'
 #%%
 
 import os
@@ -29,10 +24,9 @@ from classDataManip import subSet,oneHot,makeDir,Data,createSpriteLabels
 dataPath, LOGDIR = fF.whichUser("Elliot")
 #import modules
 import tensorflow as tf
-from tensorflow.python.tools import inspect_checkpoint as chkp
 #from tensorflow.contrib.tensorboard.plugins import projector
 import numpy as np
-#import time as t
+import time as t
 #from PIL import Image
 
 
@@ -52,6 +46,7 @@ def display(img, inputDim, threshold=200):
                 
 #%%Import the data
 print("Importing the data...")
+start = t.time()
 inputDim = 40
 #MNIST data
 #fileName="MNIST_data"
@@ -66,12 +61,13 @@ nextLabels,nextImages = fF.readNPZ(dataPath,"1201to1300","saveLabels","saveImage
 CharLabels = np.concatenate((CharLabels,nextLabels),axis=0)
 CharImages = np.concatenate((CharImages,nextImages),axis=0)
 del nextLabels; del nextImages;
-
+print("took ",t.time()-start," seconds\n")
 #define images and labels as a subset of the data
 #this function splits the data and prepares it for use in the network, can be used to loop
 #over several numOutputs
 def prepareDataSet(numOutputs,trainRatio,CharImages,CharLabels):
-
+    print("preparing dataset")
+    start = t.time()
     images, labels = subSet(numOutputs,CharImages,CharLabels)
     dataLength = len(labels) #how many labels/images do we have?
     #del MNISTLabels; del MNISTImages; 
@@ -92,11 +88,12 @@ def prepareDataSet(numOutputs,trainRatio,CharImages,CharLabels):
     # How many sprites do we want to create (must be a square) > last value in function
     montage, record_file = createSpriteLabels(testImages,testLabels,1024,dataPath)
     del montage; del record_file #don't need to save these, waste space
+    print("took ",t.time()-start," seconds\n")
     return trainData, testLabels, testImages
 
 
 #%%Build the network
-print("Building the net...")
+
 #Reset the graph (since we are not creating this in a function!)
 
 
@@ -234,19 +231,22 @@ def neural_net(baseLOGDIR,whichTest,numOutputs,learningRate,trainBatchSize,\
      
     #%% Open a tensorflow session
     print("Importing graph.....")
+    start = t.time()
     sess = tf.InteractiveSession()
     # Initialise all variables
     #tf.global_variables_initializer().run()
-    saver = tf.train.import_meta_graph(os.path.join(baseLOGDIR,'2017-12-15/Chinese_conv_5/Outputs10_LR0.001_Batch128/LR0.001_Iter3590_TestAcc0.8976510167121887.ckpt.meta'))
-    #saver.restore(sess,tf.train.latest_checkpoint('./'))#os.path.join(baseLOGDIR,'2017-12-15/Chinese_conv_5/Outputs10_LR0.001_Batch128/LR0.001_Iter3590_TestAcc0.8976510167121887.ckpt.meta'))
+    loadLOGDIR = os.path.join(baseLOGDIR,'2017-12-12/Chinese_conv_6/LR1E-3BatchFull')
+    os.chdir(loadLOGDIR)
+    saver = tf.train.import_meta_graph('model.ckpt10.meta')
+    saver.restore(sess,tf.train.latest_checkpoint('./'))
     
     graph = tf.get_default_graph()
     print(graph.get_operations())
     x=graph.get_tensor_by_name("images:0")
     y_=graph.get_tensor_by_name("labels:0")
     keep_prob=graph.get_tensor_by_name("dropout/Placeholder:0")
-    accuracy=graph.get_tensor_by_name("accuracy/accuracy:0")
-    
+    accuracy=graph.get_tensor_by_name("accuracy/Mean:0")
+    print("took ",t.time()-start," seconds\n")
     
     
     
@@ -291,16 +291,17 @@ def neural_net(baseLOGDIR,whichTest,numOutputs,learningRate,trainBatchSize,\
     #    print(display(batchImages.eval()[randomIndex], inputDim),batchLabels.eval()[randomIndex])
         
         if i % displayNum == 0:
-            train_accuracy, train_summary =sess.run(accuracy, \
+            train_accuracy =sess.run(accuracy, \
                          feed_dict={x: batchImages, y_: batchLabels, keep_prob: 1.0})
-            train_writer.add_summary(train_summary, i*trainBatchSize)
-            
+            #train_writer.add_summary(train_summary, i*trainBatchSize)
+            print("train accuracy ",train_accuracy)
         if i % testNum == 0:
             print("Testing the net...")
-            test_accuracy, test_summary = sess.run(accuracy, \
+            test_accuracy = sess.run(accuracy, \
                            feed_dict={x: testImages,y_: oneHot(testLabels,numOutputs), keep_prob: 1.0})
-            test_writer.add_summary(test_summary, i*trainBatchSize)
+            #test_writer.add_summary(test_summary, i*trainBatchSize)
             saver.save(sess, os.path.join(LOGDIR, "LR{}_Iter{}_TestAcc{}.ckpt".format(learningRate,i,test_accuracy)))
+            print("test accuracy ",test_accuracy)
             #summary and assignment for the embedding
 #            assign, embedding_summary = sess.run([assignment,mergedSummaryOp], \
 #                        #complex powers so that it matches up with number of sprites generated
@@ -323,7 +324,7 @@ for numOutputs in [10]:
     for trainRatio in [0.8]:
         trainData,testLabels,testImages = prepareDataSet(numOutputs,trainRatio,CharImages,CharLabels)
         for learning_rate in [1E-4]:
-            for trainBatchSize in [128]: 
+            for trainBatchSize in [2]: 
                 iterations = 600*int(len(trainData.labels)/trainBatchSize)
                 #LOGDIR, whichTest, numOutputs, learningRate, trainBatchSize, iterations
                 neural_net(LOGDIR,whichTest,numOutputs,learning_rate,trainBatchSize,iterations,\
