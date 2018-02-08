@@ -65,7 +65,7 @@ x=graph.get_tensor_by_name("images:0")
 y_=graph.get_tensor_by_name("labels:0")
 keep_prob=graph.get_tensor_by_name("dropout/Placeholder:0")
 accuracy=graph.get_tensor_by_name("accuracy/Mean:0")
-getBottleneck = graph.get_tensor_by_name("fc1/Relu_1:0")
+getBottleneck = graph.get_tensor_by_name("fc1/Relu:0")
 
 
 
@@ -73,13 +73,16 @@ print("took ",t.time()-start," seconds\n")
 
 #%% Start training!
 print("Starting.....")
+start = t.time()
 bottlenecks=np.zeros((dataLength,1024))
 
 for i in range(dataLength):
    
-    bottlenecks[i]=sess.run(getBottleneck,feed_dict={x: {CharImages[i]}, keep_prob: 1.0})
-    print(i,bottlenecks[i])
+    bottlenecks[i]=sess.run(getBottleneck,feed_dict={x: CharImages[i:i+1], keep_prob: 1.0})
+    
     
 print("done")
 CharLabels=0
 CharImages=0
+print("took ",t.time()-start," seconds\n")
+print(bottlenecks)
