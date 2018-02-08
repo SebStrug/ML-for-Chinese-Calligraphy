@@ -81,3 +81,5 @@ for i in range(dataLength):
     print(i,bottlenecks[i])
     
 print("done")
+CharLabels=0
+CharImages=0
