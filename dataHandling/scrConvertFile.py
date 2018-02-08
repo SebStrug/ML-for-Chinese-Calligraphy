@@ -24,7 +24,7 @@ elif user == "Seb":
     savePath = savePathSeb
 
 #%%
-import os
+import os, shutil
 import numpy as np
 os.chdir(funcPath)
 from classFileFunctions import fileFunc as fF
@@ -135,6 +135,28 @@ test_addrs = glob.glob(saveImagePath+"\\test\\*.png")
 test_labels = [addr[0:addr.index('_')] for addr in test_addrs]
 test_labels = [int(x.replace(saveImagePath+"\\test\\","")) for x in test_labels]
 
+print("Number of unique characters: {}".format(len(list(set(train_labels)))))
+print("Total number of samples: {}".format(len(train_labels)))
+
+#%%Now we only want to save 10 unique characters
+def generateUniqueAddrs(numUnique):
+    """We are going to generate 10 unique characters in the addrs and labels"""
+    print("Saving only {} unique characters".format(numUnique))
+    unique_labels = list(set(train_labels))[3:numUnique+3] #start from 3 so we skip 0,1
+    unique_addrs = []
+    for i in unique_labels:
+        tempString = '\\{}_copy'.format(i) #generate the string containing unique_label
+        unique_addrs.append([i for i in train_addrs if tempString in i]) #find the addresses
+    #unique_addrs is currently a list of lists, turn it into a flat list...
+    unique_addrs = [item for sublist in unique_addrs for item in sublist]
+    
+    unique_labels = [addr[0:addr.index('_')] for addr in unique_addrs]
+    unique_labels = [int(x.replace(saveImagePath+"\\train\\","")) for x in unique_labels]
+    return unique_addrs, unique_labels
+
+unique_addrs, unique_labels = generateUniqueAddrs(10)
+
+#%%
 # Converting the values into features
 # _int64 is used for numeric values
 def _int64_feature(value):
@@ -143,40 +165,52 @@ def _int64_feature(value):
 def _bytes_feature(value):
     return tf.train.Feature(bytes_list=tf.train.BytesList(value=[value]))
 
-print("Generating train TFRecord")
-train_filename = 'train.tfrecords'
-# Initiating the writer and creating the tfrecords file.
-writer = tf.python_io.TFRecordWriter(train_filename)
-for i in range(len(train_addrs)):
-    # Load the image
-    img = Image.open(train_addrs[i])
-    img = np.array(img)
-    label = train_labels[i]
-    # Create a feature
-    feature = {'train/label': _int64_feature(label),
-               'train/image': _bytes_feature(tf.compat.as_bytes(img.tostring()))}
-    # Create an example protocol buffer
-    example = tf.train.Example(features=tf.train.Features(feature=feature))
-    
-    # Serialize to string and write on the file
-    writer.write(example.SerializeToString())
-writer.close()
+def generateTrainTFRecord():
+    print("Generating train TFRecord... \n")
+    train_filename = 'train.tfrecords'
+    # Initiating the writer and creating the train tfrecords file.
+    writer = tf.python_io.TFRecordWriter(train_filename)
+    for i in range(len(unique_addrs)):
+        # Load the image
+        img = Image.open(unique_addrs[i])
+        img = np.array(img)
+        label = unique_labels[i]
+        # Create a feature
+        feature = {'train/label': _int64_feature(label),
+                   'train/image': _bytes_feature(tf.compat.as_bytes(img.tostring()))}
+        # Create an example protocol buffer
+        example = tf.train.Example(features=tf.train.Features(feature=feature))
+        
+        # Serialize to string and write on the file
+        writer.write(example.SerializeToString())
+    writer.close()
 
-print("Generating test TFRecord")
-test_filename = 'test.tfrecords'
-# Initiating the writer and creating the tfrecords file.
-writer = tf.python_io.TFRecordWriter(test_filename)
-for i in range(len(test_addrs)):
-    # Load the image
-    img = Image.open(test_addrs[i])
-    img = np.array(img)
-    label = test_labels[i]
-    # Create a feature
-    feature = {'test/label': _int64_feature(label),
-               'test/image': _bytes_feature(tf.compat.as_bytes(img.tostring()))}
-    # Create an example protocol buffer
-    example = tf.test.Example(features=tf.test.Features(feature=feature))
-    
-    # Serialize to string and write on the file
-    writer.write(example.SerializeToString())
-writer.close()
+#print("Generating test TFRecord")
+#test_filename = 'test.tfrecords'
+## Initiating the writer and creating the test tfrecords file.
+#writer = tf.python_io.TFRecordWriter(test_filename)
+#for i in range(len(test_addrs)):
+#    # Load the image
+#    img = Image.open(test_addrs[i])
+#    img = np.array(img)
+#    label = test_labels[i]
+#    # Create a feature
+#    feature = {'test/label': _int64_feature(label),
+#               'test/image': _bytes_feature(tf.compat.as_bytes(img.tostring()))}
+#    # Create an example protocol buffer
+#    example = tf.test.Example(features=tf.test.Features(feature=feature))
+#    
+#    # Serialize to string and write on the file
+#    writer.write(example.SerializeToString())
+#writer.close()
+
+#%% Delete the saved images so they don't take up space
+for the_file in os.listdir(saveImagePath):
+    file_path = os.path.join(saveImagePath, the_file)
+    try:
+        if os.path.isfile(file_path):
+            os.unlink(file_path)
+        # the following line also removes sub-directories
+        elif os.path.isdir(file_path): shutil.rmtree(file_path)
+    except Exception as e:
+        print(e)
