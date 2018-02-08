@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 """
-Created on Fri Dec  8 20:43:52 2017
+Created on Thu Feb  8 15:12:45 2018
 
-@author: Sebastian
-Back to basics
+@author: ellio
 """
+
 #%% Imports, set directories, seb
 name = 'Admin'
 funcPath = 'C:\\Users\\'+name+'\\Desktop\\GitHub\\ML-for-Chinese-Calligraphy\\dataHandling'
@@ -41,7 +41,7 @@ def display(img, inputDim, threshold=200):
                 
 #%%Import the data
 print("Importing the data...")
-inputDim = 40
+lenInput = 1024
 #MNIST data
 #fileName="MNIST_data"
 #MNISTLabels,MNISTImages=fF.readNPZ(savePath,fileName,"saveLabels","saveImages")
@@ -107,81 +107,20 @@ def neural_net(LOGDIR,whichTest,numOutputs,learningRate,trainBatchSize,\
         tf.summary.histogram("biases", initial)
         return tf.Variable(initial)
     
-    def conv2d(x, W):
-        """conv2d returns a 2d convolution layer with full stride."""    
-        return tf.nn.conv2d(x, W, strides=[1, 1, 1, 1], padding='SAME')
-    
-    def max_pool_2x2(x):
-        """max_pool_2x2 downsamples a feature map by 2X."""
-        return tf.nn.max_pool(x, ksize=[1, 2, 2, 1],strides=[1, 2, 2, 1], padding='SAME')
-    
     # Define the placeholders for images and labels
-    x = tf.placeholder(tf.float32, [None, inputDim**2], name="images")
-    x_image = tf.reshape(x, [-1, inputDim, inputDim, 1])
+    x = tf.placeholder(tf.float32, [None, lenInput], name="images")
+   
     # Show 4 examples of output images
-    tf.summary.image('input', x_image, 4)
     y_ = tf.placeholder(tf.float32, [None,numOutputs], name="labels")
     
-    with tf.name_scope('reshape'):
-        # reshape x to a 4D tensor with second and third dimensions being width/height
-        x_image = tf.reshape(x, [-1,inputDim,inputDim,1])
-    
-    with tf.name_scope('conv1'):
-        """First convolution layer, maps one greyscale image to 32 feature maps"""
-        # patch size of 5x5, 1 input channel, 32 output channels (features)
-        W_conv1 = weight_variable([5, 5, 1, 32])
-        # bias has a component for each output channel (feature)
-        b_conv1 = bias_variable([32])
-        # convolve x with the weight tensor, add bias and apply ReLU function
-        h_conv1 = tf.nn.relu(conv2d(x_image, W_conv1) + b_conv1)
-        tf.summary.histogram("activations", h_conv1)
-        
-    with tf.name_scope('pool1'):
-        """Pooling layer, downsamples by 2x"""
-        #max pool 2x2 reduces it to 14x14
-        h_pool1 = max_pool_2x2(h_conv1)
-    
-    with tf.name_scope('conv2'):
-        """Second convolution layer, maps 32 features maps to 64"""
-        # 64 outputs (features) for 32 inputs
-        W_conv2 = weight_variable([5, 5, 32, 64])
-        # bias has to have an equal number of outputs
-        b_conv2 = bias_variable([64])
-        # convolve again
-        h_conv2 = tf.nn.relu(conv2d(h_pool1, W_conv2) + b_conv2)
-        tf.summary.histogram("activations", h_conv2)
-    
-    with tf.name_scope('pool2'):
-        """Second pooling layer"""
-        # pool and reduce to 7x7
-        h_pool2 = max_pool_2x2(h_conv2)
-    
-    with tf.name_scope('fc1'):
-        """Fully connected layer 1, after 2 rounds of downsampling, our 28x28 image
-        is reduced to 7x7x64 feature maps, map this to 1024 features"""
-        # 7*7 image size *64 inputs, fc layer has 1024 neurons
-        W_fc1 = weight_variable([10 * 10 * 64, 1024])
-        b_fc1 = bias_variable([1024])
-        # reshape the pooling layer from 7*7 (*64 inputs) to a batch of vectors
-        h_pool2_flat = tf.reshape(h_pool2, [-1, 10*10*64])
-        # do a matmul and apply a ReLu
-        h_fc1 = tf.nn.relu(tf.matmul(h_pool2_flat, W_fc1) + b_fc1)
-        tf.summary.histogram("activations", h_fc1)
-    
-    with tf.name_scope('dropout'):
-        """Dropout controls the complexity of the model, prevents co-adaptation of features"""
-        # placeholder for dropout means we can turn it on during training, turn off during testing
-        keep_prob = tf.placeholder(tf.float32)
-        # automatically handles scaling neuron outputs and also masks them
-        h_fc1_drop = tf.nn.dropout(h_fc1, keep_prob)
     
     with tf.name_scope('fc2'):
         """Fully connected layer 2, maps 1024 features to the number of outputs"""
         #1024 inputs, 10 outputs
-        W_fc2 = weight_variable([1024, numOutputs])
+        W_fc2 = weight_variable([lenInput, numOutputs])
         b_fc2 = bias_variable([numOutputs])
         # calculate the convolution
-        y_conv = tf.matmul(h_fc1_drop, W_fc2) + b_fc2
+        y_conv = tf.matmul(x, W_fc2) + b_fc2
         tf.summary.histogram("activations", y_conv)
     
     
@@ -205,7 +144,6 @@ def neural_net(LOGDIR,whichTest,numOutputs,learningRate,trainBatchSize,\
     # Merge all summary operators
     mergedSummaryOp = tf.summary.merge_all()
     # Embedding variables for the projector
-    embedding_var = tf.Variable(tf.zeros([len(testLabels), 1024]), name="test_embedding")
     #assignment = embedding_var.assign(h_fc1)
     # Create a saver to save these summary operations AND the embedding
     saver = tf.train.Saver()
@@ -261,13 +199,13 @@ def neural_net(LOGDIR,whichTest,numOutputs,learningRate,trainBatchSize,\
         
         if i % displayNum == 0:
             train_accuracy, train_summary =sess.run([accuracy, mergedSummaryOp], \
-                         feed_dict={x: batchImages, y_: batchLabels, keep_prob: 1.0})
+                         feed_dict={x: batchImages, y_: batchLabels})
             train_writer.add_summary(train_summary, i*trainBatchSize)
             
         if i % testNum == 0:
             print("Testing the net...")
             test_accuracy, test_summary = sess.run([accuracy,mergedSummaryOp], \
-                           feed_dict={x: testImages,y_: oneHot(testLabels,numOutputs), keep_prob: 1.0})
+                           feed_dict={x: testImages,y_: oneHot(testLabels,numOutputs)})
             test_writer.add_summary(test_summary, i*trainBatchSize)
             saver.save(sess, os.path.join(LOGDIR, "LR{}_Iter{}_TestAcc{}.ckpt".format(learningRate,i,test_accuracy)))
             #summary and assignment for the embedding
@@ -280,7 +218,7 @@ def neural_net(LOGDIR,whichTest,numOutputs,learningRate,trainBatchSize,\
             whichEpoch += 1
             print("Did {} epochs".format(whichEpoch))
         # run a training step   
-        sess.run(train_step,feed_dict={x: batchImages,y_: batchLabels, keep_prob: 0.5})
+        sess.run(train_step,feed_dict={x: batchImages,y_: batchLabels})
     train_writer.close()
     test_writer.close()
 
@@ -291,8 +229,8 @@ whichTest = 3
 for numOutputs in [30]:
     for trainRatio in [0.8]:
         trainData,testLabels,testImages = prepareDataSet(numOutputs,trainRatio,CharImages,CharLabels)
-        for learning_rate in [1E-3]:
-            for trainBatchSize in [512]:      
+        for learning_rate in [1E-4]:
+            for trainBatchSize in [128]:      
                 iterations = 600*int(len(trainData.labels)/trainBatchSize)
                 #LOGDIR, whichTest, numOutputs, learningRate, trainBatchSize, iterations
                 neural_net(LOGDIR,whichTest,numOutputs,learning_rate,trainBatchSize,iterations,\
