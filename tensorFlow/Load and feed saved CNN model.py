@@ -4,7 +4,7 @@ Created on Tue Feb  6 10:43:03 2018
 
 @author: ellio
 """
-
+# script which loads a saved CNN (will work on any saved model) and feeds data through whilst printing the accuracy but doesnt alter weights
 #%% Imports, set directories, seb
 name = 'Admin'
 funcPath = 'C:\\Users\\'+name+'\\Desktop\\GitHub\\ML-for-Chinese-Calligraphy\\dataHandling'
