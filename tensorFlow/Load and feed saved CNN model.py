@@ -22,6 +22,8 @@ os.chdir(os.path.join(gitHubRep,"tensorFlow/"))
 from classDataManip import subSet,oneHot,makeDir,Data,createSpriteLabels
 #set paths
 dataPath, LOGDIR = fF.whichUser("Elliot")
+modelPath = '2017-12-15\Chinese_conv_5\Outputs10_LR0.001_Batch128'# path of loaded model relative to LOGDIR
+modelName='LR0.001_Iter3590_TestAcc0.8976510167121887.ckpt.meta'
 #import modules
 import tensorflow as tf
 #from tensorflow.contrib.tensorboard.plugins import projector
@@ -122,112 +124,7 @@ def neural_net(baseLOGDIR,whichTest,numOutputs,learningRate,trainBatchSize,\
     def max_pool_2x2(x):
         """max_pool_2x2 downsamples a feature map by 2X."""
         return tf.nn.max_pool(x, ksize=[1, 2, 2, 1],strides=[1, 2, 2, 1], padding='SAME')
-    #sess=tf.Session()    
-    #First let's load meta graph and restore weights
-#    print("Loading saved net")
-#    saver = tf.train.import_meta_graph(os.path.join(baseLOGDIR,'2017-12-15/Chinese_conv_5/Outputs10_LR0.001_Batch128/LR0.001_Iter3590_TestAcc0.8976510167121887.ckpt.meta'))
-#    chkp.print_tensors_in_checkpoint_file("LR0.001_Iter3590_TestAcc0.8976510167121887.ckpt.meta", tensor_name='', all_tensors=True)
-#    saver.restore(sess,os.path.join(baseLOGDIR,'2017-12-15/Chinese_conv_5/Outputs10_LR0.001_Batch128/LR0.001_Iter3590_TestAcc0.8976510167121887.ckpt.meta'))
-#    graph = tf.get_default_graph()
-#    print("graph:",graph)
-    
-#    # Define the placeholders for images and labels
-#    print("create and assign variables")
-#    x = tf.placeholder(tf.float32, [None, inputDim**2], name="images")
-#    x_image = tf.reshape(x, [-1, inputDim, inputDim, 1])
-#    # Show 4 examples of output images
-#    tf.summary.image('input', x_image, 4)
-#    y_ = tf.placeholder(tf.float32, [None,numOutputs], name="labels")
-    
-#    with tf.name_scope('reshape'):
-#        # reshape x to a 4D tensor with second and third dimensions being width/height
-#        x_image = tf.reshape(x, [-1,inputDim,inputDim,1])
-#    
-#    with tf.name_scope('conv1'):
-#        """First convolution layer, maps one greyscale image to 32 feature maps"""
-#        # patch size of 5x5, 1 input channel, 32 output channels (features)
-#        W_conv1 = load_variable(graph,"W_conv1:0")
-#        # bias has a component for each output channel (feature)
-#        b_conv1 = load_variable(graph,"b_conv1:0")
-#        # convolve x with the weight tensor, add bias and apply ReLU function
-#        h_conv1 = tf.nn.relu(conv2d(x_image, W_conv1) + b_conv1)
-#        tf.summary.histogram("activations", h_conv1)
-#        
-#    with tf.name_scope('pool1'):
-#        """Pooling layer, downsamples by 2x"""
-#        #max pool 2x2 reduces it to 14x14
-#        h_pool1 = max_pool_2x2(h_conv1)
-#    
-#    with tf.name_scope('conv2'):
-#        """Second convolution layer, maps 32 features maps to 64"""
-#        # 64 outputs (features) for 32 inputs
-#        W_conv2 = load_variable(graph,"W_conv2:0")
-#        # bias has to have an equal number of outputs
-#        b_conv2 = load_variable(graph,"b_conv2:0")
-#        # convolve again
-#        h_conv2 = tf.nn.relu(conv2d(h_pool1, W_conv2) + b_conv2)
-#        tf.summary.histogram("activations", h_conv2)
-#    
-#    with tf.name_scope('pool2'):
-#        """Second pooling layer"""
-#        # pool and reduce to 7x7
-#        h_pool2 = max_pool_2x2(h_conv2)
-#    
-#    with tf.name_scope('fc1'):
-#        """Fully connected layer 1, after 2 rounds of downsampling, our 28x28 image
-#        is reduced to 7x7x64 feature maps, map this to 1024 features"""
-#        # 7*7 image size *64 inputs, fc layer has 1024 neurons
-#        W_fc1 = load_variable(graph,"W_fc1:0")
-#        b_fc1 = load_variable(graph,"b_fc1:0")
-#        # reshape the pooling layer from 7*7 (*64 inputs) to a batch of vectors
-#        h_pool2_flat = tf.reshape(h_pool2, [-1, 10*10*64])
-#        # do a matmul and apply a ReLu
-#        h_fc1 = tf.nn.relu(tf.matmul(h_pool2_flat, W_fc1) + b_fc1)
-#        tf.summary.histogram("activations", h_fc1)
-#    
-#    with tf.name_scope('dropout'):
-#        """Dropout controls the complexity of the model, prevents co-adaptation of features"""
-#        # placeholder for dropout means we can turn it on during training, turn off during testing
-#        keep_prob = tf.placeholder(tf.float32)
-#        # automatically handles scaling neuron outputs and also masks them
-#        h_fc1_drop = tf.nn.dropout(h_fc1, keep_prob)
-#    
-#    with tf.name_scope('fc2'):
-#        """Fully connected layer 2, maps 1024 features to the number of outputs"""
-#        #1024 inputs, 10 outputs
-#        W_fc2 = load_variable(graph,"W_fc2:0")
-#        b_fc2 = load_variable(graph,"b_fc2:0")
-#        # calculate the convolution
-#        y_conv = tf.matmul(h_fc1_drop, W_fc2) + b_fc2
-#        tf.summary.histogram("activations", y_conv)
-#    
-#    
-#    # Calculate entropy on the raw outputs of y then average across the batch size
-#    with tf.name_scope("xent"):
-#        cross_entropy = tf.reduce_mean(\
-#                            tf.nn.softmax_cross_entropy_with_logits(\
-#                                labels=y_, \
-#                                logits=y_conv))
-#        tf.summary.scalar("xent",cross_entropy)
-#        
-#    with tf.name_scope("train"):
-#        train_step = tf.train.AdamOptimizer(learningRate).minimize(cross_entropy)
-#    
-#    with tf.name_scope("accuracy"):
-#        correct_prediction = tf.equal(tf.argmax(y_conv, 1), tf.argmax(y_, 1))
-#        # what fraction of bools was correct? Cast to floating point...
-#        accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
-#        tf.summary.scalar("accuracy",accuracy)
-#    
-#    # Merge all summary operators
-#    mergedSummaryOp = tf.summary.merge_all()
-#    # Embedding variables for the projector
-#    embedding_var = tf.Variable(tf.zeros([len(testLabels), 1024]), name="test_embedding")
-#    #assignment = embedding_var.assign(h_fc1)
-#    # Create a saver to save these summary operations AND the embedding
-#    saver = tf.train.Saver()
-    
-  
+   
      
     #%% Open a tensorflow session
     print("Importing graph.....")
@@ -235,9 +132,9 @@ def neural_net(baseLOGDIR,whichTest,numOutputs,learningRate,trainBatchSize,\
     sess = tf.InteractiveSession()
     # Initialise all variables
     #tf.global_variables_initializer().run()
-    loadLOGDIR = os.path.join(baseLOGDIR,'2017-12-12/Chinese_conv_6/LR1E-3BatchFull')
+    loadLOGDIR = os.path.join(baseLOGDIR,modelPath)
     os.chdir(loadLOGDIR)
-    saver = tf.train.import_meta_graph('model.ckpt10.meta')
+    saver = tf.train.import_meta_graph(modelName)
     saver.restore(sess,tf.train.latest_checkpoint('./'))
     
     graph = tf.get_default_graph()
@@ -302,11 +199,7 @@ def neural_net(baseLOGDIR,whichTest,numOutputs,learningRate,trainBatchSize,\
             #test_writer.add_summary(test_summary, i*trainBatchSize)
             saver.save(sess, os.path.join(LOGDIR, "LR{}_Iter{}_TestAcc{}.ckpt".format(learningRate,i,test_accuracy)))
             print("test accuracy ",test_accuracy)
-            #summary and assignment for the embedding
-#            assign, embedding_summary = sess.run([assignment,mergedSummaryOp], \
-#                        #complex powers so that it matches up with number of sprites generated
-#                         feed_dict={x: testImages[:1024],y_: oneHot(testLabels,numOutputs)[:1024],keep_prob: 1.0})
-#            embedding_writer.add_summary(embedding_summary,i*trainBatchSize)
+        
             
         if i % epochLength == 0 and i != 0:
             whichEpoch += 1

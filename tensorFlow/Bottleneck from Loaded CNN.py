@@ -20,6 +20,8 @@ from classFileFunctions import fileFunc as fF
 os.chdir(os.path.join(gitHubRep,"tensorFlow/"))
 #set paths
 dataPath, LOGDIR = fF.whichUser("Elliot")
+modelPath = '2017-12-15\Chinese_conv_5\Outputs10_LR0.001_Batch128'# path of loaded model relative to LOGDIR
+modelName='LR0.001_Iter3590_TestAcc0.8976510167121887.ckpt.meta'
 #import modules
 import tensorflow as tf
 import numpy as np
@@ -54,7 +56,7 @@ start = t.time()
 sess = tf.InteractiveSession()
 # Initialise all variables
 #tf.global_variables_initializer().run()
-loadLOGDIR = os.path.join(LOGDIR,'2017-12-12/Chinese_conv_6/LR1E-3BatchFull')
+loadLOGDIR = os.path.join(LOGDIR,modelPath)
 os.chdir(loadLOGDIR)
 saver = tf.train.import_meta_graph('model.ckpt10.meta')
 saver.restore(sess,tf.train.latest_checkpoint('./'))
