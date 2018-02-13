@@ -4,8 +4,7 @@ Created on Tue Jan 30 15:38:17 2018
 
 @author: ellio
 """
-
-
+#Script That creates a tenorflow operation and variables, saves them and then loads them back 
 #%% Imports, set directories
 import os
 gitHubRep = os.path.normpath(os.getcwd() + os.sep + os.pardir)
