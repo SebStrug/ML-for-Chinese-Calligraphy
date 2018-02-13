@@ -1,4 +1,5 @@
 import time
+import numpy as np
 import tensorflow as tf
 
 # Constants used for dealing with the files, matches convert_to_records.
@@ -18,13 +19,15 @@ def decode(serialized_example,inputDim):
         features={'train/image': tf.FixedLenFeature([], tf.string),
                   'train/label': tf.FixedLenFeature([], tf.int64)})
     # tfrecords is saved in raw bytes, need to convert this into usable format
-    # May want to save this as tf.float32
+    # May want to save this as tf.float32???
     image = tf.decode_raw(features['train/image'], tf.uint8)
-    # Reshape image data into the original shape
-    image = tf.reshape(image, [inputDim, inputDim, 1])
+    # Reshape image data into the original shape (try different forms)
+    image1 = tf.reshape(image, [inputDim, inputDim, 1]);    print(image1) #2D no batch
+    image2 = tf.reshape(image, [inputDim**2,1]);            print(image2) #1D no batch
+    image3 = tf.reshape(image, [batch_size,inputDim**2,1]); print(image3) #1D batch
     # Cast label data
     label = tf.cast(features['train/label'], tf.int32)
-    return image, label
+    return image2, label
 
 def augment(image, label):
     # OPTIONAL: Could apply distortions
@@ -63,23 +66,51 @@ def input_pipeline(TFRecord_path,inputDim,batch_size,num_epochs):
     min_after_dequeue = 10000
     capacity = min_after_dequeue + 3 * batch_size
     image_batch, label_batch = tf.train.shuffle_batch(
-        [image, label], batch_size=batch_size, capacity=capacity,
-        min_after_dequeue=min_after_dequeue)
+        [image, label],
+        batch_size=batch_size, capacity=capacity,
+        min_after_dequeue=min_after_dequeue,
+        allow_smaller_final_batch=True)
     return image_batch, label_batch
 
-
+image_batch, label_batch = input_pipeline(TFRecord_path,inputDim,batch_size,num_epochs)
+print(image_batch)
+print(label_batch)
 
 #%%
 tf.reset_default_graph()
 sess = tf.InteractiveSession()
+print("Generating input pipeline...")
 image_batch, label_batch = input_pipeline(TFRecord_path,inputDim,batch_size,num_epochs)
+print(label_batch)
 # Initialise all variables
+print("Initialising variables...")
 tf.global_variables_initializer().run()
-print(image_batch.eval(session = sess))
+print("Evaluating labels...")
+print(sess.run(label_batch))
 
 #print(sess.run(image_batch))
 
-##%% The training program
+
+#%%
+
+
+data = np.arange(1, 100 + 1)
+data_input = tf.constant(data)
+
+batch_shuffle = tf.train.shuffle_batch([data_input], enqueue_many=True, batch_size=10, capacity=100, min_after_dequeue=10, allow_smaller_final_batch=True)
+batch_no_shuffle = tf.train.batch([data_input], enqueue_many=True, batch_size=10, capacity=100, allow_smaller_final_batch=True)
+
+with tf.Session() as sess:
+    coord = tf.train.Coordinator()
+    threads = tf.train.start_queue_runners(coord=coord)
+    for i in range(10):
+        print(i, sess.run([batch_shuffle, batch_no_shuffle]))
+    coord.request_stop()
+    coord.join(threads)
+
+
+
+#%% The training program
 #
 #def run_training():
 #    """Train for a number of steps."""
