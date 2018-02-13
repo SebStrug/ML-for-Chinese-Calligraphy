@@ -25,9 +25,13 @@ dataPath, LOGDIR = fF.whichUser("Elliot")
 import tensorflow as tf
 import numpy as np
 import time as t
+#set other variables
+bottleneckLength = 1024
+oldNumOutputs = 10
+newNumOutptus = 30      
+saveName = "finallayerCNN"          
 #%%Import the data
 print("Importing the data...")
-lenInput = 1024
 start = t.time()
 #training data
 labels,bottlenecks=fF.readNPZ(dataPath,\
@@ -68,14 +72,16 @@ print("Took ",t.time()-start," seconds.")
 
 
 #%%Build the network
-print("Building the net...")
+
 #Reset the graph (since we are not creating this in a function!)
 
 
-def neural_net(LOGDIR,whichTest,numOutputs,learningRate,trainBatchSize,\
-               iterations,trainData,testImages,testLabels,trainRatio):
+def neural_net(LOGDIR,name,whichTest,numOutputs,learningRate,trainBatchSize,\
+               epochs,trainData,testImages,testLabels,trainRatio):
+    print("Building the net...")
+    start=t.time()
     tf.reset_default_graph()
-    LOGDIR = makeDir(LOGDIR,whichTest,numOutputs,learningRate,trainBatchSize,trainRatio)
+    LOGDIR = makeDir(LOGDIR,name,whichTest,numOutputs,learningRate,trainBatchSize,trainRatio)
     # function to create weights and biases automatically
     # want slightly positive weights/biases for relu to avoid dead nurons
     def weight_variable(shape):
@@ -91,7 +97,7 @@ def neural_net(LOGDIR,whichTest,numOutputs,learningRate,trainBatchSize,\
         return tf.Variable(initial)
     
     # Define the placeholders for images and labels
-    x = tf.placeholder(tf.float32, [None, lenInput], name="images")
+    x = tf.placeholder(tf.float32, [None, bottleneckLength], name="images")
    
     # Show 4 examples of output images
     y_ = tf.placeholder(tf.float32, [None,numOutputs], name="labels")
@@ -100,7 +106,7 @@ def neural_net(LOGDIR,whichTest,numOutputs,learningRate,trainBatchSize,\
     with tf.name_scope('fc2'):
         """Fully connected layer 2, maps 1024 features to the number of outputs"""
         #1024 inputs, 10 outputs
-        W_fc2 = weight_variable([lenInput, numOutputs])
+        W_fc2 = weight_variable([bottleneckLength, numOutputs])
         b_fc2 = bias_variable([numOutputs])
         # calculate the convolution
         y_conv = tf.matmul(x, W_fc2) + b_fc2
@@ -126,23 +132,25 @@ def neural_net(LOGDIR,whichTest,numOutputs,learningRate,trainBatchSize,\
     
     # Merge all summary operators
     mergedSummaryOp = tf.summary.merge_all()
+    print("Took ",t.time()-start," seconds.")
+    
     # Create a saver to save these summary operations AND the embedding
     saver = tf.train.Saver()
     
   
      
     #%% Open a tensorflow session
-    print("Initialising the net...")
+    print("Initialising the net and creating writers...")
+    start=t.time()
     sess = tf.InteractiveSession()
     # Initialise all variables
     tf.global_variables_initializer().run()
-
-    
     # Create writers
     train_writer = tf.summary.FileWriter(os.path.join(LOGDIR)+'/train')
     train_writer.add_graph(sess.graph)
     test_writer = tf.summary.FileWriter(os.path.join(LOGDIR)+'/test')
     test_writer.add_graph(sess.graph)
+    print("Took ",t.time()-start," seconds.")
 #    
     
     #%% Start training!
@@ -151,10 +159,11 @@ def neural_net(LOGDIR,whichTest,numOutputs,learningRate,trainBatchSize,\
     trainData.labelPos=0
     epochLength = int(len(trainData.labels)/trainBatchSize) #no. of iterations per epoch
     whichEpoch = 0
-    print("Number of iterations per epoch: {}".format(epochLength))
+    print("Number of batches per epoch: {}".format(epochLength))
     displayNum = 30
     testNum = 200
-    for i in range(iterations):
+    maxAccuracy = 0.0
+    for i in range(epochLength*epochs):
         """Check a random value in the batch matches its label"""
         batchImages, batchLabels = trainData.nextImageBatch(trainBatchSize), trainData.nextOneHotLabelBatch(trainBatchSize,numOutputs)
 
@@ -171,7 +180,9 @@ def neural_net(LOGDIR,whichTest,numOutputs,learningRate,trainBatchSize,\
             test_accuracy, test_summary = sess.run([accuracy,mergedSummaryOp], \
                            feed_dict={x: testImages,y_: oneHot(testLabels,numOutputs)})
             test_writer.add_summary(test_summary, i*trainBatchSize)
-            saver.save(sess, os.path.join(LOGDIR, "LR{}_Iter{}_TestAcc{}.ckpt".format(learningRate,i,test_accuracy)))
+            if test_accuracy > maxAccuracy:
+                maxAccuracy = test_accuracy
+                saver.save(sess, os.path.join(LOGDIR, "LR{}_Iter{}_TestAcc{}.ckpt".format(learningRate,i,test_accuracy)))
         if i % epochLength == 0 and i != 0:
             whichEpoch += 1
             print("Did {} epochs".format(whichEpoch))
@@ -182,14 +193,14 @@ def neural_net(LOGDIR,whichTest,numOutputs,learningRate,trainBatchSize,\
 
 
 #%% Run model function multiple times
-whichTest = 3
+whichTest = 1
+name="TransferCNNLastLayer"
 #trainRatio = 0.8
 for numOutputs in [30]:
     for trainRatio in [0.8]:
-        trainData,testLabels,testImages = prepareDataSet(numOutputs,trainRatio,CharImages,CharLabels)
-        for learning_rate in [1E-4]:
+        for learning_rate in [1E-3]:
             for trainBatchSize in [128]:      
                 iterations = 600*int(len(trainData.labels)/trainBatchSize)
                 #LOGDIR, whichTest, numOutputs, learningRate, trainBatchSize, iterations
-                neural_net(LOGDIR,whichTest,numOutputs,learning_rate,trainBatchSize,iterations,\
-                           trainData,testImages,testLabels,trainRatio)
+                neural_net(LOGDIR,saveName+"_{}Out_".format(oldNumOutputs),whichTest,numOutputs,learning_rate,trainBatchSize,iterations,\
+                           trainData,testBottlenecks,testLabels,trainRatio)
