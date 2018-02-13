@@ -18,21 +18,23 @@ gitHubRep = os.path.normpath(os.getcwd() + os.sep + os.pardir)# find github path
 os.chdir(os.path.join(gitHubRep,"dataHandling/"))
 from classFileFunctions import fileFunc as fF 
 os.chdir(os.path.join(gitHubRep,"tensorFlow/"))
-#set paths
+#set paths and file names
 dataPath, LOGDIR = fF.whichUser("Elliot")
-modelPath = '2017-12-15\Chinese_conv_5\Outputs10_LR0.001_Batch128'# path of loaded model relative to LOGDIR
+modelPath = '2017-12-15\\Chinese_conv_5\\Outputs10_LR0.001_Batch128'# path of loaded model relative to LOGDIR
 modelName='LR0.001_Iter3590_TestAcc0.8976510167121887.ckpt.meta'
+SaveName = "CNN_LR0.001_BS128"
 #import modules
 import tensorflow as tf
 import numpy as np
 import time as t
+#set other variables
+inputDim = 40
+inputChars= 30#number of unique characters in dataset
+numOutputs= 10#number of outputs in original network
+bottleneckLength = 1024
 #%% import data
 print("Importing the data...")
 start = t.time()
-inputDim = 40
-#MNIST data
-#fileName="MNIST_data"
-#MNISTLabels,MNISTImages=fF.readNPZ(savePath,fileName,"saveLabels","saveImages")
 
 #Chinese characters data
 CharLabels,CharImages=fF.readNPZ(dataPath,"1001to1100","saveLabels","saveImages")
@@ -45,10 +47,6 @@ CharImages = np.concatenate((CharImages,nextImages),axis=0)
 dataLength = len(CharImages)
 del nextLabels; del nextImages;
 print("took ",t.time()-start," seconds\n")
-#%%
-#define images and labels as a subset of the data
-#this function splits the data and prepares it for use in the network, can be used to loop
-#over several numOutputs
    
  #%% Open a tensorflow session
 print("Importing graph.....")
@@ -71,10 +69,10 @@ getBottleneck = graph.get_tensor_by_name("fc1/Relu:0")
 
 print("took ",t.time()-start," seconds\n")
 
-#%% Start training!
+#%% extract bottlencks
 print("Starting.....")
 start = t.time()
-bottlenecks=np.zeros((dataLength,1024))
+bottlenecks=np.zeros((dataLength,bottleneckLength))
 
 for i in range(dataLength):
    
@@ -86,3 +84,8 @@ CharLabels=0
 CharImages=0
 print("took ",t.time()-start," seconds\n")
 print(bottlenecks)
+print("Saving Bottlenecks.....")
+start = t.time()
+fF.saveNPZ(dataPath,"bottleneck_"+SaveName+"_{}to{}chars".format(numOutputs,inputChars),\
+           bottlenecks=bottlenecks,labels = CharLabels )
+print("took ",t.time()-start," seconds\n")
