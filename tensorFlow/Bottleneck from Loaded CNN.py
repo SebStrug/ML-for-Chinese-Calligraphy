@@ -58,7 +58,7 @@ sess = tf.InteractiveSession()
 #tf.global_variables_initializer().run()
 loadLOGDIR = os.path.join(LOGDIR,modelPath)
 os.chdir(loadLOGDIR)
-saver = tf.train.import_meta_graph('model.ckpt10.meta')
+saver = tf.train.import_meta_graph(modelName)
 saver.restore(sess,tf.train.latest_checkpoint('./'))
 
 graph = tf.get_default_graph()
