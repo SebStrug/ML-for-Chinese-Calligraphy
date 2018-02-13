@@ -18,33 +18,16 @@ gitHubRep = os.path.normpath(os.getcwd() + os.sep + os.pardir)# find github path
 os.chdir(os.path.join(gitHubRep,"dataHandling/"))
 from classFileFunctions import fileFunc as fF 
 os.chdir(os.path.join(gitHubRep,"tensorFlow/"))
-from classDataManip import subSet,oneHot,makeDir,Data,createSpriteLabels
+from classDataManip import oneHot,makeDir,Data
 #set paths
 dataPath, LOGDIR = fF.whichUser("Elliot")
 #import modules
 import tensorflow as tf
-from tensorflow.contrib.tensorboard.plugins import projector
 import numpy as np
 import time as t
-#%%Display a MNIST image
-def display(img, inputDim, threshold=200):
-    """Run as print(display(image_array))"""
-    render = ''
-    for i in range(len(img)):
-        if i % inputDim == 0:
-            render += '\n'
-        if img[i] > threshold:
-            render += '@'
-        else:
-            render += '.'
-    return render
-                
 #%%Import the data
 print("Importing the data...")
 lenInput = 1024
-#MNIST data
-#fileName="MNIST_data"
-#MNISTLabels,MNISTImages=fF.readNPZ(savePath,fileName,"saveLabels","saveImages")
 
 #Chinese characters data
 CharLabels,CharImages=fF.readNPZ(savePath,"1001to1100","saveLabels","saveImages")
@@ -143,8 +126,6 @@ def neural_net(LOGDIR,whichTest,numOutputs,learningRate,trainBatchSize,\
     
     # Merge all summary operators
     mergedSummaryOp = tf.summary.merge_all()
-    # Embedding variables for the projector
-    #assignment = embedding_var.assign(h_fc1)
     # Create a saver to save these summary operations AND the embedding
     saver = tf.train.Saver()
     
@@ -162,23 +143,6 @@ def neural_net(LOGDIR,whichTest,numOutputs,learningRate,trainBatchSize,\
     train_writer.add_graph(sess.graph)
     test_writer = tf.summary.FileWriter(os.path.join(LOGDIR)+'/test')
     test_writer.add_graph(sess.graph)
-#    embedding_writer = tf.summary.FileWriter(LOGDIR)
-#    embedding_writer.add_graph(sess.graph)
-#    
-#    #%% Embedding for the projector
-#    """To have the embedding save properly, we need to initialise its own summary,
-#    which needs to write just to the base LOGDIR, otherwise we will have problems loading it"""
-#    # embedding for the projection of higher dimensional space
-#    config = projector.ProjectorConfig()
-#    # Can have multiple embeddings, this only adds one
-#    embedding = config.embeddings.add()
-#    embedding.tensor_name = embedding_var.name
-#    # Link the tensor to the label and sprite path
-#    embedding.sprite.image_path = os.path.join(savePath,'spriteImages')
-#    embedding.metadata_path = os.path.join(savePath,'spriteLabels.tsv')
-#    # Specify the width and height of a single thumbnail.
-#    embedding.sprite.single_image_dim.extend([inputDim,inputDim])
-#    projector.visualize_embeddings(embedding_writer, config)
 #    
     
     #%% Start training!
@@ -208,12 +172,6 @@ def neural_net(LOGDIR,whichTest,numOutputs,learningRate,trainBatchSize,\
                            feed_dict={x: testImages,y_: oneHot(testLabels,numOutputs)})
             test_writer.add_summary(test_summary, i*trainBatchSize)
             saver.save(sess, os.path.join(LOGDIR, "LR{}_Iter{}_TestAcc{}.ckpt".format(learningRate,i,test_accuracy)))
-            #summary and assignment for the embedding
-#            assign, embedding_summary = sess.run([assignment,mergedSummaryOp], \
-#                        #complex powers so that it matches up with number of sprites generated
-#                         feed_dict={x: testImages[:1024],y_: oneHot(testLabels,numOutputs)[:1024],keep_prob: 1.0})
-#            embedding_writer.add_summary(embedding_summary,i*trainBatchSize)
-            
         if i % epochLength == 0 and i != 0:
             whichEpoch += 1
             print("Did {} epochs".format(whichEpoch))
