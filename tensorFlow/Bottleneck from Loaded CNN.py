@@ -78,7 +78,6 @@ for i in range(dataLength):
    
     bottlenecks[i]=sess.run(getBottleneck,feed_dict={x: CharImages[i:i+1], keep_prob: 1.0})
     
-    
 print("done")
 CharLabels=0
 CharImages=0
