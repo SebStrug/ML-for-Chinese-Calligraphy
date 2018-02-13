@@ -28,43 +28,43 @@ import time as t
 #%%Import the data
 print("Importing the data...")
 lenInput = 1024
+start = t.time()
+#training data
+labels,bottlenecks=fF.readNPZ(dataPath,\
+                                 "1001to1100_{}to{}chars".format(oldNumOutputs,newNumOutptus),\
+                                 "labels","bottlenecks")
+nextLabels,nextBottlenecks = fF.readNPZ(dataPath,\
+                                 "1101to1100_{}to{}chars".format(oldNumOutputs,newNumOutptus),\
+                                 "labels","bottlenecks")
+labels = np.concatenate((labels,nextLabels),axis=0)
+bottlenecks = np.concatenate((bottlenecks,nextBottlenecks),axis=0)
+nextLabels,nextBottlenecks = fF.readNPZ(dataPath,\
+                                 "1101to1100_{}to{}chars".format(oldNumOutputs,newNumOutptus),\
+                                 "labels","bottlenecks")
+labels = np.concatenate((labels,nextLabels),axis=0)
+bottlenecks = np.concatenate((bottlenecks,nextBottlenecks),axis=0)
+trainData = Data(bottlenecks,labels)
 
-#Chinese characters data
-CharLabels,CharImages=fF.readNPZ(savePath,"1001to1100","saveLabels","saveImages")
-nextLabels,nextImages = fF.readNPZ(savePath,"1101to1200","saveLabels","saveImages")
-CharLabels = np.concatenate((CharLabels,nextLabels),axis=0)
-CharImages = np.concatenate((CharImages,nextImages),axis=0)
-nextLabels,nextImages = fF.readNPZ(savePath,"1201to1300","saveLabels","saveImages")
-CharLabels = np.concatenate((CharLabels,nextLabels),axis=0)
-CharImages = np.concatenate((CharImages,nextImages),axis=0)
-del nextLabels; del nextImages;
-
-#define images and labels as a subset of the data
-#this function splits the data and prepares it for use in the network, can be used to loop
-#over several numOutputs
-def prepareDataSet(numOutputs,trainRatio,CharImages,CharLabels):
-
-    images, labels = subSet(numOutputs,CharImages,CharLabels)
-    dataLength = len(labels) #how many labels/images do we have?
-    #del MNISTLabels; del MNISTImages; 
-    del CharLabels; del CharImages; #free up memory
-    
-    #define the training and testing images
-    trainImages = images[0:int(dataLength*trainRatio)]
-    trainLabels = labels[0:int(dataLength*trainRatio)]
-    testImages = images[int(dataLength*trainRatio):dataLength]
-    testLabels = labels[int(dataLength*trainRatio):dataLength]
-    del images; del labels;        
-    
-    trainData = Data(trainImages,trainLabels)
-    del trainImages,trainLabels
-    #%% Create sprites and labels for the embedding
-    #os.chdir(workingPath)
-    #from classDataManip import createSpriteLabels
-    # How many sprites do we want to create (must be a square) > last value in function
-    montage, record_file = createSpriteLabels(testImages,testLabels,1024,savePath)
-    del montage; del record_file #don't need to save these, waste space
-    return trainData, testLabels, testImages
+#testing data
+labels,bottlenecks=fF.readNPZ(dataPath,\
+                                 "1001to1100_{}to{}chars".format(oldNumOutputs,newNumOutptus),\
+                                 "labels","bottlenecks")
+nextLabels,nextBottlenecks = fF.readNPZ(dataPath,\
+                                 "1001to1100_{}to{}chars".format(oldNumOutputs,newNumOutptus),\
+                                 "labels","bottlenecks")
+labels = np.concatenate((labels,nextLabels),axis=0)
+bottlenecks= np.concatenate((bottlenecks,nextBottlenecks),axis=0)
+nextLabels,nextBottlenecks = fF.readNPZ(dataPath,\
+                                 "1001to1100_{}to{}chars".format(oldNumOutputs,newNumOutptus),\
+                                 "labels","bottlenecks")
+bottlenecks = np.concatenate((labels,nextLabels),axis=0)
+bottlenecks = np.concatenate((bottlenecks,nextBottlenecks),axis=0)
+testLabels = labels
+testBottlenecks=bottlenecks
+#delete unused variables
+del nextLabels; del nextBottlenecks;
+del bottlenecks; del labels
+print("Took ",t.time()-start," seconds.")
 
 
 #%%Build the network
