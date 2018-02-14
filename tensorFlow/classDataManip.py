@@ -81,11 +81,11 @@ def oneHot(labelList,numOutputs):
         oneHots[np.arange(len(labelList)), labelList] = 1
         return oneHots
 
-def makeDir(LOGDIR,whichTest,numOutputs,learningRate,trainBatchSize,trainRatio):
+def makeDir(LOGDIR,name,whichTest,numOutputs,learningRate,trainBatchSize,trainRatio):
     #make a directory to save tensorboard information in 
     #whichTest = 5
-    LOGDIR = LOGDIR + str(datetime.date.today()) + \
-                '/Chinese_conv_{}/Outputs{}_LR{}_Batch{}_Ratio{}'\
+    LOGDIR = LOGDIR + str(datetime.date.today()) + name + \
+                '{}/Outputs{}_LR{}_Batch{}_Ratio{}'\
                 .format(whichTest,numOutputs,learningRate,trainBatchSize,trainRatio)
     #make a directory if one does not exist
     if not os.path.exists(LOGDIR):
@@ -111,7 +111,7 @@ class Data:
         self.imagePos=imagePos
         self.labelPos=labelPos
     def nextImageBatch(self,batchSize):
-        print("Image Data Position",self.imagePos)
+#        print("Image Data Position",self.imagePos)
         if batchSize < len(self.images)-self.imagePos:
             oldi=self.imagePos
             self.imagePos+=batchSize
@@ -135,9 +135,9 @@ class Data:
          if batchSize < len(self.labels)-self.labelPos:
             oldi=self.labelPos
             self.labelPos+=batchSize
-            print(self.labels[oldi:self.labelPos])
-            print(len(self.labels[oldi:self.labelPos]))
-            print(numOutputs)
+#            print(self.labels[oldi:self.labelPos])
+#            print(len(self.labels[oldi:self.labelPos]))
+#            print(numOutputs)
             return oneHot((self.labels)[oldi:self.labelPos],numOutputs)
             
          elif batchSize == len(self.labels)-self.labelPos:
