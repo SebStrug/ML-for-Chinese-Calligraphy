@@ -5,9 +5,7 @@ import time
 from classDataManip import makeDir
 import os
 
-tfrecord_filename = 'C:\\Users\\Sebastian\\Desktop\\MLChinese\\CASIA\\1.0\\train.tfrecords'
-
-def decode(serialized_example):
+def decodeTrain(serialized_example):
     features = tf.parse_single_example(
         serialized_example,
         # Defaults are not specified since both keys are required.
@@ -28,6 +26,27 @@ def decode(serialized_example):
     label = tf.cast(features['train/label'], tf.int32)
     return image2, label
 
+def decodeTest(serialized_example):
+    features = tf.parse_single_example(
+        serialized_example,
+        # Defaults are not specified since both keys are required.
+        features={'test/image': tf.FixedLenFeature([], tf.string),
+                  'test/label': tf.FixedLenFeature([], tf.int64)})
+    # tfrecords is saved in raw bytes, need to convert this into usable format
+    # May want to save this as tf.float32???
+    image = tf.decode_raw(features['test/image'], tf.uint8)
+    # Reshape image data into the original shape (try different forms)
+#    image1 = tf.reshape(image, [inputDim, inputDim, 1]); #2D no batch
+#    image2 = tf.reshape(image, [inputDim**2,1]);         #1D no batch
+    """Try with no '1' on the end of array (which denotes RGB or greyscale)"""
+    image1 = tf.reshape(image, [inputDim, inputDim]); #2D no batch
+    image2 = tf.reshape(image, [inputDim**2]);         #1D no batch
+    print(image1)
+    print(image2)
+    # Cast label data
+    label = tf.cast(features['test/label'], tf.int32)
+    return image2, label
+
 def augment(image, label):
     # OPTIONAL: Could apply distortions
     return image, label
@@ -38,14 +57,23 @@ def normalize(image, label):
     return image, label
 
 # Creates a dataset that reads all of the examples from two files.
-def inputs(tfrecord_filename,batch_size,num_epochs):
+def inputs(trainType,tfrecord_filename,batch_size,num_epochs):
+    """If num_epochs is set to 0, repeat infinitely"""
     #filenames = [tfrecord_filename]
     filenames = tfrecord_filename
     dataset = tf.data.TFRecordDataset(filenames)
-    dataset = dataset.repeat(num_epochs)
+    if num_epochs == 0: #if set to 0, repeat infinitely
+        dataset = dataset.repeat()
+    else:
+        dataset = dataset.repeat(num_epochs)
     print(dataset)
     
-    dataset = dataset.map(decode)  # Parse the record into tensors.
+    if trainType == 'train':
+        dataset = dataset.map(decodeTrain)  # Parse the record into tensors.
+    elif trainType == 'test':
+        dataset = dataset.map(decodeTest)
+    else:
+        raise ValueError("trainType not specified properly as train or test")
     #dataset = dataset.map(augment)
     dataset=dataset.map(normalize)
     
@@ -61,9 +89,10 @@ def inputs(tfrecord_filename,batch_size,num_epochs):
 
 def run_training():
     tf.reset_default_graph()
-    with tf.Graph().as_default():
+    with tf.Graph().as_default(): #<<<< do we need this line? DIfferent from net_as_func
         
-        image_batch, label_batch = inputs(tfrecord_filename,batch_size,num_epochs)
+        train_image_batch, train_label_batch = inputs('train',train_tfrecord_filename,train_batch_size,num_epochs)
+        test_image_batch, test_label_batch = inputs('test',test_tfrecord_filename,test_batch_size,0)
     
         #build a graph here
         def weight_variable(shape):
@@ -79,10 +108,11 @@ def run_training():
             return tf.Variable(initial)
         
         #Define the placeholders for the images and labels
-        x = tf.placeholder(tf.float32, [batch_size, inputDim**2], name="images")
+        # 'None' used to be batch_size << haven't tested None yet
+        x = tf.placeholder(tf.float32, [None, inputDim**2], name="images")
         x_image = tf.reshape(x, [-1, inputDim, inputDim, 1]) #to show example images
         tf.summary.image('input', x_image, 4) # Show 4 examples of output images
-        y_ = tf.placeholder(tf.float32, [batch_size,numOutputs], name="labels")
+        y_ = tf.placeholder(tf.float32, [None,numOutputs], name="labels")
         
         with tf.name_scope('fc1'):
             """Fully connected layer, maps features to the number of outputs"""
@@ -126,24 +156,34 @@ def run_training():
             # Create writers
             train_writer = tf.summary.FileWriter(os.path.join(LOGDIR)+'/train')
             train_writer.add_graph(sess.graph)
+            test_writer = tf.summary.FileWriter(os.path.join(LOGDIR)+'/test')
+            test_writer.add_graph(sess.graph)
+            
             start_time = time.time()  
             try:
                 step = 0
                 while True: #train until we run out of epochs
                       
                     if step % 5 == 0:
-                        train_accuracy, train_summary =sess.run([accuracy, mergedSummaryOp], \
-                                     feed_dict={x: image_batch.eval(), \
-                                                y_: tf.one_hot(label_batch,numOutputs).eval()})
+                        train_accuracy, train_summary = sess.run([accuracy, mergedSummaryOp], \
+                                     feed_dict={x: train_image_batch.eval(), \
+                                                y_: tf.one_hot(train_label_batch,numOutputs).eval()})
                         train_writer.add_summary(train_summary, step)
-                        saver.save(sess, os.path.join(LOGDIR, "LR{}_Iter{}_TrainAcc{}.ckpt".\
-                                                      format(learningRate,step,train_accuracy)))
+                    
+                    if step % 10 == 0:
+                        print("Testing the net...")
+                        test_accuracy, test_summary = sess.run([accuracy,mergedSummaryOp], \
+                                       feed_dict={x: test_image_batch.eval(),\
+                                                  y_: tf.one_hot(test_label_batch,numOutputs).eval()})
+                        test_writer.add_summary(test_summary, step)
+                        saver.save(sess, os.path.join(LOGDIR, "LR{}_Iter{}_TestAcc{}.ckpt".\
+                                                      format(learningRate,step,test_accuracy)))
                         
-                        print('Step: {}, accuracy = {:.3}'.format(step, train_accuracy))
+                        print('Step: {}, Test accuracy = {:.3}'.format(step, test_accuracy))
                     
                     #print(tf.one_hot(label_batch,10).eval())
-                    sess.run(train_step, feed_dict={x: image_batch.eval(),\
-                                                    y_: tf.one_hot(label_batch,numOutputs).eval()})              
+                    sess.run(train_step, feed_dict={x: train_image_batch.eval(),\
+                                                    y_: tf.one_hot(train_label_batch,numOutputs).eval()})              
                     
                     step += 1
             except tf.errors.OutOfRangeError:
@@ -152,19 +192,26 @@ def run_training():
                       format(num_epochs,step,duration/60))  
             
             train_writer.close()
+            test_writer.close()
+            
+def main():
+    LOGDIR = makeDir(savePath,whichTest,numOutputs,learningRate,train_batch_size,1)
+    run_training()
+
+
+train_tfrecord_filename = 'C:\\Users\\Sebastian\\Desktop\\MLChinese\\CASIA\\1.0\\train.tfrecords'
+test_tfrecord_filename = 'C:\\Users\\Sebastian\\Desktop\\MLChinese\\CASIA\\1.0\\test.tfrecords'
+savePath = 'C:\\Users\\Sebastian\\Desktop\\MLChinese\\Saved runs\\'
 
 inputDim = 48
 numOutputs = 10
-num_epochs = 6
-batch_size = 2
-learningRate = 1E-3
-savePath = 'C:\\Users\\Sebastian\\Desktop\\MLChinese\\Saved runs'
-whichTest = 1
-def main():
-    LOGDIR = makeDir(savePath,whichTest,numOutputs,learningRate,batch_size,1)
-    run_training()
+test_batch_size = 500
+whichTest = 2
+LOGDIR = savePath
 
-main()
-    
+for num_epochs in [600]:
+    for train_batch_size in [128]:
+        for learningRate in [1E-3]:
+            main()
     
     
