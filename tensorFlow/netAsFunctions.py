@@ -11,21 +11,27 @@ funcPath = 'C:\\Users\\'+name+'\\Desktop\\GitHub\\ML-for-Chinese-Calligraphy\\da
 savePath = 'C:\\Users\\'+name+'\\Desktop\\MLChinese\\Saved script files'
 workingPath = 'C:\\Users\\'+name+'\\Desktop\\GitHub\\ML-for-Chinese-Calligraphy\\tensorFlow'
 LOGDIR = r'C:/Users/'+name+'/Anaconda3/Lib/site-packages/tensorflow/tmp/ChineseCaligCNN/'
-#%% Imports and paths
+#%% Imports, set directories, Elliot
+#funcPath = 'C:\\Users\\ellio\\OneDrive\\Documents\\GitHubPC\\ML-for-Chinese-Calligraphy\\dataHandling'
+#savePath = 'C:\\Users\\ellio\\Documents\\training data\\Machine learning data'
+#workingPath = 'C:\\Users\\ellio\\OneDrive\\Documents\\GitHubPC\\ML-for-Chinese-Calligraphy\\tensorFlow'
+#LOGDIR = r'C:\\Users\\ellio\\Anaconda3\\Lib\\site-packages\\tensorflow\\tmp\\'
+#%%
+
 import os
-gitHubRep = os.path.normpath(os.getcwd() + os.sep + os.pardir)# find github path
-#import own functions and classes
-os.chdir(os.path.join(gitHubRep,"dataHandling/"))
-from classFileFunctions import fileFunc as fF 
-os.chdir(os.path.join(gitHubRep,"tensorFlow/"))
-from classDataManip import subSet,oneHot,makeDir,Data,createSpriteLabels
-#set paths
-dataPath, LOGDIR = fF.whichUser("Elliot")
-#import modules
 import tensorflow as tf
 from tensorflow.contrib.tensorboard.plugins import projector
 import numpy as np
 import time as t
+import datetime
+from PIL import Image
+import random
+os.chdir(funcPath)
+from classFileFunctions import fileFunc as fF 
+os.chdir(workingPath)
+from classDataManip import subSet,oneHot,makeDir,Data,createSpriteLabels
+
+
 #%%Display a MNIST image
 def display(img, inputDim, threshold=200):
     """Run as print(display(image_array))"""
