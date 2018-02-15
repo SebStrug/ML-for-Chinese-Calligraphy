@@ -60,7 +60,8 @@ def augment(image, label):
     degree_angle = random.randint(-10,10) # random integer from -10 to 10
     radian = degree_angle * math.pi / 180 #convert to radians
     #reshape the image so it has 2D shape
-    tf.contrib.image.rotate(tf.reshape(image, [inputDim, inputDim]),radian)
+    image = tf.contrib.image.rotate(tf.reshape(image, [inputDim, inputDim]),radian)
+    image = tf.reshape(image, [inputDim**2])
     #translate image
     #translate_x = random.randint(-3,3) #random integer between -3 and 3
     #translate_y = random.randint(-3,3) #this denotes translation in x and y
@@ -110,111 +111,118 @@ def inputs(trainType,tfrecord_filename,batch_size,num_epochs):
 
 def run_training():
     tf.reset_default_graph()
-    with tf.Graph().as_default(): #<<<< do we need this line? DIfferent from net_as_func
+    #with tf.Graph().as_default(): #<<<< do we need this line? DIfferent from net_as_func
         
-        train_image_batch, train_label_batch = inputs('train',train_tfrecord_filename,train_batch_size,num_epochs)
-        test_image_batch, test_label_batch = inputs('test',test_tfrecord_filename,test_batch_size,0)
-    
-        #build a graph here
-        def weight_variable(shape):
-            """weight_variable generates a weight variable of a given shape."""
-            initial = tf.truncated_normal(shape, stddev=0.1)
-            tf.summary.histogram("weights", initial)
-            return tf.Variable(initial)
-    
-        def bias_variable(shape):
-            """bias_variable generates a bias variable of a given shape."""
-            initial = tf.constant(0.1, shape=shape)
-            tf.summary.histogram("biases", initial)
-            return tf.Variable(initial)
-        
-        #Define the placeholders for the images and labels
-        # 'None' used to be batch_size << haven't tested None yet
-        x = tf.placeholder(tf.float32, [None, inputDim**2], name="images")
-        x_image = tf.reshape(x, [-1, inputDim, inputDim, 1]) #to show example images
-        tf.summary.image('input', x_image, 4) # Show 4 examples of output images
-        y_ = tf.placeholder(tf.float32, [None,num_output], name="labels")
-        
-        with tf.name_scope('fc1'):
-            """Fully connected layer, maps features to the number of outputs"""
-            w_fc = weight_variable([inputDim**2,num_output])
-            b_fc = bias_variable([num_output])
-            # calculate the convolution
-            y_conv = tf.matmul(x, w_fc) + b_fc
-            tf.summary.histogram("activations", y_conv)
-            
-        with tf.name_scope("xent"):    
-            cross_entropy = tf.reduce_mean(\
-                                tf.nn.softmax_cross_entropy_with_logits(\
-                                    labels=y_, \
-                                    logits=y_conv))
-            tf.summary.scalar("xent",cross_entropy)
-            
-        with tf.name_scope("train"):
-            train_step = tf.train.AdamOptimizer(learning_rate).minimize(cross_entropy)
-        
-        with tf.name_scope("accuracy"):
-            correct_prediction = tf.equal(tf.argmax(y_conv, 1), tf.argmax(y_, 1))
-            # what fraction of bools was correct? Cast to floating point...
-            accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
-            tf.summary.scalar("accuracy",accuracy)
+    train_image_batch, train_label_batch = inputs('train',train_tfrecord_filename,train_batch_size,num_epochs)
+    test_image_batch, test_label_batch = inputs('test',test_tfrecord_filename,test_batch_size,0)
 
-        #merge all summaries for tensorboard
-        mergedSummaryOp = tf.summary.merge_all()
-        # Create a saver to save these summary operations
-        saver = tf.train.Saver()
-        
-        #this is the operation that initialises all the graph variables
-        init_op = tf.group(tf.global_variables_initializer(),\
-                           tf.local_variables_initializer())
-            
-            
-        with tf.Session() as sess:
+    #build a graph here
+    def weight_variable(shape):
+        """weight_variable generates a weight variable of a given shape."""
+        initial = tf.truncated_normal(shape, stddev=0.1)
+        tf.summary.histogram("weights", initial)
+        return tf.Variable(initial)
+
+    def bias_variable(shape):
+        """bias_variable generates a bias variable of a given shape."""
+        initial = tf.constant(0.1, shape=shape)
+        tf.summary.histogram("biases", initial)
+        return tf.Variable(initial)
     
-            #initialise the variables
-            sess.run(init_op)
-            
-            # Create writers
-            train_writer = tf.summary.FileWriter(os.path.join(LOGDIR)+'/train')
-            train_writer.add_graph(sess.graph)
-            test_writer = tf.summary.FileWriter(os.path.join(LOGDIR)+'/test')
-            test_writer.add_graph(sess.graph)
-            
-            start_time = time.time()  
-            try:
-                step = 0
-                while True: #train until we run out of epochs
-                      
-                    if step % 5 == 0:
-                        train_accuracy, train_summary = sess.run([accuracy, mergedSummaryOp], \
-                                     feed_dict={x: train_image_batch.eval(), \
-                                                y_: tf.one_hot(train_label_batch,num_output).eval()})
-                        train_writer.add_summary(train_summary, step)
-                        print('Step: {}, Training accuracy = {:.3}'.format(step, train_accuracy))
+    #Define the placeholders for the images and labels
+    # 'None' used to be batch_size << haven't tested None yet
+    x = tf.placeholder(tf.float32, [None, inputDim**2], name="images")
+    x_image = tf.reshape(x, [-1, inputDim, inputDim, 1]) #to show example images
+    tf.summary.image('input', x_image, 4) # Show 4 examples of output images
+    y_ = tf.placeholder(tf.float32, [None,num_output], name="labels")
+    
+    with tf.name_scope('fc1'):
+        """Fully connected layer, maps features to the number of outputs"""
+        w_fc = weight_variable([inputDim**2,num_output])
+        b_fc = bias_variable([num_output])
+        # calculate the convolution
+        y_conv = tf.matmul(x, w_fc) + b_fc
+        tf.summary.histogram("activations", y_conv)
+        
+    with tf.name_scope("xent"):    
+        cross_entropy = tf.reduce_mean(\
+                            tf.nn.softmax_cross_entropy_with_logits(\
+                                labels=y_, \
+                                logits=y_conv))
+        tf.summary.scalar("xent",cross_entropy)
+        
+    with tf.name_scope("train"):
+        train_step = tf.train.AdamOptimizer(learning_rate).minimize(cross_entropy)
+    
+    with tf.name_scope("accuracy"):
+        correct_prediction = tf.equal(tf.argmax(y_conv, 1), tf.argmax(y_, 1))
+        # what fraction of bools was correct? Cast to floating point...
+        accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
+        tf.summary.scalar("accuracy",accuracy)
+
+    #merge all summaries for tensorboard
+    mergedSummaryOp = tf.summary.merge_all()
+    # Create a saver to save these summary operations
+    saver = tf.train.Saver()
+    
+    #this is the operation that initialises all the graph variables
+    init_op = tf.group(tf.global_variables_initializer(),\
+                       tf.local_variables_initializer())
+        
+        
+    with tf.Session() as sess:
+
+        #initialise the variables
+        sess.run(init_op)
+        
+        # Create writers
+        train_writer = tf.summary.FileWriter(os.path.join(LOGDIR)+'/train')
+        train_writer.add_graph(sess.graph)
+        test_writer = tf.summary.FileWriter(os.path.join(LOGDIR)+'/test')
+        test_writer.add_graph(sess.graph)
+        
+        start_time = time.time()  
+        try:
+            step = 0
+            while True: #train until we run out of epochs
+                  
+                if step % 5 == 0:
+                    train_accuracy, train_summary = sess.run([accuracy, mergedSummaryOp], \
+                                 feed_dict={x: train_image_batch.eval(), \
+                                            y_: tf.one_hot(train_label_batch,num_output).eval()})
+                    train_writer.add_summary(train_summary, step)
+                    print('Step: {}, Training accuracy = {:.3}'.format(step, train_accuracy))
+                
+                if step % 10 == 0:
+                    print("Testing the net...")
+                    test_accuracy, test_summary = sess.run([accuracy,mergedSummaryOp], \
+                                   feed_dict={x: test_image_batch.eval(),\
+                                              y_: tf.one_hot(test_label_batch,num_output).eval()})
+                    test_writer.add_summary(test_summary, step)
+                    saver.save(sess, os.path.join(LOGDIR, "LR{}_Iter{}_TestAcc{:.3}.ckpt".\
+                                                  format(learning_rate,step,test_accuracy)))
                     
-                    if step % 10 == 0:
-                        print("Testing the net...")
-                        test_accuracy, test_summary = sess.run([accuracy,mergedSummaryOp], \
-                                       feed_dict={x: test_image_batch.eval(),\
-                                                  y_: tf.one_hot(test_label_batch,num_output).eval()})
-                        test_writer.add_summary(test_summary, step)
-                        saver.save(sess, os.path.join(LOGDIR, "LR{}_Iter{}_TestAcc{:.3}.ckpt".\
-                                                      format(learning_rate,step,test_accuracy)))
-                        
-                        print('Step: {}, Test accuracy = {:.3}'.format(step, test_accuracy))
-                    
-                    #print(tf.one_hot(label_batch,10).eval())
-                    sess.run(train_step, feed_dict={x: train_image_batch.eval(),\
-                                                    y_: tf.one_hot(train_label_batch,num_output).eval()})              
-                    
-                    step += 1
-            except tf.errors.OutOfRangeError:
-                duration = time.time() - start_time
-                print('Done {} epochs, {} steps, took {:.3} mins.'.\
-                      format(num_epochs,step,duration/60))  
-            
-            train_writer.close()
-            test_writer.close()
+                    print('Step: {}, Test accuracy = {:.3}'.format(step, test_accuracy))
+                
+                #print(tf.one_hot(label_batch,10).eval())
+                sess.run(train_step, feed_dict={x: train_image_batch.eval(),\
+                                                y_: tf.one_hot(train_label_batch,num_output).eval()})              
+                
+    
+                #check that .eval() isn't skipping a batch
+                sess.run(train_image_batch.eval())
+                #convert this array into an image
+                #first reshape into 2d, then convert
+                sess.run(tf.one_hot(train_label_batch,num_output).eval())
+                #print out the indices of these labels to check if the images match up
+                step += 1
+        except tf.errors.OutOfRangeError:
+            duration = time.time() - start_time
+            print('Done {} epochs, {} steps, took {:.3} mins.'.\
+                  format(num_epochs,step,duration/60))  
+        
+        train_writer.close()
+        test_writer.close()
             
 def main():
     run_training()
