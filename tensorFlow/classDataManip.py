@@ -81,15 +81,22 @@ def oneHot(labelList,numOutputs):
         oneHots[np.arange(len(labelList)), labelList] = 1
         return oneHots
 
-def makeDir(LOGDIR,name,whichTest,numOutputs,learningRate,trainBatchSize,trainRatio):
+def makeDir(baseLOGDIR,name,numOutputs,learningRate,trainBatchSize):
     #make a directory to save tensorboard information in 
-    #whichTest = 5
-    LOGDIR = LOGDIR + str(datetime.date.today()) + name + \
-                '{}/Outputs{}_LR{}_Batch{}_Ratio{}'\
-                .format(whichTest,numOutputs,learningRate,trainBatchSize,trainRatio)
-    #make a directory if one does not exist
+    run_number = 1 #which run with the same values is completed
+    LOGDIR = baseLOGDIR + str(datetime.date.today()) + '/' + name + \
+                ' run_' + str(run_number) +  '/' + '/Outputs{}_LR{}_Batch{}'\
+                .format(numOutputs,learningRate,trainBatchSize)
+                
     if not os.path.exists(LOGDIR):
         os.makedirs(LOGDIR)
+    else:
+        #make a directory if one does not exist
+        while os.path.exists(LOGDIR):
+            run_number += 1
+            LOGDIR = baseLOGDIR + str(datetime.date.today()) + '/' + name + \
+                '_run_' + str(run_number) +  '/' + '/Outputs{}_LR{}_Batch{}'\
+                .format(numOutputs,learningRate,trainBatchSize)
     return LOGDIR
 
         

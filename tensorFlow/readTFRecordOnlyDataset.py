@@ -1,5 +1,9 @@
 # -*- coding: utf-8 -*-
-"""Second attempt"""
+"""
+Build and train a neural network using TFRecords as input
+Look at the bottom of the file for all the inputs
+"""
+
 import tensorflow as tf
 import time
 import math #to use radians in rotating the image
@@ -129,12 +133,12 @@ def run_training():
         x = tf.placeholder(tf.float32, [None, inputDim**2], name="images")
         x_image = tf.reshape(x, [-1, inputDim, inputDim, 1]) #to show example images
         tf.summary.image('input', x_image, 4) # Show 4 examples of output images
-        y_ = tf.placeholder(tf.float32, [None,numOutputs], name="labels")
+        y_ = tf.placeholder(tf.float32, [None,num_output], name="labels")
         
         with tf.name_scope('fc1'):
             """Fully connected layer, maps features to the number of outputs"""
-            w_fc = weight_variable([inputDim**2,numOutputs])
-            b_fc = bias_variable([numOutputs])
+            w_fc = weight_variable([inputDim**2,num_output])
+            b_fc = bias_variable([num_output])
             # calculate the convolution
             y_conv = tf.matmul(x, w_fc) + b_fc
             tf.summary.histogram("activations", y_conv)
@@ -147,7 +151,7 @@ def run_training():
             tf.summary.scalar("xent",cross_entropy)
             
         with tf.name_scope("train"):
-            train_step = tf.train.AdamOptimizer(learningRate).minimize(cross_entropy)
+            train_step = tf.train.AdamOptimizer(learning_rate).minimize(cross_entropy)
         
         with tf.name_scope("accuracy"):
             correct_prediction = tf.equal(tf.argmax(y_conv, 1), tf.argmax(y_, 1))
@@ -184,23 +188,24 @@ def run_training():
                     if step % 5 == 0:
                         train_accuracy, train_summary = sess.run([accuracy, mergedSummaryOp], \
                                      feed_dict={x: train_image_batch.eval(), \
-                                                y_: tf.one_hot(train_label_batch,numOutputs).eval()})
+                                                y_: tf.one_hot(train_label_batch,num_output).eval()})
                         train_writer.add_summary(train_summary, step)
+                        print('Step: {}, Training accuracy = {:.3}'.format(step, train_accuracy))
                     
                     if step % 10 == 0:
                         print("Testing the net...")
                         test_accuracy, test_summary = sess.run([accuracy,mergedSummaryOp], \
                                        feed_dict={x: test_image_batch.eval(),\
-                                                  y_: tf.one_hot(test_label_batch,numOutputs).eval()})
+                                                  y_: tf.one_hot(test_label_batch,num_output).eval()})
                         test_writer.add_summary(test_summary, step)
-                        saver.save(sess, os.path.join(LOGDIR, "LR{}_Iter{}_TestAcc{}.ckpt".\
-                                                      format(learningRate,step,test_accuracy)))
+                        saver.save(sess, os.path.join(LOGDIR, "LR{}_Iter{}_TestAcc{:.3}.ckpt".\
+                                                      format(learning_rate,step,test_accuracy)))
                         
                         print('Step: {}, Test accuracy = {:.3}'.format(step, test_accuracy))
                     
                     #print(tf.one_hot(label_batch,10).eval())
                     sess.run(train_step, feed_dict={x: train_image_batch.eval(),\
-                                                    y_: tf.one_hot(train_label_batch,numOutputs).eval()})              
+                                                    y_: tf.one_hot(train_label_batch,num_output).eval()})              
                     
                     step += 1
             except tf.errors.OutOfRangeError:
@@ -212,7 +217,6 @@ def run_training():
             test_writer.close()
             
 def main():
-    LOGDIR = makeDir(savePath,'12gnt',whichTest,numOutputs,learningRate,train_batch_size,1)
     run_training()
 
 inputDim = 48
@@ -221,19 +225,22 @@ num_epoch_list = [600]
 train_batch_size_list = [128]
 learning_rate_list = [1E-3]
 test_batch_size = 500
-whichTest = 2
-LOGDIR = savePath
 
 savePath = 'C:\\Users\\Sebastian\\Desktop\\MLChinese\\Saved runs\\'
+localPath = 'C:\\Users\\Sebastian\\Desktop\\MLChinese\\CASIA\\1.0'
 
-for numOutputs in num_output_list:
+name_of_run = 'test'
+
+for num_output in num_output_list:
     train_tfrecord_filename = \
-        'C:\\Users\\Sebastian\\Desktop\\MLChinese\\CASIA\\1.0\\train'+str(numOutputs)+'.tfrecords'
+        localPath+'\\train'+str(num_output)+'.tfrecords'
     test_tfrecord_filename = \
-        'C:\\Users\\Sebastian\\Desktop\\MLChinese\\CASIA\\1.0\\test'+str(numOutputs)+'.tfrecords'
+        localPath+'\\test'+str(num_output)+'.tfrecords'
     for num_epochs in num_epoch_list:
         for train_batch_size in train_batch_size_list:
-            for learningRate in learning_rate_list:
+            for learning_rate in learning_rate_list:
+                LOGDIR = makeDir(savePath,name_of_run,num_output,\
+                                     learning_rate,train_batch_size)
                 main()
     
     
