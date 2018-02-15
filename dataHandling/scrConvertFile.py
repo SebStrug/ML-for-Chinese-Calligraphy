@@ -233,12 +233,13 @@ for numOutputs in [10,20,30,50,100]:
     generateTestTFRecord(unique_test_addrs,unique_test_labels,numOutputs)
 
 #%% Delete the saved images so they don't take up space
-for the_file in os.listdir(saveImagePath):
-    file_path = os.path.join(saveImagePath, the_file)
-    try:
-        if os.path.isfile(file_path):
-            os.unlink(file_path)
-        # the following line also removes sub-directories
-        elif os.path.isdir(file_path): shutil.rmtree(file_path)
-    except Exception as e:
-        print(e)
+def delete_images():
+    for the_file in os.listdir(saveImagePath):
+        file_path = os.path.join(saveImagePath, the_file)
+        try:
+            if os.path.isfile(file_path):
+                os.unlink(file_path)
+            # the following line also removes sub-directories
+            elif os.path.isdir(file_path): shutil.rmtree(file_path)
+        except Exception as e:
+            print(e)

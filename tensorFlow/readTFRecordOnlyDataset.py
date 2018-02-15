@@ -2,6 +2,8 @@
 """Second attempt"""
 import tensorflow as tf
 import time
+import math #to use radians in rotating the image
+import random
 from classDataManip import makeDir
 import os
 
@@ -48,7 +50,20 @@ def decodeTest(serialized_example):
     return image2, label
 
 def augment(image, label):
-    # OPTIONAL: Could apply distortions
+    """Apply distortions to the image, here rotation and translation
+    Not included yet"""
+    #rotate image
+    degree_angle = random.randint(-10,10) # random integer from -10 to 10
+    radian = degree_angle * math.pi / 180 #convert to radians
+    tf.contrib.image.rotate(image,radian)
+    #translate image
+    translate_x = random.randint(-3,3) #random integer between -3 and 3
+    translate_y = random.randint(-3,3) #this denotes translation in x and y
+    tf.contrib.image.translate(image,(translate_x,translate_y))
+    #also can scale images using
+    #tf.image.resize_images
+    #need to look at the documentation for these methods, see if we have
+    # the correct arguments
     return image, label
 
 def normalize(image, label):
@@ -195,13 +210,8 @@ def run_training():
             test_writer.close()
             
 def main():
-    LOGDIR = makeDir(savePath,whichTest,numOutputs,learningRate,train_batch_size,1)
+    LOGDIR = makeDir(savePath,'12gnt',whichTest,numOutputs,learningRate,train_batch_size,1)
     run_training()
-
-
-train_tfrecord_filename = 'C:\\Users\\Sebastian\\Desktop\\MLChinese\\CASIA\\1.0\\train.tfrecords'
-test_tfrecord_filename = 'C:\\Users\\Sebastian\\Desktop\\MLChinese\\CASIA\\1.0\\test.tfrecords'
-savePath = 'C:\\Users\\Sebastian\\Desktop\\MLChinese\\Saved runs\\'
 
 inputDim = 48
 numOutputs = 10
@@ -209,8 +219,12 @@ test_batch_size = 500
 whichTest = 2
 LOGDIR = savePath
 
+train_tfrecord_filename = 'C:\\Users\\Sebastian\\Desktop\\MLChinese\\CASIA\\1.0\\train'+str(numOutputs)+'.tfrecords'
+test_tfrecord_filename = 'C:\\Users\\Sebastian\\Desktop\\MLChinese\\CASIA\\1.0\\test'+str(numOutputs)+'.tfrecords'
+savePath = 'C:\\Users\\Sebastian\\Desktop\\MLChinese\\Saved runs\\'
+
 for num_epochs in [600]:
-    for train_batch_size in [128]:
+    for train_batch_size in [40]:
         for learningRate in [1E-3]:
             main()
     
