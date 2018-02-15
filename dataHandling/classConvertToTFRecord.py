@@ -92,10 +92,9 @@ class convertToTFRecord:
         return labels
      
     #Now we only want to save 10 unique characters
-    def generateUniqueAddrs(saveImagePath,numUnique,trainType,train_addrs,train_labels,test_addrs,test_labels):
+    def generateUniqueAddrs(saveImagePath,numUnique,trainType,addrs_labels):
         """We are going to generate 10 unique characters in the addrs and labels"""
         print("Saving only {} unique characters for ".format(numUnique) + trainType)
-        addrs_labels = [train_addrs,train_labels,test_addrs,test_labels]
         train_addrs = addrs_labels[0]
         train_labels = addrs_labels[1]
         test_addrs = addrs_labels[2]
@@ -130,7 +129,7 @@ class convertToTFRecord:
         return tf.train.Feature(bytes_list=tf.train.BytesList(value=[value]))
     
     def generateTrainTFRecord(addrs,labels,numOutputs):
-        print("Generating test TFRecord for {} outputs... \n".format(numOutputs))
+        print("Generating train TFRecord for {} outputs...".format(numOutputs))
         train_filename = 'train'+str(numOutputs)+'.tfrecords'
         # Initiating the writer and creating the train tfrecords file.
         writer = tf.python_io.TFRecordWriter(train_filename)
@@ -140,8 +139,8 @@ class convertToTFRecord:
             img = np.array(img)
             label = labels[i]
             # Create a feature
-            feature = {'train/label': _int64_feature(label),
-                       'train/image': _bytes_feature(tf.compat.as_bytes(img.tostring()))}
+            feature = {'train/label': convertToTFRecord._int64_feature(label),
+                       'train/image': convertToTFRecord._bytes_feature(tf.compat.as_bytes(img.tostring()))}
             # Create an example protocol buffer
             example = tf.train.Example(features=tf.train.Features(feature=feature))
             # Serialize to string and write on the file
@@ -149,7 +148,7 @@ class convertToTFRecord:
         writer.close()
     
     def generateTestTFRecord(addrs,labels,numOutputs):
-        print("Generating test TFRecord for {} outputs... \n".format(numOutputs))
+        print("Generating test TFRecord for {} outputs...".format(numOutputs))
         test_filename = 'test'+str(numOutputs)+'.tfrecords'
         # Initiating the writer and creating the test tfrecords file.
         writer = tf.python_io.TFRecordWriter(test_filename)
@@ -159,8 +158,8 @@ class convertToTFRecord:
             img = np.array(img)
             label = labels[i]
             # Create a feature
-            feature = {'test/label': _int64_feature(label),
-                       'test/image': _bytes_feature(tf.compat.as_bytes(img.tostring()))}
+            feature = {'test/label': convertToTFRecord._int64_feature(label),
+                       'test/image': convertToTFRecord._bytes_feature(tf.compat.as_bytes(img.tostring()))}
             # Create an example protocol buffer
             example = tf.train.Example(features=tf.train.Features(feature=feature))
             # Serialize to string and write on the file

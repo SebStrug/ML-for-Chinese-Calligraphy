@@ -40,8 +40,10 @@ def checkTrainTest():
 testGNT,trainGNT = checkTrainTest()
 
 #process the images from the .gnt files and save them (as images)
+#this is the majority of the processing
 cTF.processGNTasImage(saveImagePath,gntPath,imageSize,trainGNT,testGNT)                
-            
+
+#%%
 #read directories of each image in training, and get their corresponding labels
 train_addrs = glob.glob(saveImagePath+"\\train\\*.png")
 train_labels = cTF.convLabels(saveImagePath,'train',train_addrs)
@@ -52,7 +54,6 @@ addrs_labels = [train_addrs,train_labels,test_addrs,test_labels] #store as singl
 
 print("Number of unique characters: {}".format(len(list(set(train_labels)))))
 print("Total number of samples: {}".format(len(train_labels)))
-
 
 #save TFRecord files containing the following numbers of unique Chinese characters
 for numOutputs in [10,20,30,50,100]:
