@@ -63,6 +63,7 @@ for numOutputs in [10,20,30,50,100]:
         cTF.generateUniqueAddrs(saveImagePath,numOutputs,'train',addrs_labels)
     unique_test_addrs, unique_test_labels = \
             cTF.generateUniqueAddrs(saveImagePath,numOutputs,'test',addrs_labels)
+    os.chdir(mainPath)
     cTF.generateTrainTFRecord(unique_train_addrs,unique_train_labels,numOutputs)
     cTF.generateTestTFRecord(unique_test_addrs,unique_test_labels,numOutputs)
 
