@@ -55,11 +55,12 @@ def augment(image, label):
     #rotate image
     degree_angle = random.randint(-10,10) # random integer from -10 to 10
     radian = degree_angle * math.pi / 180 #convert to radians
-    tf.contrib.image.rotate(image,radian)
+    #reshape the image so it has 2D shape
+    tf.contrib.image.rotate(tf.reshape(image, [inputDim, inputDim]),radian)
     #translate image
-    translate_x = random.randint(-3,3) #random integer between -3 and 3
-    translate_y = random.randint(-3,3) #this denotes translation in x and y
-    tf.contrib.image.translate(image,(translate_x,translate_y))
+    #translate_x = random.randint(-3,3) #random integer between -3 and 3
+    #translate_y = random.randint(-3,3) #this denotes translation in x and y
+    #tf.contrib.image.translate(image,(translate_x,translate_y))
     #also can scale images using
     #tf.image.resize_images
     #need to look at the documentation for these methods, see if we have
@@ -85,14 +86,15 @@ def inputs(trainType,tfrecord_filename,batch_size,num_epochs):
     
     if trainType == 'train':
         dataset = dataset.map(decodeTrain)  # Parse the record into tensors.
+        dataset = dataset.map(augment)
     elif trainType == 'test':
+        #do not augment testing data! Only need to augment training data
         dataset = dataset.map(decodeTest)
     else:
         raise ValueError("trainType not specified properly as train or test")
-    #dataset = dataset.map(augment)
-    dataset=dataset.map(normalize)
     
-    dataset = dataset.shuffle(1000 + 3 * batch_size)
+    dataset=dataset.map(normalize) #normalize the image values to be between -0.5 and 0.5
+    dataset = dataset.shuffle(1000 + 3 * batch_size) #shuffle the order of the images
     dataset = dataset.batch(batch_size)
     iterator = dataset.make_one_shot_iterator()
     return iterator.get_next()
@@ -214,18 +216,24 @@ def main():
     run_training()
 
 inputDim = 48
-numOutputs = 10
+num_output_list = [10]
+num_epoch_list = [600]
+train_batch_size_list = [128]
+learning_rate_list = [1E-3]
 test_batch_size = 500
 whichTest = 2
 LOGDIR = savePath
 
-train_tfrecord_filename = 'C:\\Users\\Sebastian\\Desktop\\MLChinese\\CASIA\\1.0\\train'+str(numOutputs)+'.tfrecords'
-test_tfrecord_filename = 'C:\\Users\\Sebastian\\Desktop\\MLChinese\\CASIA\\1.0\\test'+str(numOutputs)+'.tfrecords'
 savePath = 'C:\\Users\\Sebastian\\Desktop\\MLChinese\\Saved runs\\'
 
-for num_epochs in [600]:
-    for train_batch_size in [40]:
-        for learningRate in [1E-3]:
-            main()
+for numOutputs in num_output_list:
+    train_tfrecord_filename = \
+        'C:\\Users\\Sebastian\\Desktop\\MLChinese\\CASIA\\1.0\\train'+str(numOutputs)+'.tfrecords'
+    test_tfrecord_filename = \
+        'C:\\Users\\Sebastian\\Desktop\\MLChinese\\CASIA\\1.0\\test'+str(numOutputs)+'.tfrecords'
+    for num_epochs in num_epoch_list:
+        for train_batch_size in train_batch_size_list:
+            for learningRate in learning_rate_list:
+                main()
     
     
