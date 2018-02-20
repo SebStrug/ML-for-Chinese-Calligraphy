@@ -31,7 +31,7 @@ class fileFunc(object):
             dataPath = dataPathSeb
             savePath = savePathSeb
             rootDIR = SebLOGDIR
-        return funcPath,dataPath,savePath,rootDIR
+        return dataPath,rootDIR
     
     def byteToInt(byte,byteOrder='little'):
         return int.from_bytes(byte, byteorder=byteOrder)
