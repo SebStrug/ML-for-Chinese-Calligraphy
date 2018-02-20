@@ -41,15 +41,7 @@ print("Importing the data...")
 start = t.time()
 
 #Chinese characters data
-CharLabels,CharImages=fF.readNPZ(dataPath,"1001to1100","saveLabels","saveImages")
-nextLabels,nextImages = fF.readNPZ(dataPath,"1101to1200","saveLabels","saveImages")
-CharLabels = np.concatenate((CharLabels,nextLabels),axis=0)
-CharImages = np.concatenate((CharImages,nextImages),axis=0)
-nextLabels,nextImages = fF.readNPZ(dataPath,"1201to1300","saveLabels","saveImages")
-CharLabels = np.concatenate((CharLabels,nextLabels),axis=0)
-CharImages = np.concatenate((CharImages,nextImages),axis=0)
-dataLength = len(CharImages)
-del nextLabels; del nextImages;
+
 print("took ",t.time()-start," seconds\n")
    
  #%% Open a tensorflow session
@@ -66,8 +58,8 @@ saver.restore(sess,tf.train.latest_checkpoint('./'))
 graph = tf.get_default_graph()
 #print(graph.get_operations())
 
-train_image_batch, train_label_batch = inputs('train',train_tfrecord_filename,train_batch_size,num_epochs)
-test_image_batch, test_label_batch = inputs('test',test_tfrecord_filename,test_batch_size,0)
+train_image_batch, train_label_batch = inputs('train',train_tfrecord_filename,1024,1)
+test_image_batch, test_label_batch = inputs('test',test_tfrecord_filename,1024,1)
     
 x=graph.get_tensor_by_name("images:0")
 y_=graph.get_tensor_by_name("labels:0")
