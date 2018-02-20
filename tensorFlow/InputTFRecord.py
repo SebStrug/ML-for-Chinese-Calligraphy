@@ -82,7 +82,7 @@ def normalize(image, label):
     return image, label
 
 # Creates a dataset that reads all of the examples from two files.
-def inputs(trainType,tfrecord_filename,batch_size,num_epochs,normalize=True):
+def inputs(trainType,tfrecord_filename,batch_size,num_epochs):
     """If num_epochs is set to 0, repeat infinitely"""
     #filenames = [tfrecord_filename]
     filenames = tfrecord_filename
@@ -102,8 +102,8 @@ def inputs(trainType,tfrecord_filename,batch_size,num_epochs,normalize=True):
     else:
         raise ValueError("trainType not specified properly as train or test")
     
-    if normalize == True:
-        dataset=dataset.map(normalize) #normalize the image values to be between -0.5 and 0.5
+    #if normalize == True:
+      #  dataset=dataset.map(normalize) #normalize the image values to be between -0.5 and 0.5
     dataset = dataset.shuffle(1000 + 3 * batch_size) #shuffle the order of the images
     dataset = dataset.batch(batch_size)
     iterator = dataset.make_one_shot_iterator()
