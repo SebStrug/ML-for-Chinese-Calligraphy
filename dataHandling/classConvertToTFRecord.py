@@ -134,7 +134,7 @@ class convertToTFRecord:
         # Initiating the writer and creating the train tfrecords file.
         writer = tf.python_io.TFRecordWriter(train_filename)
         #make the labels go from 0 -> num_outputs instead of e.g. 171 -> 181
-        labels = [i-startNum for i in labels]
+        labels = [i-171 for i in labels]
         for i in range(len(addrs)):
             # Load the image
             img = Image.open(addrs[i])
@@ -155,7 +155,7 @@ class convertToTFRecord:
         # Initiating the writer and creating the test tfrecords file.
         writer = tf.python_io.TFRecordWriter(test_filename)
         #make the labels go from 0 -> num_outputs instead of e.g. 171 -> 181
-        labels = [i-startNum for i in labels]
+        labels = [i-171 for i in labels]
         for i in range(len(addrs)):
             # Load the image
             img = Image.open(addrs[i])
