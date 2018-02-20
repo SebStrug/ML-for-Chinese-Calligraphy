@@ -9,6 +9,7 @@ import math #to use radians in rotating the image
 import random
 from classDataManip import makeDir
 import os
+import numpy as np
 
 #%%
 inputDim = 48
@@ -60,20 +61,36 @@ def decodeTest(serialized_example):
 def augment(image, label):
     """Apply distortions to the image, here rotation and translation
     Not included yet"""
+    #reshape the image so it has 2D shape
+    image = tf.reshape(image, [inputDim, inputDim,1])
+    
+    #adjust brightness
+    image = tf.image.random_brightness(image,0.1)
+    
     #rotate image
     degree_angle = random.randint(-10,10) # random integer from -10 to 10
+    print("Rotation by {} degrees".format(degree_angle))
     radian = degree_angle * math.pi / 180 #convert to radians
-    #reshape the image so it has 2D shape
-    image = tf.contrib.image.rotate(tf.reshape(image, [inputDim, inputDim]),radian)
-    image = tf.reshape(image, [inputDim**2])
+    image = tf.contrib.image.rotate(image,radian)
+    
     #translate image
-    #translate_x = random.randint(-3,3) #random integer between -3 and 3
-    #translate_y = random.randint(-3,3) #this denotes translation in x and y
-    #tf.contrib.image.translate(image,(translate_x,translate_y))
-    #also can scale images using
-    #tf.image.resize_images
-    #need to look at the documentation for these methods, see if we have
-    # the correct arguments
+    translate_x = int(np.random.normal(0)) #random integer normally distributed
+    translate_y = int(np.random.normal(0)) #random integer normally distributed
+    if abs(translate_x) > 2 or abs(translate_y) > 2:
+        translate_x = 0 #so we don't get a shift of 5 
+        translate_y = 0
+    print("Translation by {},{} in x,y".format(translate_x,translate_y))
+    image = tf.contrib.image.translate(image,(translate_x,translate_y))
+    
+    #scale the image
+    #scaling doesn't seem to work with how small the lines are
+#    resize_scale = inputDim + 0
+#    image = tf.image.resize_images(image,tf.constant([inputDim+0,inputDim+5]))
+#    image = tf.image.resize_image_with_crop_or_pad(image,inputDim,inputDim)
+   
+    #reshape the image back into 1D
+    image = tf.reshape(image, [inputDim**2])
+    
     return image, label
 
 def normalize(image, label):
@@ -82,7 +99,7 @@ def normalize(image, label):
     return image, label
 
 # Creates a dataset that reads all of the examples from two files.
-def inputs(trainType,tfrecord_filename,batch_size,num_epochs,normalize=True):
+def inputs(trainType,tfrecord_filename,batch_size,num_epochs,normalize=False,augment_images=False):
     """If num_epochs is set to 0, repeat infinitely"""
     #filenames = [tfrecord_filename]
     filenames = tfrecord_filename
@@ -95,7 +112,9 @@ def inputs(trainType,tfrecord_filename,batch_size,num_epochs,normalize=True):
     
     if trainType == 'train':
         dataset = dataset.map(decodeTrain)  # Parse the record into tensors.
-        #dataset = dataset.map(augment)
+        if augment_images == True:   
+            print("Augmenting the images")
+            dataset = dataset.map(augment)
     elif trainType == 'test':
         #do not augment testing data! Only need to augment training data
         dataset = dataset.map(decodeTest)
@@ -104,6 +123,7 @@ def inputs(trainType,tfrecord_filename,batch_size,num_epochs,normalize=True):
     
     if normalize == True:
         dataset=dataset.map(normalize) #normalize the image values to be between -0.5 and 0.5
+        
     dataset = dataset.shuffle(1000 + 3 * batch_size) #shuffle the order of the images
     dataset = dataset.batch(batch_size)
     iterator = dataset.make_one_shot_iterator()
