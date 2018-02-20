@@ -28,13 +28,17 @@ localPath = 'C:\\Users\\Sebastian\\Desktop\\MLChinese\\CASIA\\1.0'
 train_tfrecord_filename = localPath+'\\train'+str(num_output)+'.tfrecords'
 test_tfrecord_filename = localPath+'\\test'+str(num_output)+'.tfrecords'
 
+train_kwargs = {"normalize": False, "augment_images": True}
 train_image_batch, train_label_batch = inputs('train',train_tfrecord_filename,\
-                                              train_batch_size,num_epochs,normalize=False)
+                                              train_batch_size,num_epochs,\
+                                              **train_kwargs)
+test_kwargs = {"normalize": False, "augment_images": False}
 test_image_batch, test_label_batch = inputs('test',test_tfrecord_filename,\
-                                            test_batch_size,0,normalize=False)
+                                            test_batch_size,0,\
+                                            **test_kwargs)
 
 with tf.Session() as sess:
-    for i in range(10):
+    for i in range(1):
         print(train_image_batch.eval())
         print(train_image_batch.eval().shape)
         print(train_image_batch)
@@ -45,4 +49,5 @@ with tf.Session() as sess:
         print(saved_image)
         print(saved_label_onehot)
         print(saved_label)
+        
         im = Image.fromarray(np.uint8((saved_image)*255))
