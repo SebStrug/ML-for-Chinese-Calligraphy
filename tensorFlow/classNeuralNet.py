@@ -5,7 +5,7 @@ Created on Tue Feb 20 13:06:57 2018
 @author: ellio
 """
 import tensorflow as tf        
-        
+# a class to hold inportat info on a layer        
 class layer:
     def __init__(self,layerType,outputShape,output):
         self.layerType=layerType
@@ -41,9 +41,9 @@ class NeuralNet:
         return tf.Variable(initial)  
     
     def addConvLayer(self,outputs,kernelSize=5):
-        prevOutput = self.layers[len(self.layers)-1].getOutput
-        prevOutputShape = self.layers[len(self.layers)-1].getOutputShape
-        prevType = self.layers[len(self.layers)-1].getType
+        prevOutput = self.layers[len(self.layers)-1].getOutput()
+        prevOutputShape = self.layers[len(self.layers)-1].getOutputShape()
+        prevType = self.layers[len(self.layers)-1].getType()
         allowedPrevTypes=["reshape", "conv", "relu", "pool", "input"]
         if prevType not in allowedPrevTypes:
             print('Error: Cannot place layer of type [conv] after layer of type ',prevType)
@@ -60,9 +60,9 @@ class NeuralNet:
             self.layers.append(layer("conv",[prevOutputShape[0:2],outputs],h_conv))
      
     def addPoolLayer(self,kernelSize=2,stride = 2):
-        prevOutput = self.layers[len(self.layers)-1].getOutput
-        prevOutputShape = self.layers[len(self.layers)-1].getOutputShape
-        prevType = self.layers[len(self.layers)-1].getType
+        prevOutput = self.layers[len(self.layers)-1].getOutput()
+        prevOutputShape = self.layers[len(self.layers)-1].getOutputShape()
+        prevType = self.layers[len(self.layers)-1].getType()
         allowedPrevTypes=["conv", "input", "dropout", "relu"]
         if prevType not in allowedPrevTypes:
             print("Error: Cannot place layer of type [pool] after layer of type ",prevType)
@@ -73,9 +73,9 @@ class NeuralNet:
             self.layers.append(layer("pool",[prevOutputShape[0:2]/2,prevOutputShape[2]],h_pool))    
         
     def addFCLayer(self,outputs):
-        prevOutput = self.layers[len(self.layers)-1].getOutput
-        prevOutputShape = self.layers[len(self.layers)-1].getOutputShape
-        prevType = self.layers[len(self.layers)-1].getType
+        prevOutput = self.layers[len(self.layers)-1].getOutput()
+        prevOutputShape = self.layers[len(self.layers)-1].getOutputShape()
+        prevType = self.layers[len(self.layers)-1].getType()
         allowedPrevTypes=["reshape", "fc", "relu", "input"]
         if prevType not in allowedPrevTypes:
             print("Error: Cannot place layer of type [fc] after layer of type ",prevType)
@@ -92,20 +92,37 @@ class NeuralNet:
             self.layers.append(layer("conv",[1,1,outputs],h_fc))
     
     def addReluLayer(self):
-        prevOutput = self.layers[len(self.layers)-1].getOutput
-        prevOutputShape = self.layers[len(self.layers)-1].getOutputShape
-        prevType = self.layers[len(self.layers)-1].getType
+        prevOutput = self.layers[len(self.layers)-1].getOutput()
+        prevOutputShape = self.layers[len(self.layers)-1].getOutputShape()
+        prevType = self.layers[len(self.layers)-1].getType()
         allowedPrevTypes=["reshape", "fc", "conv", "input", "dropout"]
         if prevType not in allowedPrevTypes:
-            print("Error: Cannot place layer of type [Relu] after layer of type ",prevType)
+            print("Error: Cannot place layer of type [relu] after layer of type ",prevType)
         else:
             self.numRelu+=1
             with tf.name_scope('Relu{}'.format(self.numRelu)):
                 h_relu=tf.nn.relu(prevOutput)
             self.layers.append(layer("relu",prevOutputShape,h_relu))
-    def addReshapeLayer(self,outputShape):
-        prevOutput = self.layers[len(self.layers)-1].getOutput
-        prevOutputShape = self.layers[len(self.layers)-1].getOutputShape
-        prevType = self.layers[len(self.layers)-1].getType
-        allowedPrevTypes=["reshape", "fc", "conv", "input", "dropout","relu"]
-        if
+            
+    def addReshapeLayer(self,outputShape,axis=-1):
+        prevOutput = self.layers[len(self.layers)-1].getOutput()
+        prevOutputShape = self.layers[len(self.layers)-1].getOutputShape()
+        prevType = self.layers[len(self.layers)-1].getType()
+        self.numReshape+=1
+        with tf.name_scope('Reshape{}'.format(self.numReshape)):
+            h_reshape=tf.reshape(prevOutput, [axis,outputShape[0],outputShape[1],outputShape[2]])
+        self.layers.append(layer("reshape",outputShape,h_reshape))
+    
+    def addDropoutLayer(self):
+        prevOutput = self.layers[len(self.layers)-1].getOutput()
+        prevOutputShape = self.layers[len(self.layers)-1].getOutputShape()
+        prevType = self.layers[len(self.layers)-1].getType()
+        allowedPrevTypes=["reshape", "fc", "conv", "input", "relu"]
+        if prevType not in allowedPrevTypes:
+            print("Error: Cannot place layer of type [dropout] after layer of type ",prevType)
+        else:
+            self.numDropout+=1
+            with tf.name_scope('Dropout{}'.format(self.numDropout)):
+                keep_prob = tf.placeholder(tf.float32,name="dropout_probability")
+                h_dropout=tf.nn.dropout(prevOutput,keep_prob)
+            self.layers.append(layer("dropout",prevOutputShape,h_dropout))
