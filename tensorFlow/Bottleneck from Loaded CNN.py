@@ -18,7 +18,7 @@ gitHubRep = os.path.normpath(os.getcwd() + os.sep + os.pardir)# find github path
 os.chdir(os.path.join(gitHubRep,"dataHandling/"))
 from classFileFunctions import fileFunc as fF 
 os.chdir(os.path.join(gitHubRep,"tensorFlow/"))
-from readTFRecordOnlyDataset import inputs
+from InputTFRecord import inputs
 #set other variables
 inputDim = 40
 inputChars= 30#number of unique characters in dataset
@@ -28,8 +28,8 @@ bottleneckLength = 1024
 dataPath, LOGDIR = fF.whichUser("Elliot")
 train_tfrecord_filename = os.path.join(dataPath,'train'+str(inputChars)+'.tfrecords')
 test_tfrecord_filename = os.path.join(dataPath,'train'+str(inputChars)+'.tfrecords')
-modelPath = 'CNN best'# path of loaded model relative to LOGDIR
-modelName='LR0.001_Iter3550_TestAcc0.9211409687995911.ckpt.meta'
+modelPath = 'CNNbest'# path of loaded model relative to LOGDIR
+modelName="LR0.001_Iter3550_TestAcc0.9211409687995911.ckpt"
 SaveName = "CNN_LR0.001_BS128"
 #import modules
 import tensorflow as tf
@@ -52,8 +52,8 @@ sess = tf.InteractiveSession()
 #tf.global_variables_initializer().run()
 loadLOGDIR = os.path.join(LOGDIR,modelPath)
 os.chdir(loadLOGDIR)
-saver = tf.train.import_meta_graph(modelName)
-saver.restore(sess,tf.train.latest_checkpoint('./'))
+saver = tf.train.import_meta_graph(modelName+".meta")
+saver.restore(sess,'./'+modelName)
 
 graph = tf.get_default_graph()
 #print(graph.get_operations())
@@ -75,8 +75,8 @@ print("took ",t.time()-start," seconds\n")
 #train data
 print("Extracting Bottlenecks for train data......")
 start = t.time()
-trainBottlenecks=np.as_array([])
-trainLabels = np.as_array([])
+trainBottlenecks=np.asarray([])
+trainLabels = np.asarray([])
 try:
     while True:
         bottleneckBatch=sess.run(getBottleneck,feed_dict={x: train_image_batch.eval(), keep_prob: 1.0})
@@ -92,10 +92,10 @@ fF.saveNPZ(dataPath,"bottleneck_"+SaveName+"_{}to{}chars_train".format(numOutput
 print("took ",t.time()-start," seconds\n")   
 
 #test data
-print("Extracting Bottlenecks for train data......")
+print("Extracting Bottlenecks for test data......")
 start = t.time() 
-testBottlenecks=np.as_array([])
-testLabels = np.as_array([]) 
+testBottlenecks=np.asarray([])
+testLabels = np.asarray([]) 
 try:
     while True: 
         bottleneckBatch=sess.run(getBottleneck,feed_dict={x: train_image_batch.eval(), keep_prob: 1.0})
