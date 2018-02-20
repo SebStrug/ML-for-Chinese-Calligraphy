@@ -16,8 +16,8 @@ from classConvertToTFRecord import convertToTFRecord as cTF
 imageSize = 48 #size of characters desired
 
 # Main path containing gnt files, folders, and so on.
-mainPath = "C:\\Users\\Sebastian\\Desktop\\MLChinese\\CASIA\\1.0"
-#dataPath = 'C:\\Users\\ellio\\Documents\\training data'
+#mainPath = "C:\\Users\\Sebastian\\Desktop\\MLChinese\\CASIA\\1.0"
+mainPath = 'C:\\Users\\ellio\\Documents\\training data\\Machine learning data'
 
 # Path containing gnt files
 dataPath = mainPath + '\\1.0 test'
