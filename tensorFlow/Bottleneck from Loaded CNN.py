@@ -18,7 +18,7 @@ gitHubRep = os.path.normpath(os.getcwd() + os.sep + os.pardir)# find github path
 os.chdir(os.path.join(gitHubRep,"dataHandling/"))
 from classFileFunctions import fileFunc as fF 
 os.chdir(os.path.join(gitHubRep,"tensorFlow/"))
-from readTFRecordOnlyDataset import inputs
+from inputTFRecord import inputs
 #set other variables
 inputDim = 40
 inputChars= 30#number of unique characters in dataset
