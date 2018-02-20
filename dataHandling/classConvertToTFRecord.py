@@ -110,6 +110,8 @@ class convertToTFRecord:
             raise ValueError("Error, not running train or test labels, exiting")
         
         unique_labels = list(set(labels))[startNum:numUnique+startNum] #skip non-Chinese chars
+        #make the labels go from 0 -> num_outputs instead of e.g. 171 -> 181
+        unique_labels = [i-startNum for i in unique_labels]
         unique_addrs = []
         for i in unique_labels:
             tempString = '\\{}_copy'.format(i) #generate the string containing unique_label
