@@ -28,8 +28,8 @@ bottleneckLength = 1024
 dataPath, LOGDIR = fF.whichUser("Elliot")
 train_tfrecord_filename = os.path.join(dataPath,'train'+str(inputChars)+'.tfrecords')
 test_tfrecord_filename = os.path.join(dataPath,'train'+str(inputChars)+'.tfrecords')
-modelPath = '2017-12-15\\Chinese_conv_5\\Outputs10_LR0.001_Batch128'# path of loaded model relative to LOGDIR
-modelName='LR0.001_Iter3590_TestAcc0.8976510167121887.ckpt.meta'
+modelPath = 'CNN best'# path of loaded model relative to LOGDIR
+modelName='LR0.001_Iter3550_TestAcc0.9211409687995911.ckpt.meta'
 SaveName = "CNN_LR0.001_BS128"
 #import modules
 import tensorflow as tf
@@ -64,30 +64,48 @@ test_image_batch, test_label_batch = inputs('test',test_tfrecord_filename,1024,1
 x=graph.get_tensor_by_name("images:0")
 y_=graph.get_tensor_by_name("labels:0")
 keep_prob=graph.get_tensor_by_name("dropout/Placeholder:0")
-accuracy=graph.get_tensor_by_name("accuracy/Mean:0")
+#accuracy=graph.get_tensor_by_name("accuracy/Mean:0")
 getBottleneck = graph.get_tensor_by_name("fc1/Relu:0")
 
 print("took ",t.time()-start," seconds\n")
 
 
 #%% extract bottlencks
-print("Starting.....")
-start = t.time()
-#bottlenecks=np.zeros((dataLength,bottleneckLength))
-bottlenecks=np.as_array([])
 
-for i in range(dataLength):
-   
-    bottleneckBatch=sess.run(getBottleneck,feed_dict={x: CharImages[i:i+1], keep_prob: 1.0})
-    bottlenecks=np.concatenate((bottlenecks,bottleneckBatch),axis=0)
-    
-print("done")
-CharLabels=0
-CharImages=0
-print("took ",t.time()-start," seconds\n")
-print(bottlenecks)
-print("Saving Bottlenecks.....")
+#train data
+print("Extracting Bottlenecks for train data......")
 start = t.time()
-fF.saveNPZ(dataPath,"bottleneck_"+SaveName+"_{}to{}chars".format(numOutputs,inputChars),\
-           bottlenecks=bottlenecks,labels = CharLabels )
+trainBottlenecks=np.as_array([])
+trainLabels = np.as_array([])
+try:
+    while True:
+        bottleneckBatch=sess.run(getBottleneck,feed_dict={x: train_image_batch.eval(), keep_prob: 1.0})
+        trainBottlenecks=np.concatenate((trainBottlenecks,bottleneckBatch),axis=0)
+        trainLabels=np.concatentate((trainLabels,train_label_batch.eval()))
+except tf.errors.OutOfRangeError:
+    print("done")
+    print("took ",t.time()-start," seconds\n")
+print("Saving Train Bottlenecks.....")
+start = t.time()
+fF.saveNPZ(dataPath,"bottleneck_"+SaveName+"_{}to{}chars_train".format(numOutputs,inputChars),\
+           bottlenecks=trainBottlenecks,labels = trainLabels )
+print("took ",t.time()-start," seconds\n")   
+
+#test data
+print("Extracting Bottlenecks for train data......")
+start = t.time() 
+testBottlenecks=np.as_array([])
+testLabels = np.as_array([]) 
+try:
+    while True: 
+        bottleneckBatch=sess.run(getBottleneck,feed_dict={x: train_image_batch.eval(), keep_prob: 1.0})
+        testBottlenecks=np.concatenate((testBottlenecks,bottleneckBatch),axis=0)
+        testLabels=np.concatentate((testLabels,test_label_batch.eval()))   
+except tf.errors.OutOfRangeError:
+    print("done")
+    print("took ",t.time()-start," seconds\n")
+print("Saving Test Bottlenecks.....")
+start = t.time()
+fF.saveNPZ(dataPath,"bottleneck_"+SaveName+"_{}to{}chars_test".format(numOutputs,inputChars),\
+           bottlenecks=testBottlenecks,labels = testLabels )
 print("took ",t.time()-start," seconds\n")
