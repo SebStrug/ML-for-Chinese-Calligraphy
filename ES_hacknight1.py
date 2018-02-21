@@ -6,17 +6,18 @@ Created on Wed Feb 21 18:08:25 2018
 """
 from funcs import *
 import os
+from sklearn import cluster,preprocessing
 import numpy as np
 from PIL import Image
 import matplotlib.pyplot as plt
 
-dataPathSeb = "C:\\Users\\Sebastian\\Desktop\\GitHub\\hacknight_1\\data"
-gitHubRep = os.path.normpath(os.getcwd() + os.sep + os.pardir)# find github path
-
-
-dataPath = dataPathSeb
-os.chdir(dataPath)
-(10)
+#dataPathSeb = "C:\\Users\\Sebastian\\Desktop\\GitHub\\hacknight_1\\data"
+#gitHubRep = os.path.normpath(os.getcwd() + os.sep + os.pardir)# find github path
+#
+#
+#dataPath = dataPathSeb
+#os.chdir(dataPath)
+#(10)
 
 #%%
 # read in the dataset
@@ -29,7 +30,7 @@ plt.imshow(image_histogram_equalization(im1[:,:,:3]))
 plt.grid(color='blue')
 plt.show()
 
-im1_2d = im1.reshape(1000**2, 4)
+
 
 #%%
 f = plt.figure(figsize=(8,8))
@@ -79,9 +80,50 @@ plt.imshow(LAI_one_2D,'nipy_spectral')
 plt.title('LAI_one')
 plt.colorbar()
 plt.show()
+
+plt.figure(figsize=(8,8))
+plt.imshow(LAI_one_2D-ndvi,'nipy_spectral')
+plt.title('LAI_one diff')
+plt.colorbar()
+plt.show()
+
+
 # plot
 plt.figure(figsize=(8,8))
 plt.imshow(LAI_two_2D,'nipy_spectral')
 plt.title('LAI_two')
+plt.colorbar()
+plt.show()
+
+plt.figure(figsize=(8,8))
+plt.imshow(LAI_one_2D-ndvi,'nipy_spectral')
+plt.title('LAI_two diff')
+plt.colorbar()
+plt.show()
+#%%
+def multi_to_2d(arr):
+    """ convert image array to list array"""
+    s = arr.shape
+    return np.ravel(arr,(0)).reshape((-1,s[2]))
+
+im_2D = multi_to_2d(im1)
+im_2D.shape
+im_2D = preprocessing.robust_scale(im_2D)
+
+# construct a KMeans clustering object
+clus = cluster.KMeans(n_clusters=6)
+
+# perform clustering operation
+## returns a list of cluster IDs
+clusters = clus.fit_predict(im_2D)
+
+# reshape the cluster vector to a
+# 2D array for plotting
+
+clusters = clusters.reshape(im1.shape[:-1])
+clusters
+
+plt.imshow(clusters,'gist_rainbow')
+plt.title('Clusters')
 plt.colorbar()
 plt.show()
