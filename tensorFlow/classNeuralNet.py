@@ -4,7 +4,8 @@ Created on Tue Feb 20 13:06:57 2018
 
 @author: ellio
 """
-import tensorflow as tf        
+import tensorflow as tf   
+import os     
 # a class to hold inportat info on a layer        
 class layer:
     def __init__(self,layerType,outputShape,output):
@@ -41,6 +42,7 @@ class NeuralNet:
         return tf.Variable(initial) 
     
     def addInputLayer(self,inputDim):
+        tf.reset_default_graph()
         with tf.name_scope("Input"):
             h_input = tf.placeholder(tf.float32, [None, inputDim**2], name="images")
         self.layers.append(layer("input",[1,1,inputDim**2],h_input))
@@ -132,7 +134,7 @@ class NeuralNet:
                 h_dropout=tf.nn.dropout(prevOutput,keep_prob)
             self.layers.append(layer("dropout",prevOutputShape,h_dropout))
     
-    def addOutput(self,numOutputs):
+    def addOutputLayer(self,numOutputs,savePath,saveName):
         y_ = tf.placeholder(tf.float32, [None,numOutputs], name="labels")
         prevOutput = self.layers[len(self.layers)-1].getOutput()
         prevOutputShape = self.layers[len(self.layers)-1].getOutputShape()
@@ -144,6 +146,11 @@ class NeuralNet:
             accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32),name="accuracy")
             tf.summary.scalar("accuracy",accuracy)
         self.layers.append(layer("output",prevOutputShape,prevOutput))
-            
+        
+        mergedSummaryOp = tf.summary.merge_all(name="merged_summary")
+        saver = tf.train.Saver()
+        sess = tf.InteractiveSession()
+        tf.global_variables_initializer().run()
+        saver.save(sess, os.path.join(savePath, saveName))
             
         
