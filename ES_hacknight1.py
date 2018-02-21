@@ -4,7 +4,7 @@ Created on Wed Feb 21 18:08:25 2018
 
 @author: Sebastian
 """
-
+from funcs import *
 import os
 import numpy as np
 from PIL import Image
@@ -14,3 +14,14 @@ dataPathSeb = "C:\\Users\\Sebastian\\Desktop\\GitHub\\hacknight_1\\data"
 
 dataPath = dataPathSeb
 os.chdir(dataPath)
+
+# read in the dataset
+im1 = np.load('S2_London.npy')
+print('Array dimensions: {}'.format(im1.shape))
+pixel_size = 10
+plt.figure(figsize=(8,8))
+plt.imshow(image_histogram_equalization(im1[:,:,:3]))
+
+# gridlines
+plt.grid(color='blue')
+plt.show()
