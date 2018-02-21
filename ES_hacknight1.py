@@ -80,10 +80,24 @@ plt.imshow(LAI_one_2D,'nipy_spectral')
 plt.title('LAI_one')
 plt.colorbar()
 plt.show()
+
+plt.figure(figsize=(8,8))
+plt.imshow(LAI_one_2D-ndvi,'nipy_spectral')
+plt.title('LAI_one diff')
+plt.colorbar()
+plt.show()
+
+
 # plot
 plt.figure(figsize=(8,8))
 plt.imshow(LAI_two_2D,'nipy_spectral')
 plt.title('LAI_two')
+plt.colorbar()
+plt.show()
+
+plt.figure(figsize=(8,8))
+plt.imshow(LAI_one_2D-ndvi,'nipy_spectral')
+plt.title('LAI_two diff')
 plt.colorbar()
 plt.show()
 #%%
