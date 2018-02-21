@@ -38,9 +38,14 @@ class NeuralNet:
         """bias_variable generates a bias variable of a given shape."""
         initial = tf.constant(0.1, shape=shape)
         tf.summary.histogram("biases", initial)
-        return tf.Variable(initial)  
+        return tf.Variable(initial) 
     
-    def addConvLayer(self,outputs,kernelSize=5):
+    def addInputLayer(self,inputDim):
+        with tf.name_scope("Input"):
+            h_input = tf.placeholder(tf.float32, [None, inputDim**2], name="images")
+        self.layers.append(layer("input",[1,1,inputDim**2],h_input))
+        
+    def addConvLayer(self,outputs,kernelSize=5,stride=1):
         prevOutput = self.layers[len(self.layers)-1].getOutput()
         prevOutputShape = self.layers[len(self.layers)-1].getOutputShape()
         prevType = self.layers[len(self.layers)-1].getType()
@@ -55,9 +60,9 @@ class NeuralNet:
                 with tf.name_scope("Bias"):
                     b_conv = self.bias_variable([outputs])
                 with tf.name_scope("Convolve"):
-                    h_conv = tf.nn.conv2d(prevOutput, w_conv, strides=[1, 1, 1, 1], padding='SAME') + b_conv
+                    h_conv = tf.nn.conv2d(prevOutput, w_conv, strides=[1, stride, stride, 1], padding='SAME') + b_conv
                     tf.summary.histogram("activations", h_conv)      
-            self.layers.append(layer("conv",[prevOutputShape[0:2],outputs],h_conv))
+            self.layers.append(layer("conv",[prevOutputShape[0],prevOutputShape[1],outputs],h_conv))
      
     def addPoolLayer(self,kernelSize=2,stride = 2):
         prevOutput = self.layers[len(self.layers)-1].getOutput()
@@ -70,7 +75,7 @@ class NeuralNet:
             self.numpool+=1
             with tf.name_scope('Pool{}'.format(self.numPool)):
                 h_pool=tf.nn.max_pool(prevOutput, ksize=[1, kernelSize, kernelSize, 1],strides=[1, stride, stride, 1], padding='SAME')
-            self.layers.append(layer("pool",[prevOutputShape[0:2]/2,prevOutputShape[2]],h_pool))    
+            self.layers.append(layer("pool",[prevOutputShape[0]/2,prevOutputShape[1]/2,prevOutputShape[2]],h_pool))    
         
     def addFCLayer(self,outputs):
         prevOutput = self.layers[len(self.layers)-1].getOutput()
@@ -123,6 +128,22 @@ class NeuralNet:
         else:
             self.numDropout+=1
             with tf.name_scope('Dropout{}'.format(self.numDropout)):
-                keep_prob = tf.placeholder(tf.float32,name="dropout_probability")
+                keep_prob = tf.placeholder(tf.float32,name="keep_prob")
                 h_dropout=tf.nn.dropout(prevOutput,keep_prob)
             self.layers.append(layer("dropout",prevOutputShape,h_dropout))
+    
+    def addOutput(self,numOutputs):
+        y_ = tf.placeholder(tf.float32, [None,numOutputs], name="labels")
+        prevOutput = self.layers[len(self.layers)-1].getOutput()
+        prevOutputShape = self.layers[len(self.layers)-1].getOutputShape()
+        with tf.name_scope("xent"):
+            cross_entropy = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(labels=y_, logits=prevOutput),name="xent")
+            tf.summary.scalar("xent",cross_entropy)
+        with tf.name_scope("accuracy"):
+            correct_prediction = tf.equal(tf.argmax(prevOutput, 1), tf.argmax(y_, 1))
+            accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32),name="accuracy")
+            tf.summary.scalar("accuracy",accuracy)
+        self.layers.append(layer("output",prevOutputShape,prevOutput))
+            
+            
+        
