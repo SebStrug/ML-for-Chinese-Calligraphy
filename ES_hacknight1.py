@@ -92,7 +92,7 @@ def multi_to_2d(arr):
     s = arr.shape
     return np.ravel(arr,(0)).reshape((-1,s[2]))
 
-im_2D = multi_to_2d(im)
+im_2D = multi_to_2d(im1)
 im_2D.shape
 im_2D = preprocessing.robust_scale(im_2D)
 
@@ -106,7 +106,7 @@ clusters = clus.fit_predict(im_2D)
 # reshape the cluster vector to a
 # 2D array for plotting
 
-clusters = clusters.reshape(im.shape[:-1])
+clusters = clusters.reshape(im1.shape[:-1])
 clusters
 
 plt.imshow(clusters,'gist_rainbow')
