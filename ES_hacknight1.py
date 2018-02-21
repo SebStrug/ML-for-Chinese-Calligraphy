@@ -24,10 +24,12 @@ im1 = np.load('S2_London.npy')
 print('Array dimensions: {}'.format(im1.shape))
 pixel_size = 10
 plt.figure(figsize=(8,8))
-plt.imshow(image_histogram_equalization(im1[200:300,200:300,:3]))
+plt.imshow(image_histogram_equalization(im1[:,:,:3]))
 # gridlines
 plt.grid(color='blue')
 plt.show()
+
+im1_2d = im1.reshape(1000**2, 4)
 
 #%%
 f = plt.figure(figsize=(8,8))
@@ -70,4 +72,16 @@ for i in ndvi:
         LAI_two.append(0.128 * np.exp(j/0.311)) # R = 0.77
         
 LAI_one_2D = np.reshape(LAI_one,(1000,1000))
-LAI_one_2D = np.reshape(LAI_one,(1000,1000))
+LAI_two_2D = np.reshape(LAI_one,(1000,1000))
+# plot
+plt.figure(figsize=(8,8))
+plt.imshow(LAI_one_2D,'nipy_spectral')
+plt.title('LAI_one')
+plt.colorbar()
+plt.show()
+# plot
+plt.figure(figsize=(8,8))
+plt.imshow(LAI_two_2D,'nipy_spectral')
+plt.title('LAI_two')
+plt.colorbar()
+plt.show()
