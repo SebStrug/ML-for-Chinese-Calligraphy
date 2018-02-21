@@ -11,6 +11,9 @@ from PIL import Image
 import matplotlib.pyplot as plt
 
 dataPathSeb = "C:\\Users\\Sebastian\\Desktop\\GitHub\\hacknight_1\\data"
+gitHubRep = os.path.normpath(os.getcwd() + os.sep + os.pardir)# find github path
+
+
 
 dataPath = dataPathSeb
 os.chdir(dataPath)
