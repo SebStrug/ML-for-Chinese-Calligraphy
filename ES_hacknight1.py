@@ -14,20 +14,22 @@ dataPathSeb = "C:\\Users\\Sebastian\\Desktop\\GitHub\\hacknight_1\\data"
 gitHubRep = os.path.normpath(os.getcwd() + os.sep + os.pardir)# find github path
 
 
-
 dataPath = dataPathSeb
 os.chdir(dataPath)
+(10)
 
+#%%
 # read in the dataset
 im1 = np.load('S2_London.npy')
 print('Array dimensions: {}'.format(im1.shape))
 pixel_size = 10
 plt.figure(figsize=(8,8))
-plt.imshow(image_histogram_equalization(im1[:,:,:3]))
+plt.imshow(image_histogram_equalization(im1[200:300,200:300,:3]))
 # gridlines
 plt.grid(color='blue')
 plt.show()
 
+#%%
 f = plt.figure(figsize=(8,8))
 
 f.add_subplot(221)
@@ -48,7 +50,7 @@ plt.title('Infrared')
 plt.show()
 
 
-
+#%%
 # calculate NDVI
 ndvi = calculate_NDVI(im1)
 
@@ -58,3 +60,14 @@ plt.imshow(ndvi,'nipy_spectral')
 plt.title('NDVI')
 plt.colorbar()
 plt.show()
+
+#%% Caclulate leaf area index LAI
+LAI_one = []
+LAI_two = []
+for i in ndvi:
+    for j in i: 
+        LAI_one.append(-0.0897 + 1.424 * j) # R = 0.79; 
+        LAI_two.append(0.128 * np.exp(j/0.311)) # R = 0.77
+        
+LAI_one_2D = np.reshape(LAI_one,(1000,1000))
+LAI_one_2D = np.reshape(LAI_one,(1000,1000))
