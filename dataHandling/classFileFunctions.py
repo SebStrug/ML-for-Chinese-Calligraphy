@@ -13,8 +13,6 @@ from collections import namedtuple
 class fileFunc(object):
     """Class of functions that perform on files"""
     def whichUser(user):
-        
-        
         trainDataPathElliot = 'C:/Users/ellio/Documents/training data/forTraining/'
         trainDataPathSeb = 'C:\\Users\\Sebastian\\Desktop\\MLChinese\\CASIA\\1.0'
         rawDataPathSeb = 'C:\\Users\\Sebastian\\Desktop\\MLChinese\\CASIA\\1.0'
