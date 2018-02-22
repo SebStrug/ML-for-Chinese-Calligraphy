@@ -141,7 +141,7 @@ train_batch_size_list = [128]
 learning_rate_list = [1E-3]
 test_batch_size = 500
 
-savePath = 'C:\\Users\\Sebastian\\Desktop\\MLChinese\\Saved runs\\'
+savePath = 'C:\\Users\\Sebastian\\Desktop\\MLChinese\\Saved_runs\\'
 localPath = 'C:\\Users\\Sebastian\\Desktop\\MLChinese\\CASIA\\1.0'
 
 name_of_run = 'test'
