@@ -28,26 +28,30 @@ localPath = 'C:\\Users\\Sebastian\\Desktop\\MLChinese\\CASIA\\1.0'
 train_tfrecord_filename = localPath+'\\train'+str(num_output)+'.tfrecords'
 test_tfrecord_filename = localPath+'\\test'+str(num_output)+'.tfrecords'
 
-train_kwargs = {"normalize": False, "augment_images": True}
+train_kwargs = {"normalize_images": False, "augment_images": False, "shuffle_data": True}
 train_image_batch, train_label_batch = inputs('train',train_tfrecord_filename,\
                                               train_batch_size,num_epochs,\
                                               **train_kwargs)
-test_kwargs = {"normalize": False, "augment_images": False}
+test_kwargs = {"normalize_images": False, "augment_images": False, "shuffle_data": True}
 test_image_batch, test_label_batch = inputs('test',test_tfrecord_filename,\
                                             test_batch_size,0,\
                                             **test_kwargs)
 
 with tf.Session() as sess:
-    for i in range(1):
-        print(train_image_batch.eval())
-        print(train_image_batch.eval().shape)
-        print(train_image_batch)
-        saved_image = np.reshape(train_image_batch.eval()[0],(48,48))
-        saved_label_onehot = tf.one_hot(train_label_batch,num_output).eval()[0]
-        saved_label = train_label_batch.eval()
+    for i in range(200):
+        test_images, test_labels = sess.run([test_image_batch,test_label_batch])
+        print("Print the sess.run")
+        print(test_images)
+        print(test_labels)
+        print(tf.one_hot(test_labels,10).eval()[0])
         
-        print(saved_image)
-        print(saved_label_onehot)
-        print(saved_label)
-        
+
+        saved_image = np.reshape(test_images[0],(48,48))
+        saved_label_onehot = tf.one_hot(test_labels,num_output).eval()[0]
+        #index is given by 
+        imIndex = np.where(saved_label_onehot == 1)[0][0]
+        # get the image from the array
         im = Image.fromarray(np.uint8((saved_image)*255))
+        im.save("C:\\Users\\Sebastian\\Desktop\\MLChinese\\tmp\\{}_{}.jpeg".format(imIndex,i))
+        
+        
