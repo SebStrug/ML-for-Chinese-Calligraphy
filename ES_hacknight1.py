@@ -81,11 +81,6 @@ plt.title('LAI_one')
 plt.colorbar()
 plt.show()
 
-plt.figure(figsize=(8,8))
-plt.imshow(LAI_one_2D-ndvi,'nipy_spectral')
-plt.title('LAI_one diff')
-plt.colorbar()
-plt.show()
 
 
 # plot
@@ -95,11 +90,7 @@ plt.title('LAI_two')
 plt.colorbar()
 plt.show()
 
-plt.figure(figsize=(8,8))
-plt.imshow(LAI_one_2D-ndvi,'nipy_spectral')
-plt.title('LAI_two diff')
-plt.colorbar()
-plt.show()
+
 #%%
 def multi_to_2d(arr):
     """ convert image array to list array"""
@@ -126,4 +117,11 @@ clusters
 plt.imshow(clusters,'gist_rainbow')
 plt.title('Clusters')
 plt.colorbar()
+plt.show()
+
+
+mask = (clusters< 2)
+plt.figure(figsize=(8,8))
+plt.imshow(mask*clusters,'nipy_spectral')
+plt.title('cluster values > {}'.format(-1))
 plt.show()
