@@ -49,8 +49,8 @@ saver.restore(sess,'./'+modelName)
 graph = tf.get_default_graph()
 #print(graph.get_operations())
 
-train_image_batch, train_label_batch = inputs('train',train_tfrecord_filename,1024,1)
-test_image_batch, test_label_batch = inputs('test',test_tfrecord_filename,1024,1)
+train_image_batch, train_label_batch = inputs('train',train_tfrecord_filename,bottleneckLength,1)
+test_image_batch, test_label_batch = inputs('test',test_tfrecord_filename,bottleneckLength,1)
     
 x=graph.get_tensor_by_name("images:0")
 y_=graph.get_tensor_by_name("labels:0")
