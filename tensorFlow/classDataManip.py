@@ -85,7 +85,7 @@ def makeDir(baseLOGDIR,name,numOutputs,learningRate,trainBatchSize):
     #make a directory to save tensorboard information in 
     run_number = 1 #which run with the same values is completed
     LOGDIR = baseLOGDIR + str(datetime.date.today()) + '/' + name + \
-                ' run_' + str(run_number) +  '/' + '/Outputs{}_LR{}_Batch{}'\
+                '_run_' + str(run_number) +  '/' + '/Outputs{}_LR{}_Batch{}'\
                 .format(numOutputs,learningRate,trainBatchSize)
                 
     if not os.path.exists(LOGDIR):
