@@ -5,12 +5,6 @@ Created on Thu Feb  8 15:12:45 2018
 @author: ellio
 """
 
-#%% Imports, set directories, seb
-name = 'Admin'
-funcPath = 'C:\\Users\\'+name+'\\Desktop\\GitHub\\ML-for-Chinese-Calligraphy\\dataHandling'
-savePath = 'C:\\Users\\'+name+'\\Desktop\\MLChinese\\Saved script files'
-workingPath = 'C:\\Users\\'+name+'\\Desktop\\GitHub\\ML-for-Chinese-Calligraphy\\tensorFlow'
-LOGDIR = r'C:/Users/'+name+'/Anaconda3/Lib/site-packages/tensorflow/tmp/ChineseCaligCNN/'
 #%% Imports and paths
 import os
 gitHubRep = os.path.normpath(os.getcwd() + os.sep + os.pardir)# find github path
@@ -20,53 +14,36 @@ from classFileFunctions import fileFunc as fF
 os.chdir(os.path.join(gitHubRep,"tensorFlow/"))
 from classDataManip import oneHot,makeDir,Data
 #set paths
-dataPath, LOGDIR = fF.whichUser("Elliot")
+dataPath, LOGDIR,rawDataPath= fF.whichUser("Elliot")
+relBottleneckPath="Machine learning data/bottlenecks"#path of bottlencks relative to dataPath
+bottleneckSaveName="CNN_LR0.001_BS128"#bit of save name for bottlenecks specified when they were saved in previous script
 #import modules
 import tensorflow as tf
-import numpy as np
 import time as t
 #set other variables
 bottleneckLength = 1024
 oldNumOutputs = 10
-newNumOutptus = 30      
-saveName = "finallayerCNN"          
+newNumOutputs = 30      
+saveName = "finalLayerCNN"          
 #%%Import the data
 print("Importing the data...")
 start = t.time()
 #training data
-labels,bottlenecks=fF.readNPZ(dataPath,\
-                                 "1001to1100_{}to{}chars".format(oldNumOutputs,newNumOutptus),\
+labels,bottlenecks=fF.readNPZ(os.path.join(dataPath,relBottleneckPath),\
+                                 "bottleneck_"+bottleneckSaveName+"_{}to{}chars_train"\
+                                 .format(oldNumOutputs,newNumOutputs),\
                                  "labels","bottlenecks")
-nextLabels,nextBottlenecks = fF.readNPZ(dataPath,\
-                                 "1101to1100_{}to{}chars".format(oldNumOutputs,newNumOutptus),\
-                                 "labels","bottlenecks")
-labels = np.concatenate((labels,nextLabels),axis=0)
-bottlenecks = np.concatenate((bottlenecks,nextBottlenecks),axis=0)
-nextLabels,nextBottlenecks = fF.readNPZ(dataPath,\
-                                 "1101to1100_{}to{}chars".format(oldNumOutputs,newNumOutptus),\
-                                 "labels","bottlenecks")
-labels = np.concatenate((labels,nextLabels),axis=0)
-bottlenecks = np.concatenate((bottlenecks,nextBottlenecks),axis=0)
 trainData = Data(bottlenecks,labels)
 
 #testing data
-labels,bottlenecks=fF.readNPZ(dataPath,\
-                                 "1001to1100_{}to{}chars".format(oldNumOutputs,newNumOutptus),\
+labels,bottlenecks=fF.readNPZ(os.path.join(dataPath,relBottleneckPath),\
+                                 "bottleneck_"+bottleneckSaveName+"_{}to{}chars_test"\
+                                 .format(oldNumOutputs,newNumOutputs),\
                                  "labels","bottlenecks")
-nextLabels,nextBottlenecks = fF.readNPZ(dataPath,\
-                                 "1001to1100_{}to{}chars".format(oldNumOutputs,newNumOutptus),\
-                                 "labels","bottlenecks")
-labels = np.concatenate((labels,nextLabels),axis=0)
-bottlenecks= np.concatenate((bottlenecks,nextBottlenecks),axis=0)
-nextLabels,nextBottlenecks = fF.readNPZ(dataPath,\
-                                 "1001to1100_{}to{}chars".format(oldNumOutputs,newNumOutptus),\
-                                 "labels","bottlenecks")
-bottlenecks = np.concatenate((labels,nextLabels),axis=0)
-bottlenecks = np.concatenate((bottlenecks,nextBottlenecks),axis=0)
+
 testLabels = labels
 testBottlenecks=bottlenecks
 #delete unused variables
-del nextLabels; del nextBottlenecks;
 del bottlenecks; del labels
 print("Took ",t.time()-start," seconds.")
 
@@ -81,7 +58,7 @@ def neural_net(LOGDIR,name,whichTest,numOutputs,learningRate,trainBatchSize,\
     print("Building the net...")
     start=t.time()
     tf.reset_default_graph()
-    LOGDIR = makeDir(LOGDIR,name,whichTest,numOutputs,learningRate,trainBatchSize,trainRatio)
+    LOGDIR = makeDir(LOGDIR,name,numOutputs,learningRate,trainBatchSize)
     # function to create weights and biases automatically
     # want slightly positive weights/biases for relu to avoid dead nurons
     def weight_variable(shape):
@@ -118,7 +95,7 @@ def neural_net(LOGDIR,name,whichTest,numOutputs,learningRate,trainBatchSize,\
         cross_entropy = tf.reduce_mean(\
                             tf.nn.softmax_cross_entropy_with_logits(\
                                 labels=y_, \
-                                logits=y_conv))
+                                logits=y_conv),name="xent")
         tf.summary.scalar("xent",cross_entropy)
         
     with tf.name_scope("train"):
@@ -127,7 +104,7 @@ def neural_net(LOGDIR,name,whichTest,numOutputs,learningRate,trainBatchSize,\
     with tf.name_scope("accuracy"):
         correct_prediction = tf.equal(tf.argmax(y_conv, 1), tf.argmax(y_, 1))
         # what fraction of bools was correct? Cast to floating point...
-        accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
+        accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32),name="accuracy")
         tf.summary.scalar("accuracy",accuracy)
     
     # Merge all summary operators
@@ -180,6 +157,7 @@ def neural_net(LOGDIR,name,whichTest,numOutputs,learningRate,trainBatchSize,\
             test_accuracy, test_summary = sess.run([accuracy,mergedSummaryOp], \
                            feed_dict={x: testImages,y_: oneHot(testLabels,numOutputs)})
             test_writer.add_summary(test_summary, i*trainBatchSize)
+            print("testing accuracy:",test_accuracy)
             if test_accuracy > maxAccuracy:
                 maxAccuracy = test_accuracy
                 saver.save(sess, os.path.join(LOGDIR, "LR{}_Iter{}_TestAcc{}.ckpt".format(learningRate,i,test_accuracy)))
@@ -202,5 +180,5 @@ for numOutputs in [30]:
             for trainBatchSize in [128]:      
                 iterations = 600*int(len(trainData.labels)/trainBatchSize)
                 #LOGDIR, whichTest, numOutputs, learningRate, trainBatchSize, iterations
-                neural_net(LOGDIR,saveName+"_{}Out_".format(oldNumOutputs),whichTest,numOutputs,learning_rate,trainBatchSize,iterations,\
+                neural_net(LOGDIR,saveName+"_was{}Out_".format(oldNumOutputs),whichTest,numOutputs,learning_rate,trainBatchSize,iterations,\
                            trainData,testBottlenecks,testLabels,trainRatio)
