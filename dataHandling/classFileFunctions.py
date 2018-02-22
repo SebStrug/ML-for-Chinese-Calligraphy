@@ -135,19 +135,4 @@ class fileFunc(object):
                     openFile.close()
         return fullFile,totalFiles
 
-    def iterateOverFilesSingle(path):
-        """function to read several gnt files into an array in byte form"""
-        #path is the folder containing subfolders containing all .gnt files
-        totalFiles = 0
-        for subdir, dirs, filenames in os.walk(path):
-            totalFiles += len(filenames)
-        print("total Files:",totalFiles)
-        
-        fullFile = [None]*totalFiles
-        for subdir, dirs, filenames in os.walk(path):
-            for file in filenames:
-                fullpath = os.path.join(subdir, file)
-                with open(fullpath, 'rb') as openFile:
-                    fullFile[filenames.index(file)] = fileFunc.readByte(fullpath)
-                    openFile.close()
-        return fullFile,totalFiles
+    
