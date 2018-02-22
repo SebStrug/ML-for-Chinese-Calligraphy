@@ -13,10 +13,10 @@ from collections import namedtuple
 class fileFunc(object):
     """Class of functions that perform on files"""
     def whichUser(user):
-        trainDataPathElliot = 'C:/Users/ellio/Documents/training data/forTraining/'
+        trainDataPathElliot = 'C:/Users/ellio/Documents/training data/'
         trainDataPathSeb = 'C:\\Users\\Sebastian\\Desktop\\MLChinese\\CASIA\\1.0'
         rawDataPathSeb = 'C:\\Users\\Sebastian\\Desktop\\MLChinese\\CASIA\\1.0'
-        rawDataPathElliot = 'C:\\Users\\ellio\\Documents\\training data\\forConversion'
+        rawDataPathElliot = 'C:\\Users\\ellio\\Documents\\training data\\'
         SebLOGDIR = r'C:/Users/Sebastian/Anaconda3/Lib/site-packages/tensorflow/tmp/ChineseCaligCNN/'
         elliotLOGDIR = r'C:/Users/ellio/Anaconda3/Lib/site-packages/tensorflow/tmp/'
         if user == "Elliot":

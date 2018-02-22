@@ -5,12 +5,7 @@ Created on Thu Feb  8 12:31:13 2018
 @author: ellio
 """
 
-#%% Imports, set directories, seb
-name = 'Admin'
-funcPath = 'C:\\Users\\'+name+'\\Desktop\\GitHub\\ML-for-Chinese-Calligraphy\\dataHandling'
-savePath = 'C:\\Users\\'+name+'\\Desktop\\MLChinese\\Saved script files'
-workingPath = 'C:\\Users\\'+name+'\\Desktop\\GitHub\\ML-for-Chinese-Calligraphy\\tensorFlow'
-LOGDIR = r'C:/Users/'+name+'/Anaconda3/Lib/site-packages/tensorflow/tmp/ChineseCaligCNN/'
+
 #%% Imports and paths
 import os
 gitHubRep = os.path.normpath(os.getcwd() + os.sep + os.pardir)# find github path
@@ -25,24 +20,20 @@ inputChars= 30#number of unique characters in dataset
 numOutputs= 10#number of outputs in original network
 bottleneckLength = 1024
 #set paths and file names
-dataPath, LOGDIR = fF.whichUser("Elliot")
-train_tfrecord_filename = os.path.join(dataPath,'train'+str(inputChars)+'.tfrecords')
-test_tfrecord_filename = os.path.join(dataPath,'train'+str(inputChars)+'.tfrecords')
-modelPath = 'CNNbest'# path of loaded model relative to LOGDIR
-modelName="LR0.001_Iter3550_TestAcc0.9211409687995911.ckpt"
-SaveName = "CNN_LR0.001_BS128"
+dataPath, LOGDIR, rawDatapath = fF.whichUser("Elliot")
+relTrainDataPath = "Machine learning data/TFrecord"#path of training data relative to datapath in classFileFunc
+relBottleneckSavePath = "Machine learning data/bottlenecks" #path for saved bottlenecks relative to dataPath
+relModelPath = 'untrainedCNN48x48/Outputs10_LR0.001_Batch128'# path of loaded model relative to LOGDIR
+modelName="LR0.001_Iter180_TestAcc0.176.ckpt"#name of ckpt file with saved model
+SaveName = "CNN_LR0.001_BS128"#name for saved bottlenecks
 #import modules
 import tensorflow as tf
 import numpy as np
 import time as t
 
 #%% import data
-print("Importing the data...")
-start = t.time()
-
-#Chinese characters data
-
-print("took ",t.time()-start," seconds\n")
+train_tfrecord_filename = os.path.join(os.path.join(dataPath,relTrainDataPath),'train'+str(inputChars)+'.tfrecords')
+test_tfrecord_filename = os.path.join(os.path.join(dataPath,relTrainDataPath),'train'+str(inputChars)+'.tfrecords')
    
  #%% Open a tensorflow session
 print("Importing graph.....")
@@ -50,7 +41,7 @@ start = t.time()
 sess = tf.InteractiveSession()
 # Initialise all variables
 #tf.global_variables_initializer().run()
-loadLOGDIR = os.path.join(LOGDIR,modelPath)
+loadLOGDIR = os.path.join(LOGDIR,relModelPath)
 os.chdir(loadLOGDIR)
 saver = tf.train.import_meta_graph(modelName+".meta")
 saver.restore(sess,'./'+modelName)
@@ -63,9 +54,9 @@ test_image_batch, test_label_batch = inputs('test',test_tfrecord_filename,1024,1
     
 x=graph.get_tensor_by_name("images:0")
 y_=graph.get_tensor_by_name("labels:0")
-keep_prob=graph.get_tensor_by_name("dropout/Placeholder:0")
+keep_prob=graph.get_tensor_by_name("dropout/keep_prob:0")
 #accuracy=graph.get_tensor_by_name("accuracy/Mean:0")
-getBottleneck = graph.get_tensor_by_name("fc1/Relu:0")
+getBottleneck = graph.get_tensor_by_name("fc1/bottleneck:0")
 
 print("took ",t.time()-start," seconds\n")
 
@@ -87,7 +78,7 @@ except tf.errors.OutOfRangeError:
     print("took ",t.time()-start," seconds\n")
 print("Saving Train Bottlenecks.....")
 start = t.time()
-fF.saveNPZ(dataPath,"bottleneck_"+SaveName+"_{}to{}chars_train".format(numOutputs,inputChars),\
+fF.saveNPZ(os.path.join(dataPath,relBottleneckSavePath),"bottleneck_"+SaveName+"_{}to{}chars_train".format(numOutputs,inputChars),\
            bottlenecks=trainBottlenecks,labels = trainLabels )
 print("took ",t.time()-start," seconds\n")   
 
@@ -106,6 +97,6 @@ except tf.errors.OutOfRangeError:
     print("took ",t.time()-start," seconds\n")
 print("Saving Test Bottlenecks.....")
 start = t.time()
-fF.saveNPZ(dataPath,"bottleneck_"+SaveName+"_{}to{}chars_test".format(numOutputs,inputChars),\
+fF.saveNPZ(os.path.join(dataPath,relBottleneckSavePath),"bottleneck_"+SaveName+"_{}to{}chars_test".format(numOutputs,inputChars),\
            bottlenecks=testBottlenecks,labels = testLabels )
 print("took ",t.time()-start," seconds\n")
