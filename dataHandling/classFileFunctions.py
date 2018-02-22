@@ -13,25 +13,18 @@ from collections import namedtuple
 class fileFunc(object):
     """Class of functions that perform on files"""
     def whichUser(user):
-        funcPathElliot = 'C:/Users/ellio/OneDrive/Documents/GitHub/ML-for-Chinese-Calligraphy/dataHandling'
-        funcPathSeb = 'C:\\Users\\Sebastian\\Desktop\\GitHub\\ML-for-Chinese-Calligraphy\\dataHandling'
-        dataPathElliot = 'C:/Users/ellio/Documents/training data/Machine Learning data/'
-        dataPathSeb = 'C:\\Users\\Sebastian\\Desktop\\MLChinese\\Saved script files'
-        savePathSeb = 'C:\\Users\\Sebastian\\Desktop\\MLChinese\\Saved script files'
-        savePathElliot = 'C:\\Users\\ellio\\Documents\\training data\\Machine learning data'
+        
+        
+        trainDataPathElliot = 'C:/Users/ellio/Documents/training data/forTraining/'
+        trainDataPathSeb = 'C:\\Users\\Sebastian\\Desktop\\MLChinese\\CASIA\\1.0'
+        rawDataPathSeb = 'C:\\Users\\Sebastian\\Desktop\\MLChinese\\CASIA\\1.0'
+        rawDataPathElliot = 'C:\\Users\\ellio\\Documents\\training data\\forConversion'
         SebLOGDIR = r'C:/Users/Sebastian/Anaconda3/Lib/site-packages/tensorflow/tmp/ChineseCaligCNN/'
         elliotLOGDIR = r'C:/Users/ellio/Anaconda3/Lib/site-packages/tensorflow/tmp/'
         if user == "Elliot":
-            funcPath = funcPathElliot
-            dataPath = dataPathElliot
-            savePath = savePathElliot
-            rootDIR = elliotLOGDIR
+            return trainDataPathElliot, elliotLOGDIR, rawDataPathElliot
         else:
-            funcPath = funcPathSeb
-            dataPath = dataPathSeb
-            savePath = savePathSeb
-            rootDIR = SebLOGDIR
-        return dataPath,rootDIR
+            return trainDataPathSeb, SebLOGDIR, rawDataPathSeb
     
     def byteToInt(byte,byteOrder='little'):
         return int.from_bytes(byte, byteorder=byteOrder)
