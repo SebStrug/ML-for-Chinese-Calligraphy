@@ -117,6 +117,17 @@ class fileFunc(object):
         info = infoStruct(numSamples,maxHeight,maxWidth,minHeight,minWidth,totalSize)
         print (info)
         return info
+    
+    def arraysFromDGR(array,numFiles):
+        position=0
+        while position <len(array):
+            headerSize=fileFunc.byteToInt(array[position:position+4])
+            formatCode=array[position+4:position+12]
+            illustration=234
+            
+            
+            
+        
         
     def iterateOverFiles(path):
         """function to read several gnt files into an array in byte form"""
