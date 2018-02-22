@@ -33,7 +33,7 @@ import time as t
 
 #%% import data
 train_tfrecord_filename = os.path.join(os.path.join(dataPath,relTrainDataPath),'train'+str(inputChars)+'.tfrecords')
-test_tfrecord_filename = os.path.join(os.path.join(dataPath,relTrainDataPath),'train'+str(inputChars)+'.tfrecords')
+test_tfrecord_filename = os.path.join(os.path.join(dataPath,relTrainDataPath),'test'+str(inputChars)+'.tfrecords')
    
  #%% Open a tensorflow session
 print("Importing graph.....")
@@ -66,13 +66,14 @@ print("took ",t.time()-start," seconds\n")
 #train data
 print("Extracting Bottlenecks for train data......")
 start = t.time()
-trainBottlenecks=np.asarray([])
+trainBottlenecks=np.zeros((0,bottleneckLength))
 trainLabels = np.asarray([])
 try:
     while True:
-        bottleneckBatch=sess.run(getBottleneck,feed_dict={x: train_image_batch.eval(), keep_prob: 1.0})
+        trainImageBatch,trainLabelBatch=sess.run([train_image_batch,train_label_batch])
+        bottleneckBatch=sess.run(getBottleneck,feed_dict={x: trainImageBatch, keep_prob: 1.0})
         trainBottlenecks=np.concatenate((trainBottlenecks,bottleneckBatch),axis=0)
-        trainLabels=np.concatentate((trainLabels,train_label_batch.eval()))
+        trainLabels=np.concatenate((trainLabels,trainLabelBatch))
 except tf.errors.OutOfRangeError:
     print("done")
     print("took ",t.time()-start," seconds\n")
@@ -85,13 +86,14 @@ print("took ",t.time()-start," seconds\n")
 #test data
 print("Extracting Bottlenecks for test data......")
 start = t.time() 
-testBottlenecks=np.asarray([])
+testBottlenecks=np.zeros((0,bottleneckLength))
 testLabels = np.asarray([]) 
 try:
     while True: 
-        bottleneckBatch=sess.run(getBottleneck,feed_dict={x: train_image_batch.eval(), keep_prob: 1.0})
+        testImageBatch,testLabelBatch=sess.run([test_image_batch,test_label_batch])
+        bottleneckBatch=sess.run(getBottleneck,feed_dict={x: testImageBatch, keep_prob: 1.0})
         testBottlenecks=np.concatenate((testBottlenecks,bottleneckBatch),axis=0)
-        testLabels=np.concatentate((testLabels,test_label_batch.eval()))   
+        testLabels=np.concatenate((testLabels,testLabelBatch)) 
 except tf.errors.OutOfRangeError:
     print("done")
     print("took ",t.time()-start," seconds\n")
