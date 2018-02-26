@@ -5,13 +5,17 @@ Look at the bottom of the file for all the inputs
 """
 
 import tensorflow as tf
-from tryBuildNet import buildNet
+#from tryBuildNet import buildNet
 import time
 import math #to use radians in rotating the image
 import random
 from classDataManip import makeDir
 import os
 from InputTFRecord import inputs
+gitHubRep = os.path.normpath(os.getcwd() + os.sep + os.pardir)# find github path
+#import own functions and classes
+os.chdir(os.path.join(gitHubRep,"dataHandling/"))
+from classFileFunctions import fileFunc as fF 
 
 # You can feed the initializer with the appropriate filenames for the current
 # phase of execution, e.g. training vs. validation.
@@ -205,8 +209,6 @@ def run_training():
         train_writer.close()
         test_writer.close()
             
-def main():
-    run_training()
 
 inputDim = 48
 num_output_list = [10]
@@ -215,8 +217,13 @@ train_batch_size_list = [128]
 learning_rate_list = [1E-3]
 test_batch_size = 500
 
-savePath = 'C:\\Users\\Sebastian\\Desktop\\MLChinese\\Saved_runs\\'
-localPath = 'C:\\Users\\Sebastian\\Desktop\\MLChinese\\CASIA\\1.0'
+dataPath, LOGDIR, rawDataPath = fF.whichUser("Elliot")
+savePath=LOGDIR
+localPath=os.path.join(dataPath,"Machine learning data")
+
+#savePath = 'C:\\Users\\Sebastian\\Desktop\\MLChinese\\Saved_runs\\'
+#localPath = 'C:\\Users\\Sebastian\\Desktop\\MLChinese\\CASIA\\1.0'
+
 
 name_of_run = '2conv_2fc'
 
@@ -230,6 +237,6 @@ for num_output in num_output_list:
             for learning_rate in learning_rate_list:
                 LOGDIR = makeDir(savePath,name_of_run,num_output,\
                                      learning_rate,train_batch_size)
-                main()
+                run_training()
     
     
