@@ -133,7 +133,7 @@ def run_training():
                                               y_: tf.one_hot(test_labels,num_output).eval(),\
                                               keep_prob: 1.0})
                     test_writer.add_summary(test_summary, step)
-                    if accuracy > maxAccuracy:
+                    if test_accuracy > maxAccuracy:
                         maxAccuracy=accuracy
                         saver.save(sess, os.path.join(LOGDIR, "LR{}_Iter{}_TestAcc{:.3}.ckpt".\
                                                   format(learning_rate,step,test_accuracy)))
