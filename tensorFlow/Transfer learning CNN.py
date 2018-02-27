@@ -33,7 +33,8 @@ labels,bottlenecks=fF.readNPZ(os.path.join(dataPath,relBottleneckPath),\
                                  "bottleneck_"+bottleneckSaveName+"_{}to{}chars_train"\
                                  .format(oldNumOutputs,newNumOutputs),\
                                  "labels","bottlenecks")
-trainData = Data(bottlenecks,labels)
+
+trainData = Data(bottlenecks,labels.astype(int)-171);
 
 #testing data
 labels,bottlenecks=fF.readNPZ(os.path.join(dataPath,relBottleneckPath),\
@@ -41,7 +42,7 @@ labels,bottlenecks=fF.readNPZ(os.path.join(dataPath,relBottleneckPath),\
                                  .format(oldNumOutputs,newNumOutputs),\
                                  "labels","bottlenecks")
 
-testLabels = labels
+testLabels = labels.astype(int)-171
 testBottlenecks=bottlenecks
 #delete unused variables
 del bottlenecks; del labels
@@ -172,13 +173,13 @@ def neural_net(LOGDIR,name,whichTest,numOutputs,learningRate,trainBatchSize,\
 
 #%% Run model function multiple times
 whichTest = 1
-name="TransferCNNLastLayer"
+
 #trainRatio = 0.8
 for numOutputs in [30]:
     for trainRatio in [0.8]:
         for learning_rate in [1E-3]:
             for trainBatchSize in [128]:      
-                iterations = 600*int(len(trainData.labels)/trainBatchSize)
+                epochs = 300
                 #LOGDIR, whichTest, numOutputs, learningRate, trainBatchSize, iterations
-                neural_net(LOGDIR,saveName+"_was{}Out_".format(oldNumOutputs),whichTest,numOutputs,learning_rate,trainBatchSize,iterations,\
+                neural_net(LOGDIR,saveName+"_was{}Out".format(oldNumOutputs),whichTest,numOutputs,learning_rate,trainBatchSize,epochs,\
                            trainData,testBottlenecks,testLabels,trainRatio)

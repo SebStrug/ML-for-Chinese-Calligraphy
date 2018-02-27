@@ -25,40 +25,24 @@ from classFileFunctions import fileFunc as fF
 def run_training():
     tf.reset_default_graph()
         
-    train_kwargs = {"normalize_images": False, "augment_images": False, "shuffle_data": True}
+    train_kwargs = {"normalize_images": True, "augment_images": False, "shuffle_data": True}
     train_image_batch, train_label_batch = inputs('train',train_tfrecord_filename,\
                                                   train_batch_size,num_epochs,\
                                                   **train_kwargs)
-    test_kwargs = {"normalize_images": False, "augment_images": False, "shuffle_data": False}
+    test_kwargs = {"normalize_images": True, "augment_images": False, "shuffle_data": False}
     test_image_batch, test_label_batch = inputs('test',test_tfrecord_filename,\
                                                 test_batch_size,0,\
                                                 **test_kwargs)
-
-    #build a graph here
-    def weight_variable(shape):
-        """weight_variable generates a weight variable of a given shape."""
-        initial = tf.truncated_normal(shape, stddev=0.1)
-        tf.summary.histogram("weights", initial)
-        return tf.Variable(initial)
-
-    def bias_variable(shape):
-        """bias_variable generates a bias variable of a given shape."""
-        initial = tf.constant(0.1, shape=shape)
-        tf.summary.histogram("biases", initial)
-        return tf.Variable(initial)
-    
-    def conv2d(x, W):
-        """conv2d returns a 2d convolution layer with full stride."""    
-        return tf.nn.conv2d(x, W, strides=[1, 1, 1, 1], padding='SAME')
-    
-    def max_pool_2x2(x):
-        """max_pool_2x2 downsamples a feature map by 2X."""
-        return tf.nn.max_pool(x, ksize=[1, 2, 2, 1],strides=[1, 2, 2, 1], padding='SAME')
     
     #Define the placeholders for the images and labels
     # 'None' used to be batch_size << haven't tested None yet
     x = tf.placeholder(tf.float32, [None,inputDim**2], name="images")
     y_ = tf.placeholder(tf.float32, [None,num_output], name="labels")
+
+    
+    """4 convolution network"""
+    # placeholder for dropout means we can turn it on during training, turn off during testing
+    keep_prob = tf.placeholder(tf.float32, name = 'keep_prob')
     
     with tf.name_scope('reshape'):
         # reshape x to a 4D tensor with second and third dimensions being width/height
@@ -66,77 +50,34 @@ def run_training():
     
     tf.summary.image('input', x_image, 4) # Show 4 examples of output images on tensorboard
     
-    with tf.name_scope('conv1'):
-        """First convolution layer, maps one greyscale image to 32 feature maps"""
-        # patch size of 5x5, 1 input channel, 32 output channels (features)
-        W_conv1 = weight_variable([5, 5, 1, 32])
-        # bias has a component for each output channel (feature)
-        b_conv1 = bias_variable([32])
-        # convolve x with the weight tensor, add bias and apply ReLU function
-        h_conv1 = tf.nn.relu(conv2d(x_image, W_conv1) + b_conv1)
-        tf.summary.histogram("activations", h_conv1)
-        
-    with tf.name_scope('pool1'):
-        """Pooling layer, downsamples by 2x"""
-        #max pool 2x2 reduces it to 14x14
-        h_pool1 = max_pool_2x2(h_conv1)
+    conv_layer_1, output_dim, output_channels = \
+        buildNet.conv_layer('conv_1', x_image, inputDim, 5, 1, 256, do_pool=True)
+    conv_layer_2, output_dim, output_channels = \
+        buildNet.conv_layer('conv_2', conv_layer_1, output_dim, 4, \
+                            output_channels, 512, do_pool=True)
+#    conv_layer_3, output_dim, output_channels = \
+#        buildNet.conv_layer('conv_3',conv_layer_2, output_dim, 4, \
+#                            output_channels, 96, do_pool=False)
+#    conv_layer_4, output_dim, output_channels = \
+#        buildNet.conv_layer('conv_4',conv_layer_3, output_dim, 3, \
+#                            output_channels, 128, do_pool=False)
+#    conv_layer_5, output_dim, output_channels = \
+#        buildNet.conv_layer('conv_5',conv_layer_4, output_dim, 2, \
+#                        output_channels, 160, do_pool=True)
+#    conv_layer_6, output_dim, output_channels = \
+#        buildNet.conv_layer('conv_6',conv_layer_5, output_dim, 2, \
+#                        output_channels, 256, do_pool=False)
+    fc_layer_1, output_channels = \
+        buildNet.fc_layer('fc_1', conv_layer_2, output_dim, output_channels, \
+                          1024, do_pool=True)
+    y_conv = buildNet.output_layer(output_channels, num_output, fc_layer_1, 0.5)
     
-    with tf.name_scope('conv2'):
-        """Second convolution layer, maps 32 features maps to 64"""
-        # 64 outputs (features) for 32 inputs
-        W_conv2 = weight_variable([5, 5, 32, 64])
-        # bias has to have an equal number of outputs
-        b_conv2 = bias_variable([64])
-        # convolve again
-        h_conv2 = tf.nn.relu(conv2d(h_pool1, W_conv2) + b_conv2)
-        tf.summary.histogram("activations", h_conv2)
-    
-    with tf.name_scope('pool2'):
-        """Second pooling layer"""
-        # pool and reduce to 7x7
-        h_pool2 = max_pool_2x2(h_conv2)    
-    
-#    with tf.name_scope('fc1'):
-#        """Fully connected layer, maps features to the number of outputs"""
-#        w_fc = weight_variable([inputDim**2,num_output])
-#        b_fc = bias_variable([num_output])
-#        # calculate the convolution
-#        y_conv = tf.matmul(x, w_fc) + b_fc
-#        tf.summary.histogram("activations", y_conv)
-
-    with tf.name_scope('fc1'):
-        """Fully connected layer 1, after 2 rounds of downsampling, our 28x28 image
-        is reduced to 7x7x64 feature maps, map this to 1024 features"""
-        # 7*7 image size *64 inputs, fc layer has 1024 neurons
-        W_fc1 = weight_variable([12 * 12 * 64, 1024])
-        b_fc1 = bias_variable([1024])
-        # reshape the pooling layer from 7*7 (*64 inputs) to a batch of vectors
-        h_pool2_flat = tf.reshape(h_pool2, [-1, 12*12*64])
-        # do a matmul and apply a ReLu
-        h_fc1 = tf.nn.relu(tf.matmul(h_pool2_flat, W_fc1) + b_fc1, name = 'bottleneck')
-        tf.summary.histogram("activations", h_fc1)
-
-    with tf.name_scope('dropout'):
-        """Dropout controls the complexity of the model, prevents co-adaptation of features"""
-        # placeholder for dropout means we can turn it on during training, turn off during testing
-        keep_prob = tf.placeholder(tf.float32, name = 'keep_prob')
-        # automatically handles scaling neuron outputs and also masks them
-        h_fc1_drop = tf.nn.dropout(h_fc1, keep_prob)
-    
-    with tf.name_scope('fc2'):
-        """Fully connected layer 2, maps 1024 features to the number of outputs"""
-        #1024 inputs, 10 outputs
-        W_fc2 = weight_variable([1024, num_output])
-        b_fc2 = bias_variable([num_output])
-        # calculate the convolution
-        y_conv = tf.matmul(h_fc1_drop, W_fc2) + b_fc2
-        tf.summary.histogram("activations", y_conv)
-        
+    """Simple network"""
+#    y_conv = buildNet.output_layer(inputDim**2, num_output, x, 1)      
+      
     with tf.name_scope("xent"):    
         cross_entropy = tf.reduce_mean(\
-                            tf.nn.softmax_cross_entropy_with_logits(\
-                                labels=y_, \
-                                logits=y_conv))
+                            tf.nn.softmax_cross_entropy_with_logits_v2(labels=y_,logits=y_conv))
         tf.summary.scalar("xent",cross_entropy)
         
     with tf.name_scope("train"):
@@ -184,7 +125,7 @@ def run_training():
                                             keep_prob: 1.0})
                     train_writer.add_summary(train_summary, step)
                     print('Step: {}, Training accuracy = {:.3}'.format(step, train_accuracy))
-                
+                    
                 if step % 90 == 0:
                     print("Testing the net...")
                     test_accuracy, test_summary = sess.run([accuracy,mergedSummaryOp], \
@@ -212,9 +153,9 @@ def run_training():
 
 inputDim = 48
 num_output_list = [10]
-num_epoch_list = [800]
+num_epoch_list = [1000]
 train_batch_size_list = [128]
-learning_rate_list = [1E-3]
+learning_rate_list = [1E-4]
 test_batch_size = 500
 
 dataPath, LOGDIR, rawDataPath = fF.whichUser("Elliot")
@@ -225,7 +166,7 @@ localPath=os.path.join(dataPath,"Machine learning data")
 #localPath = 'C:\\Users\\Sebastian\\Desktop\\MLChinese\\CASIA\\1.0'
 
 
-name_of_run = '2conv_2fc'
+name_of_run = '4conv_shuffle_true_normalised'
 
 for num_output in num_output_list:
     train_tfrecord_filename = \
