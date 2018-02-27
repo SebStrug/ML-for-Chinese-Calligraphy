@@ -6,6 +6,21 @@ Created on Thu Feb 22 15:26:24 2018
 """
 
 import tensorflow as tf
+import numpy as np
+
+input_dim = 48
+num_output = 10
+
+#Define the placeholders for the images and labels
+# 'None' used to be batch_size << haven't tested None yet
+x = tf.placeholder(tf.float32, [None,inputDim**2], name="images")
+y_ = tf.placeholder(tf.float32, [None,num_output], name="labels")
+
+with tf.name_scope('reshape'):
+    # reshape x to a 4D tensor with second and third dimensions being width/height
+    x_image = tf.reshape(x, [-1,inputDim,inputDim,1])
+
+tf.summary.image('input', x_image, 4) # Show 4 examples of output images on tensorboard
 
 class buildNet(object):
     #build a graph here
@@ -89,17 +104,8 @@ class buildNet(object):
                 h_fc = tf.nn.relu(tf.matmul(h_pool_flat, W_fc) + b_fc)
                 tf.summary.histogram("activations", h_fc)
                 return h_fc, output_channel
-
-    def dropout_layer(fc_input_layer, keep_prob):
-        with tf.name_scope('dropout'):
-            """Dropout controls the complexity of the model, prevents co-adaptation of features"""
-            print("Using a dropout layer...")
-            print("Probability of keeping the layer: {}".format(keep_prob))
-            # automatically handles scaling neuron outputs and also masks them
-            fc_dropout = tf.nn.dropout(fc_input_layer, keep_prob)
-            return fc_dropout
                 
-    def output_layer(input_channels,num_outputs,input_layer, keep_prob):
+    def output_layer(input_channels,num_outputs,input_layer):
             print("\nBuilding the final layer of the network...")
             print("Weight shape: [{},{}], Bias shape: [{}]".\
                   format(input_channels,num_outputs,num_outputs))
@@ -107,22 +113,8 @@ class buildNet(object):
             W_fc = buildNet.weight_variable([input_channels, num_outputs])
             b_fc = buildNet.bias_variable([num_outputs])
             
-            dropout = buildNet.dropout_layer(input_layer, keep_prob)
+            dropout = buildNet.dropout_layer(input_layer)
             y_conv = tf.matmul(dropout, W_fc) + b_fc
             tf.summary.histogram("activations", y_conv)
-            return y_conv
 
 
-
-        
-       
-#conv_layer_1, output_dim, output_channels = \
-#    buildNet.conv_layer('conv_1', x_image, input_dim, 5, 1, 32, do_pool=True)
-#    
-#conv_layer_2, output_dim, output_channels = \
-#    buildNet.conv_layer('conv_2', conv_layer_1, output_dim, 5, output_channels, 64, do_pool=True)
-#    
-#fc_layer_1, output_channels = \
-#    buildNet.fc_layer('fc_1', conv_layer_2, output_dim, output_channels, 1024, do_pool=True)
-#
-#output_layer = buildNet.output_layer(output_channels, num_output, fc_layer_1, keep_prob)
