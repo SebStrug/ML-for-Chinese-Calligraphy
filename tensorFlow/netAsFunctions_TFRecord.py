@@ -77,7 +77,7 @@ def run_training():
       
     with tf.name_scope("xent"):    
         cross_entropy = tf.reduce_mean(\
-                            tf.nn.softmax_cross_entropy_with_logits_v2(labels=y_,logits=y_conv))
+                            tf.nn.softmax_cross_entropy_with_logits(labels=y_,logits=y_conv))
         tf.summary.scalar("xent",cross_entropy)
         
     with tf.name_scope("train"):
@@ -154,21 +154,21 @@ def run_training():
             
 
 inputDim = 48
-num_output_list = [10]
+num_output_list = [30]
 num_epoch_list = [1000]
 train_batch_size_list = [128]
-learning_rate_list = [1E-4]
+learning_rate_list = [1E-3]
 test_batch_size = 500
 
 dataPath, LOGDIR, rawDataPath = fF.whichUser("Elliot")
 savePath=LOGDIR
 localPath=os.path.join(dataPath,"Machine learning data/TFrecord")
 
-savePath = 'C:\\Users\\Sebastian\\Desktop\\MLChinese\\Saved_runs\\'
-localPath = 'C:\\Users\\Sebastian\\Desktop\\MLChinese\\CASIA\\1.0'
+#savePath = 'C:\\Users\\Sebastian\\Desktop\\MLChinese\\Saved_runs\\'
+#localPath = 'C:\\Users\\Sebastian\\Desktop\\MLChinese\\CASIA\\1.0'
 
 
-name_of_run = '4conv_shuffle_true_normalised'
+name_of_run = '2conv_shuffle_true_normalised'
 
 for num_output in num_output_list:
     train_tfrecord_filename = \
