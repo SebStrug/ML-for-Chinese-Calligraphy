@@ -29,7 +29,7 @@ def run_training():
     train_image_batch, train_label_batch = inputs('train',train_tfrecord_filename,\
                                                   train_batch_size,num_epochs,\
                                                   **train_kwargs)
-    test_kwargs = {"normalize_images": True, "augment_images": False, "shuffle_data": False}
+    test_kwargs = {"normalize_images": True, "augment_images": False, "shuffle_data": True}
     test_image_batch, test_label_batch = inputs('test',test_tfrecord_filename,\
                                                 test_batch_size,0,\
                                                 **test_kwargs)
