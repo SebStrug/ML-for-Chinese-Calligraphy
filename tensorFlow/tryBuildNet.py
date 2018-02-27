@@ -104,6 +104,15 @@ class buildNet(object):
                 h_fc = tf.nn.relu(tf.matmul(h_pool_flat, W_fc) + b_fc)
                 tf.summary.histogram("activations", h_fc)
                 return h_fc, output_channel
+            
+    def dropout_layer(fc_input_layer, keep_prob):
+        with tf.name_scope('dropout'):
+            """Dropout controls the complexity of the model, prevents co-adaptation of features"""
+            print("Using a dropout layer...")
+            print("Probability of keeping the layer: {}".format(keep_prob))
+            # automatically handles scaling neuron outputs and also masks them
+            fc_dropout = tf.nn.dropout(fc_input_layer, keep_prob)
+            return fc_dropout
                 
     def output_layer(input_channels,num_outputs,input_layer):
             print("\nBuilding the final layer of the network...")
@@ -116,5 +125,6 @@ class buildNet(object):
             dropout = buildNet.dropout_layer(input_layer)
             y_conv = tf.matmul(dropout, W_fc) + b_fc
             tf.summary.histogram("activations", y_conv)
+            return y_conv
 
 
