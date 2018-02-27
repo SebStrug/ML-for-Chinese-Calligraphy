@@ -139,7 +139,7 @@ def neural_net(LOGDIR,name,whichTest,numOutputs,learningRate,trainBatchSize,\
     whichEpoch = 0
     print("Number of batches per epoch: {}".format(epochLength))
     displayNum = 30
-    testNum = 200
+    testNum = 90
     maxAccuracy = 0.0
     for i in range(epochLength*epochs):
         """Check a random value in the batch matches its label"""
