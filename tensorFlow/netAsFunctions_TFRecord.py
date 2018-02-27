@@ -5,7 +5,7 @@ Look at the bottom of the file for all the inputs
 """
 
 import tensorflow as tf
-#from tryBuildNet import buildNet
+from tryBuildNet import buildNet
 import time
 import math #to use radians in rotating the image
 import random
@@ -70,7 +70,7 @@ def run_training():
     fc_layer_1, output_channels = \
         buildNet.fc_layer('fc_1', conv_layer_2, output_dim, output_channels, \
                           1024, do_pool=True)
-    y_conv = buildNet.output_layer(output_channels, num_output, fc_layer_1, 0.5)
+    y_conv = buildNet.output_layer(output_channels, num_output, fc_layer_1,0.5)
     
     """Simple network"""
 #    y_conv = buildNet.output_layer(inputDim**2, num_output, x, 1)      
@@ -158,12 +158,12 @@ train_batch_size_list = [128]
 learning_rate_list = [1E-4]
 test_batch_size = 500
 
-dataPath, LOGDIR, rawDataPath = fF.whichUser("Elliot")
-savePath=LOGDIR
-localPath=os.path.join(dataPath,"Machine learning data")
+#dataPath, LOGDIR, rawDataPath = fF.whichUser("Elliot")
+#savePath=LOGDIR
+#localPath=os.path.join(dataPath,"Machine learning data")
 
-#savePath = 'C:\\Users\\Sebastian\\Desktop\\MLChinese\\Saved_runs\\'
-#localPath = 'C:\\Users\\Sebastian\\Desktop\\MLChinese\\CASIA\\1.0'
+savePath = 'C:\\Users\\Sebastian\\Desktop\\MLChinese\\Saved_runs\\'
+localPath = 'C:\\Users\\Sebastian\\Desktop\\MLChinese\\CASIA\\1.0'
 
 
 name_of_run = '4conv_shuffle_true_normalised'

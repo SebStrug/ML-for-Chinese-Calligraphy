@@ -9,6 +9,7 @@ import tensorflow as tf
 import numpy as np
 
 input_dim = 48
+inputDim = 48
 num_output = 10
 
 #Define the placeholders for the images and labels
@@ -114,7 +115,7 @@ class buildNet(object):
             fc_dropout = tf.nn.dropout(fc_input_layer, keep_prob)
             return fc_dropout
                 
-    def output_layer(input_channels,num_outputs,input_layer):
+    def output_layer(input_channels,num_outputs,input_layer,keep_prob):
             print("\nBuilding the final layer of the network...")
             print("Weight shape: [{},{}], Bias shape: [{}]".\
                   format(input_channels,num_outputs,num_outputs))
@@ -122,7 +123,7 @@ class buildNet(object):
             W_fc = buildNet.weight_variable([input_channels, num_outputs])
             b_fc = buildNet.bias_variable([num_outputs])
             
-            dropout = buildNet.dropout_layer(input_layer)
+            dropout = buildNet.dropout_layer(input_layer,keep_prob)
             y_conv = tf.matmul(dropout, W_fc) + b_fc
             tf.summary.histogram("activations", y_conv)
             return y_conv
