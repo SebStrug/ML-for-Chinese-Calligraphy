@@ -163,6 +163,7 @@ test_batch_size = 500
 #dataPath, LOGDIR, rawDataPath = fF.whichUser("Elliot")
 #savePath=LOGDIR
 #localPath=os.path.join(dataPath,"Machine learning data")
+localPath=os.path.join(dataPath,"Machine learning data/TFrecord")
 
 savePath = 'C:\\Users\\Sebastian\\Desktop\\MLChinese\\Saved_runs\\'
 localPath = 'C:\\Users\\Sebastian\\Desktop\\MLChinese\\CASIA\\1.0'
