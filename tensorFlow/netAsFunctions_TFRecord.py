@@ -29,7 +29,7 @@ def run_training():
     train_image_batch, train_label_batch = inputs('train',train_tfrecord_filename,\
                                                   train_batch_size,num_epochs,\
                                                   **train_kwargs)
-    test_kwargs = {"normalize_images": True, "augment_images": False, "shuffle_data": False}
+    test_kwargs = {"normalize_images": True, "augment_images": False, "shuffle_data": True}
     test_image_batch, test_label_batch = inputs('test',test_tfrecord_filename,\
                                                 test_batch_size,0,\
                                                 **test_kwargs)
@@ -51,10 +51,10 @@ def run_training():
     tf.summary.image('input', x_image, 4) # Show 4 examples of output images on tensorboard
     
     conv_layer_1, output_dim, output_channels = \
-        buildNet.conv_layer('conv_1', x_image, inputDim, 5, 1, 256, do_pool=True)
+        buildNet.conv_layer('conv_1', x_image, inputDim, 5, 1, 32, do_pool=True)
     conv_layer_2, output_dim, output_channels = \
-        buildNet.conv_layer('conv_2', conv_layer_1, output_dim, 4, \
-                            output_channels, 512, do_pool=True)
+        buildNet.conv_layer('conv_2', conv_layer_1, output_dim, 5, \
+                            output_channels, 64, do_pool=True)
 #    conv_layer_3, output_dim, output_channels = \
 #        buildNet.conv_layer('conv_3',conv_layer_2, output_dim, 4, \
 #                            output_channels, 96, do_pool=False)
@@ -160,9 +160,8 @@ train_batch_size_list = [128]
 learning_rate_list = [1E-4]
 test_batch_size = 500
 
-#dataPath, LOGDIR, rawDataPath = fF.whichUser("Elliot")
-#savePath=LOGDIR
-#localPath=os.path.join(dataPath,"Machine learning data")
+dataPath, LOGDIR, rawDataPath = fF.whichUser("Elliot")
+savePath=LOGDIR
 localPath=os.path.join(dataPath,"Machine learning data/TFrecord")
 
 savePath = 'C:\\Users\\Sebastian\\Desktop\\MLChinese\\Saved_runs\\'
