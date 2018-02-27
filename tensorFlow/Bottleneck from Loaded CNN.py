@@ -23,8 +23,8 @@ bottleneckLength = 1024
 dataPath, LOGDIR, rawDatapath = fF.whichUser("Elliot")
 relTrainDataPath = "Machine learning data/TFrecord"#path of training data relative to datapath in classFileFunc
 relBottleneckSavePath = "Machine learning data/bottlenecks" #path for saved bottlenecks relative to dataPath
-relModelPath = 'untrainedCNN48x48/Outputs10_LR0.001_Batch128'# path of loaded model relative to LOGDIR
-modelName="LR0.001_Iter180_TestAcc0.176.ckpt"#name of ckpt file with saved model
+relModelPath = 'TF_record_CNN'# path of loaded model relative to LOGDIR
+modelName="LR0.001_Iter7020_TestAcc0.992.ckpt"#name of ckpt file with saved model
 SaveName = "CNN_LR0.001_BS128"#name for saved bottlenecks
 #import modules
 import tensorflow as tf
@@ -48,9 +48,9 @@ saver.restore(sess,'./'+modelName)
 
 graph = tf.get_default_graph()
 #print(graph.get_operations())
-
-train_image_batch, train_label_batch = inputs('train',train_tfrecord_filename,bottleneckLength,1)
-test_image_batch, test_label_batch = inputs('test',test_tfrecord_filename,bottleneckLength,1)
+train_kwargs = {"normalize_images": True, "augment_images": False, "shuffle_data": True}
+train_image_batch, train_label_batch = inputs('train',train_tfrecord_filename,bottleneckLength,1,**train_kwargs)
+test_image_batch, test_label_batch = inputs('test',test_tfrecord_filename,bottleneckLength,1,**train_kwargs)
     
 x=graph.get_tensor_by_name("images:0")
 y_=graph.get_tensor_by_name("labels:0")
