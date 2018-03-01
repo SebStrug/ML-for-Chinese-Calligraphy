@@ -134,7 +134,7 @@ def run_training():
                                               keep_prob: 1.0})
                     test_writer.add_summary(test_summary, step)
                     if test_accuracy > maxAccuracy:
-                        maxAccuracy=accuracy
+                        maxAccuracy=test_accuracy
                         saver.save(sess, os.path.join(LOGDIR, "LR{}_Iter{}_TestAcc{:.3}.ckpt".\
                                                   format(learning_rate,step,test_accuracy)))
                     print('Step: {}, Test accuracy = {:.3}'.format(step, test_accuracy))
