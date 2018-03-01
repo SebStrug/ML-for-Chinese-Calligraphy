@@ -22,13 +22,15 @@ numOutputs= 10#number of outputs in original network
 dataPath, LOGDIR, rawDatapath = fF.whichUser("Elliot")
 relTrainDataPath = "Machine learning data/TFrecord"#path of training data relative to datapath in classFileFunc
 relSavePath = "savedVisualisation" #path for saved images relative to dataPath
-relModelPath = 'TF_record_CNN'# path of loaded model relative to LOGDIR
+relModelPath = 'TF_record_CNN/2 layer CNN 10 out'# path of loaded model relative to LOGDIR
 modelName="LR0.001_Iter7020_TestAcc0.992.ckpt"#name of ckpt file with saved model
 SaveName = "CNN_LR0.001_BS128"#name for saved images
 #import modules
 import tensorflow as tf
 import numpy as np
 import time as t
+
+numImages = 1
 
 #%% import data
 train_tfrecord_filename = os.path.join(os.path.join(dataPath,relTrainDataPath),'train'+str(numOutputs)+'.tfrecords')
@@ -45,13 +47,19 @@ saver.restore(sess,'./'+modelName)
 
 graph = tf.get_default_graph()
 print(graph.get_operations())
-train_kwargs = {"normalize_images": True, "augment_images": False, "shuffle_data": False}
-train_image_batch, train_label_batch = inputs('train',train_tfrecord_filename,inputDim**2,1,**train_kwargs)
+train_kwargs = {"normalize_images": True, "augment_images": False, "shuffle_data":True}
+train_image_batch, train_label_batch = inputs('train',train_tfrecord_filename,numImages,1,**train_kwargs)
     
 x=graph.get_tensor_by_name("images:0")
 y_=graph.get_tensor_by_name("labels:0")
 keep_prob=graph.get_tensor_by_name("dropout/keep_prob:0")
+conv1Activations = graph.get_tensor_by_name("conv1/Relu:0")
+conv2Activations = graph.get_tensor_by_name("conv2/Relu:0")
 #accuracy=graph.get_tensor_by_name("accuracy/Mean:0")
 getBottleneck = graph.get_tensor_by_name("fc1/bottleneck:0")
 
 print("took ",t.time()-start," seconds\n")
+#%%
+images,labels=sess.run([train_image_batch,train_label_batch])
+layer1Activations=sess.run(conv1Activations,feed_dict={x: images, keep_prob: 1.0})
+layer2Activations=sess.run(conv2Activations,feed_dict={x: images, keep_prob: 1.0})
