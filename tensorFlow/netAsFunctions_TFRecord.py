@@ -77,7 +77,7 @@ def run_training():
       
     with tf.name_scope("xent"):    
         cross_entropy = tf.reduce_mean(\
-                            tf.nn.softmax_cross_entropy_with_logits(labels=y_,logits=y_conv))
+                            tf.nn.softmax_cross_entropy_with_logits_v2(labels=y_,logits=y_conv))
         tf.summary.scalar("xent",cross_entropy)
         
     with tf.name_scope("train"):
