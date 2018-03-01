@@ -38,7 +38,8 @@ def normaliseImages(thresholdedImages):
         else: #if already square resize the images to 48x48 
             image = image.resize((48,48),Image.ANTIALIAS)
             thresholdedImages_resized.append(image)
-    return thresholdedImages_resized
+    images_as_arrays = np.array(thresholdedImages_resized)
+    return thresholdedImages_resized, images_as_arrays
 
 def saveImages(Images): #saves the images in the output directory
     for i in range(len(Images)):
@@ -50,7 +51,7 @@ outputPath = 'Normalised calligraphy'
 files = glob.glob(basePath + inputPath+"\*.jpg")
 threshold = 80 
 standardImages, thresholdedImages = thresholdImages(files,threshold) #greyscale, threshold
-Images = normaliseImages(thresholdedImages) #center and normalise the images
-saveImages(Images) #save them
+images,images_as_arrays = normaliseImages(thresholdedImages) #center and normalise the images
+saveImages(images) #save them
 
 
