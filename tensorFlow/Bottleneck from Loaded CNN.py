@@ -23,7 +23,7 @@ bottleneckLength = 1024
 dataPath, LOGDIR, rawDatapath = fF.whichUser("Elliot")
 relTrainDataPath = "Machine learning data/TFrecord"#path of training data relative to datapath in classFileFunc
 relBottleneckSavePath = "Machine learning data/bottlenecks" #path for saved bottlenecks relative to dataPath
-relModelPath = 'TF_record_CNN'# path of loaded model relative to LOGDIR
+relModelPath = 'TF_record_CNN/Outputs10_LR0.001_Batch128'# path of loaded model relative to LOGDIR
 modelName="LR0.001_Iter7020_TestAcc0.992.ckpt"#name of ckpt file with saved model
 SaveName = "CNN_LR0.001_BS128"#name for saved bottlenecks
 #import modules
