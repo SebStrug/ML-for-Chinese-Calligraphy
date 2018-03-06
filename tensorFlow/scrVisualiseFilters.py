@@ -39,17 +39,26 @@ test_tfrecord_filename = os.path.join(os.path.join(dataPath,relTrainDataPath),'t
 print("Importing graph.....")
 start = t.time()
 sess = tf.InteractiveSession()
+print(0)
 # Initialise all variables
 loadLOGDIR = os.path.join(LOGDIR,relModelPath)
 os.chdir(loadLOGDIR)
 saver = tf.train.import_meta_graph(modelName+".meta")
-saver.restore(sess,'./')
+print(1)
+saver.restore(sess,'./'+modelName)
 
 graph = tf.get_default_graph()
+print("took ",t.time()-start," seconds\n")
 #print(graph.get_operations())
+
+print("Set up data....")
+start = t.time()
 train_kwargs = {"normalize_images": True, "augment_images": False, "shuffle_data":True}
 train_image_batch, train_label_batch = inputs('train',train_tfrecord_filename,numImages,1,**train_kwargs)
-    
+print("took ",t.time()-start," seconds\n")
+
+print("Assign operations and placeholders......")  
+start = t.time()  
 x=graph.get_tensor_by_name("images:0")
 y_=graph.get_tensor_by_name("labels:0")
 keep_prob=graph.get_tensor_by_name("dropout/dropout/keep_prob:0")
@@ -57,8 +66,8 @@ conv1Activations = graph.get_tensor_by_name("conv_1/Relu:0")
 conv2Activations = graph.get_tensor_by_name("conv_2/Relu:0")
 #accuracy=graph.get_tensor_by_name("accuracy/Mean:0")
 getBottleneck = graph.get_tensor_by_name("add:0")
-
 print("took ",t.time()-start," seconds\n")
+
 #%%
 images,labels=sess.run([train_image_batch,train_label_batch])
 layer1Activations=sess.run(conv1Activations,feed_dict={x: images, keep_prob: 1.0})
