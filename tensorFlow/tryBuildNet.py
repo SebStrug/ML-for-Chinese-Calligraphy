@@ -36,75 +36,73 @@ class buildNet(object):
         tf.summary.histogram("biases", initial)
         return tf.Variable(initial)
     
-    def conv2d(x, W, stride_input):
+    def conv2d(x, W, stride_input, padding_type):
         """conv2d returns a 2d convolution layer with full stride."""  
         #stride_input in form [2,2], or [1,1]
-        return tf.nn.conv2d(x, W, strides=[1] + stride_input + [1], padding='SAME')
+        return tf.nn.conv2d(x, W, strides=[1] + stride_input + [1], padding = padding_type)
     
-    def deconv2d(x, W, stride_input):
+    def deconv2d(x, W, output_dim, stride_input, padding_type):
         """deconv2d returns a 2d de-convolution layer with full stride."""    
         #stride_input in form [2,2], or [1,1]
-        return tf.nn.conv2d_transpose(x, W, stride_input=[1]+stride_input+[1], padding='SAME')
+        return tf.nn.conv2d_transpose(x, W, output_shape = tf.constant([output_dim,output_dim], tf.float32), \
+                    strides=[1]+stride_input+[1], padding = padding_type)
     
     def max_pool_2x2(x):
         """max_pool_2x2 downsamples a feature map by 2X."""
         return tf.nn.max_pool(x, ksize=[1, 2, 2, 1],strides=[1, 2, 2, 1], padding='SAME')
     
-    def conv_layer(conv_name, prev_layer, input_dim, patch_size, stride, input_channels, output_channels, do_pool=False):
-        """ e.g. name = 'conv-1', x = x_image, patch_size = [5,5], num_features = 32"""
+    def conv_layer(conv_name, prev_layer, input_dim, patch_size, stride, input_channels, \
+                   output_channels, do_pool=False, padding_type = 'SAME'):
+        """ e.g. name = 'conv-1', x = x_image, patch_size = [5,5], stride = [1,1],
+                    input_channels = 32, output_channels = 64"""
         with tf.name_scope(conv_name):
             """First convolution layer, maps one greyscale image to 32 feature maps"""
             # patch size of YxY, 1 input channel, Z output channels (features)
             print("\nBuilding a convolution layer...")
-            print("Name: {}, Weight shape: [{},{},{},{}], Bias shape: [{}], Stride: {}".\
-                  format(conv_name,patch_size,patch_size,\
-                         input_channels,output_channels,output_channels,[1]+stride+[1]))
+            print("Name: {}, Weight shape: [{},{},{},{}], Bias shape: [{}], Stride: {}, Output channels: {}".\
+                  format(conv_name, patch_size, patch_size, input_channels,\
+                         output_channels, output_channels, [1]+stride+[1], output_channels))
             print("Doing a pool: {}".format(do_pool))
             W_conv_input = [patch_size,patch_size,input_channels,output_channels]
             W_conv = buildNet.weight_variable(W_conv_input)
             # bias has a component for each output channel (feature)
             b_conv = buildNet.bias_variable([output_channels])
             # convolve x with the weight tensor, add bias and apply ReLU function
-            h_conv = tf.nn.relu(buildNet.conv2d(prev_layer, W_conv,stride) + b_conv)
+            h_conv = tf.nn.relu(buildNet.conv2d(prev_layer, W_conv, stride, padding_type) + b_conv)
             tf.summary.histogram("activations", h_conv)
+            print("Output dimension: {}".format(h_conv.shape))
         if do_pool == True:
             pool_name = conv_name + '_pool'
             with tf.name_scope(pool_name):
                 """Pooling layer, downsamples by 2x"""
                 print("Pooling...")
                 h_pool = buildNet.max_pool_2x2(h_conv)
-                output_dim = int(input_dim/2)
+                output_dim = h_pool.shape[1] #can be index 1 or 2
                 #return the pooling layer if we did a pool
-                print("Output dimension: {}, Output channels: {}".\
-                      format(output_dim,output_channels))
                 return h_pool, output_dim, output_channels
-        else:
-            output_dim = input_dim
-            #return the convolutional layer if we didn't do a pool
-            print("Output dimension: {}, Output channels: {}".\
-                      format(output_dim,output_channels))
+        else: #return the convolutional layer if we didn't do a pool
+            output_dim = h_conv.shape[1] #can be index 1 or 2   
             return h_conv, output_dim, output_channels
         
-    def deconv_layer(deconv_name, prev_layer, input_dim, patch_size, input_channels, output_channels):
-        """ e.g. name = 'conv-1', x = x_image, patch_size = [5,5], num_features = 32"""
+    def deconv_layer(deconv_name, prev_layer, input_dim, patch_size, stride, input_channels, \
+                     output_channels, padding_type = 'SAME'):
         with tf.name_scope(deconv_name):
             """First convolution layer, maps one greyscale image to 32 feature maps"""
             # patch size of YxY, 1 input channel, Z output channels (features)
             print("\nBuilding a DE-convolution layer...")
-            print("Name: {}, Weight shape: [{},{},{},{}], Bias shape: [{}]".\
-                  format(deconv_name,patch_size,patch_size,input_channels,output_channels,output_channels))
+            print("Name: {}, Weight shape: [{},{},{},{}], Bias shape: [{}], Stride: {}, Output channels: {}".\
+                  format(deconv_name, patch_size, patch_size, input_channels,\
+                         output_channels, output_channels, [1]+stride+[1], output_channels))
             W_conv_input = [patch_size,patch_size,input_channels,output_channels]
             W_conv = buildNet.weight_variable(W_conv_input)
             # bias has a component for each output channel (feature)
             b_conv = buildNet.bias_variable([output_channels])
             # convolve x with the weight tensor, add bias and apply ReLU function
-            h_conv = tf.nn.relu(buildNet.deconv2d(prev_layer, W_conv) + b_conv)
+            h_conv = tf.nn.relu(buildNet.deconv2d(prev_layer, W_conv, \
+                                        input_dim, stride, padding_type) + b_conv)
             tf.summary.histogram("activations", h_conv)
-        #can't do a pool in a deconv_layer
-        output_dim = input_dim
-        #return the convolutional layer if we didn't do a pool
-        print("Output dimension: {}, Output channels: {}".\
-                  format(output_dim,output_channels))
+            print("Output dimension: {}".format(h_conv.shape))
+        output_dim = h_conv.shape[1] #can't do a pool in a deconv_layer
         return h_conv, output_dim, output_channels 
                
     def fc_layer(fc_name, input_layer, input_dim, input_features, output_channel, do_pool=False):
