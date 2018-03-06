@@ -51,9 +51,9 @@ def run_training():
     tf.summary.image('input', x_image, 4) # Show 4 examples of output images on tensorboard
     
     conv_layer_1, output_dim, output_channels = \
-        buildNet.conv_layer('conv_1', x_image, inputDim, 5, 1, 32, do_pool=True)
+        buildNet.conv_layer('conv_1', x_image, inputDim, 5, [1,1], 1, 32, do_pool=True)
     conv_layer_2, output_dim, output_channels = \
-        buildNet.conv_layer('conv_2', conv_layer_1, output_dim, 5, \
+        buildNet.conv_layer('conv_2', conv_layer_1, output_dim, 5, [1,1], \
                             output_channels, 64, do_pool=True)
 #    conv_layer_3, output_dim, output_channels = \
 #        buildNet.conv_layer('conv_3',conv_layer_2, output_dim, 4, \
@@ -67,13 +67,13 @@ def run_training():
 #    conv_layer_6, output_dim, output_channels = \
 #        buildNet.conv_layer('conv_6',conv_layer_5, output_dim, 2, \
 #                        output_channels, 256, do_pool=False)
-    fc_layer_1, output_channels = \
-        buildNet.fc_layer('fc_1', conv_layer_2, output_dim, output_channels, \
-                          1024, do_pool=True)
-    y_conv = buildNet.output_layer(output_channels, num_output, fc_layer_1,0.5)
+#    fc_layer_1, output_channels = \
+#        buildNet.fc_layer('fc_1', conv_layer_2, output_dim, output_channels, \
+#                          1024, do_pool=True)
+#    y_conv = buildNet.output_layer(output_channels, num_output, fc_layer_1,0.5)
     
     """Simple network"""
-#    y_conv = buildNet.output_layer(inputDim**2, num_output, x, 1)      
+    y_conv = buildNet.output_layer(inputDim**2, num_output, x, 1)      
       
     with tf.name_scope("xent"):    
         cross_entropy = tf.reduce_mean(\
@@ -154,21 +154,21 @@ def run_training():
             
 
 inputDim = 48
-num_output_list = [30]
-num_epoch_list = [1000]
+num_output_list = [10]
+num_epoch_list = [10]
 train_batch_size_list = [128]
 learning_rate_list = [1E-3]
 test_batch_size = 500
 
-dataPath, LOGDIR, rawDataPath = fF.whichUser("Elliot")
-savePath=LOGDIR
-localPath=os.path.join(dataPath,"Machine learning data/TFrecord")
+#dataPath, LOGDIR, rawDataPath = fF.whichUser("Elliot")
+#savePath=LOGDIR
+#localPath=os.path.join(dataPath,"Machine learning data/TFrecord")
 
-#savePath = 'C:\\Users\\Sebastian\\Desktop\\MLChinese\\Saved_runs\\'
-#localPath = 'C:\\Users\\Sebastian\\Desktop\\MLChinese\\CASIA\\1.0'
+savePath = 'C:\\Users\\Sebastian\\Desktop\\MLChinese\\Saved_runs\\'
+localPath = 'C:\\Users\\Sebastian\\Desktop\\MLChinese\\CASIA\\1.0'
 
 
-name_of_run = '2conv_shuffle_true_normalised'
+name_of_run = 'testing_code'
 
 for num_output in num_output_list:
     train_tfrecord_filename = \

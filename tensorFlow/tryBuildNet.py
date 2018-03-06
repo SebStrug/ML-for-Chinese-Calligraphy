@@ -36,34 +36,36 @@ class buildNet(object):
         tf.summary.histogram("biases", initial)
         return tf.Variable(initial)
     
-    def conv2d(x, W):
-        """conv2d returns a 2d convolution layer with full stride."""    
-        return tf.nn.conv2d(x, W, strides=[1, 1, 1, 1], padding='SAME')
+    def conv2d(x, W, stride_input):
+        """conv2d returns a 2d convolution layer with full stride."""  
+        #stride_input in form [2,2], or [1,1]
+        return tf.nn.conv2d(x, W, strides=[1] + stride_input + [1], padding='SAME')
     
     def deconv2d(x, W, stride_input):
-        #stride_input in form [2,2], or [1,1]
         """deconv2d returns a 2d de-convolution layer with full stride."""    
+        #stride_input in form [2,2], or [1,1]
         return tf.nn.conv2d_transpose(x, W, stride_input=[1]+stride_input+[1], padding='SAME')
     
     def max_pool_2x2(x):
         """max_pool_2x2 downsamples a feature map by 2X."""
         return tf.nn.max_pool(x, ksize=[1, 2, 2, 1],strides=[1, 2, 2, 1], padding='SAME')
     
-    def conv_layer(conv_name, prev_layer, input_dim, patch_size, input_channels, output_channels, do_pool=False):
+    def conv_layer(conv_name, prev_layer, input_dim, patch_size, stride, input_channels, output_channels, do_pool=False):
         """ e.g. name = 'conv-1', x = x_image, patch_size = [5,5], num_features = 32"""
         with tf.name_scope(conv_name):
             """First convolution layer, maps one greyscale image to 32 feature maps"""
             # patch size of YxY, 1 input channel, Z output channels (features)
             print("\nBuilding a convolution layer...")
-            print("Name: {}, Weight shape: [{},{},{},{}], Bias shape: [{}]".\
-                  format(conv_name,patch_size,patch_size,input_channels,output_channels,output_channels))
+            print("Name: {}, Weight shape: [{},{},{},{}], Bias shape: [{}], Stride: {}".\
+                  format(conv_name,patch_size,patch_size,\
+                         input_channels,output_channels,output_channels,[1]+stride+[1]))
             print("Doing a pool: {}".format(do_pool))
             W_conv_input = [patch_size,patch_size,input_channels,output_channels]
             W_conv = buildNet.weight_variable(W_conv_input)
             # bias has a component for each output channel (feature)
             b_conv = buildNet.bias_variable([output_channels])
             # convolve x with the weight tensor, add bias and apply ReLU function
-            h_conv = tf.nn.relu(buildNet.conv2d(prev_layer, W_conv) + b_conv)
+            h_conv = tf.nn.relu(buildNet.conv2d(prev_layer, W_conv,stride) + b_conv)
             tf.summary.histogram("activations", h_conv)
         if do_pool == True:
             pool_name = conv_name + '_pool'
