@@ -104,10 +104,10 @@ def normalize(image, label):
 
 # Creates a dataset that reads all of the examples from two files.
 def inputs(trainType, tfrecord_filename, batch_size, num_epochs,\
-           normalize_images=False, augment_images=False, shuffle_data=False):
+           normalize_images=False, augment_images=False, shuffle_data=False,\
+           multiple_files=False):
     """If num_epochs is set to 0, repeat infinitely"""
-    #filenames = [tfrecord_filename]
-    filenames = tfrecord_filename
+    filenames = tfrecord_filename #[tfrecord_filename]??
     dataset = tf.data.TFRecordDataset(filenames)
     if num_epochs == 0: #if set to 0, repeat infinitely
         dataset = dataset.repeat()
