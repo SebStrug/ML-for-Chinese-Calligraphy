@@ -12,6 +12,10 @@ import glob
 import numpy as np
 from datetime import datetime
 
+gitHubRep = os.path.normpath(os.getcwd() + os.sep + os.pardir)# find github path
+#import own functions and classes
+os.chdir(os.path.join(gitHubRep,"dataHandling/"))
+from classFileFunctions import fileFunc as fF 
 #%% basic functions
 
 def convWallTime(seconds):
@@ -93,15 +97,21 @@ def plotAll(relTime,stepTime,accValues,plot_step=False):
 #%% load in files
 """tensorboard csv to graph function"""
 #change path so figure saves correctly
+dataPath, LOGDIR, rawDataPAth = fF.whichUser("Elliot")
+
+
+savePathElliot = LOGDIR
 savePathSeb = "C:/Users/Sebastian/Desktop/MLChinese/Saved_runs/"
-savePath = savePathSeb
-nameFile = "2018-02-23/6_conv_shuffle_true_normalised"
-os.chdir(savePath+nameFile)
+
+savePath=savePathElliot
+nameFile = "CSV"
+
+os.chdir(savePath)
 
 accData = loadFiles(savePath,nameFile)
 relTime, stepTime, accValues = convertData(accData)
 
 batchSize = 128
-numOutputs = 10
+numOutputs = 100
 
 plotAll(relTime, stepTime, accValues, plot_step=False)
