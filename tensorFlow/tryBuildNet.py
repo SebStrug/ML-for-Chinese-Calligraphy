@@ -6,22 +6,21 @@ Created on Thu Feb 22 15:26:24 2018
 """
 
 import tensorflow as tf
-import numpy as np
 
-input_dim = 48
-inputDim = 48
-num_output = 10
-
-#Define the placeholders for the images and labels
-# 'None' used to be batch_size << haven't tested None yet
-x = tf.placeholder(tf.float32, [None,inputDim**2], name="images")
-y_ = tf.placeholder(tf.float32, [None,num_output], name="labels")
-
-with tf.name_scope('reshape'):
-    # reshape x to a 4D tensor with second and third dimensions being width/height
-    x_image = tf.reshape(x, [-1,inputDim,inputDim,1])
-
-tf.summary.image('input', x_image, 4) # Show 4 examples of output images on tensorboard
+#input_dim = 48
+#inputDim = 48
+#num_output = 10
+#
+##Define the placeholders for the images and labels
+## 'None' used to be batch_size << haven't tested None yet
+#x = tf.placeholder(tf.float32, [None,inputDim**2], name="images")
+#y_ = tf.placeholder(tf.float32, [None,num_output], name="labels")
+#
+#with tf.name_scope('reshape'):
+#    # reshape x to a 4D tensor with second and third dimensions being width/height
+#    x_image = tf.reshape(x, [-1,inputDim,inputDim,1])
+#
+#tf.summary.image('input', x_image, 4) # Show 4 examples of output images on tensorboard
 
 class buildNet(object):
     #build a graph here
@@ -40,6 +39,11 @@ class buildNet(object):
     def conv2d(x, W):
         """conv2d returns a 2d convolution layer with full stride."""    
         return tf.nn.conv2d(x, W, strides=[1, 1, 1, 1], padding='SAME')
+    
+    def deconv2d(x, W, stride_input):
+        #stride_input in form [2,2], or [1,1]
+        """deconv2d returns a 2d de-convolution layer with full stride."""    
+        return tf.nn.conv2d_transpose(x, W, stride_input=[1]+stride_input+[1], padding='SAME')
     
     def max_pool_2x2(x):
         """max_pool_2x2 downsamples a feature map by 2X."""
@@ -79,7 +83,28 @@ class buildNet(object):
                       format(output_dim,output_channels))
             return h_conv, output_dim, output_channels
         
-                
+    def deconv_layer(deconv_name, prev_layer, input_dim, patch_size, input_channels, output_channels):
+        """ e.g. name = 'conv-1', x = x_image, patch_size = [5,5], num_features = 32"""
+        with tf.name_scope(deconv_name):
+            """First convolution layer, maps one greyscale image to 32 feature maps"""
+            # patch size of YxY, 1 input channel, Z output channels (features)
+            print("\nBuilding a DE-convolution layer...")
+            print("Name: {}, Weight shape: [{},{},{},{}], Bias shape: [{}]".\
+                  format(deconv_name,patch_size,patch_size,input_channels,output_channels,output_channels))
+            W_conv_input = [patch_size,patch_size,input_channels,output_channels]
+            W_conv = buildNet.weight_variable(W_conv_input)
+            # bias has a component for each output channel (feature)
+            b_conv = buildNet.bias_variable([output_channels])
+            # convolve x with the weight tensor, add bias and apply ReLU function
+            h_conv = tf.nn.relu(buildNet.deconv2d(prev_layer, W_conv) + b_conv)
+            tf.summary.histogram("activations", h_conv)
+        #can't do a pool in a deconv_layer
+        output_dim = input_dim
+        #return the convolutional layer if we didn't do a pool
+        print("Output dimension: {}, Output channels: {}".\
+                  format(output_dim,output_channels))
+        return h_conv, output_dim, output_channels 
+               
     def fc_layer(fc_name, input_layer, input_dim, input_features, output_channel, do_pool=False):
         with tf.name_scope(fc_name):
             """Fully connected layer 1, after 2 rounds of downsampling, our 28x28 image

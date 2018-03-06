@@ -25,19 +25,19 @@ def generator(x, isTrain=True, reuse=False):
         # lrelu is a 'leaky relu layer'
         # 1st hidden layer, uses TRANSPOSE i.e. deconvolutions
         conv1 = tf.layers.conv2d_transpose(x, 1024, [4, 4], strides=(1, 1), padding='valid')
-        lrelu1 = lrelu(tf.layers.batch_normalization(conv1, training=isTrain), 0.2)
+        lrelu1 = tf.nn.leaky_relu(tf.layers.batch_normalization(conv1, training=isTrain))
 
         # 2nd hidden layer
         conv2 = tf.layers.conv2d_transpose(lrelu1, 512, [4, 4], strides=(2, 2), padding='same')
-        lrelu2 = lrelu(tf.layers.batch_normalization(conv2, training=isTrain), 0.2)
+        lrelu2 = tf.nn.leaky_relu(tf.layers.batch_normalization(conv2, training=isTrain))
 
         # 3rd hidden layer
         conv3 = tf.layers.conv2d_transpose(lrelu2, 256, [4, 4], strides=(2, 2), padding='same')
-        lrelu3 = lrelu(tf.layers.batch_normalization(conv3, training=isTrain), 0.2)
+        lrelu3 = tf.nn.leaky_relu(tf.layers.batch_normalization(conv3, training=isTrain))
 
         # 4th hidden layer
         conv4 = tf.layers.conv2d_transpose(lrelu3, 128, [4, 4], strides=(2, 2), padding='same')
-        lrelu4 = lrelu(tf.layers.batch_normalization(conv4, training=isTrain), 0.2)
+        lrelu4 = tf.nn.leaky_relu(tf.layers.batch_normalization(conv4, training=isTrain))
 
         # output layer
         conv5 = tf.layers.conv2d_transpose(lrelu4, 1, [4, 4], strides=(2, 2), padding='same')
@@ -49,19 +49,19 @@ def discriminator(x, isTrain=True, reuse=False):
     with tf.variable_scope('discriminator', reuse=reuse):
         # 1st hidden layer. Goes from 48x48 -> 24x24
         conv1 = tf.layers.conv2d(x, 128, [4, 4], strides=(2, 2), padding='same')
-        lrelu1 = lrelu(conv1, 0.2)
+        lrelu1 = tf.nn.leaky_relu(conv1)
 
         # 2nd hidden layer. Goes from 24x24 -> 12x12
         conv2 = tf.layers.conv2d(lrelu1, 256, [4, 4], strides=(2, 2), padding='same')
-        lrelu2 = lrelu(tf.layers.batch_normalization(conv2, training=isTrain), 0.2)
+        lrelu2 = tf.nn.leaky_relu(tf.layers.batch_normalization(conv2, training=isTrain))
 
         # 3rd hidden layer. Goes from 12x12 -> 6x6
         conv3 = tf.layers.conv2d(lrelu2, 512, [4, 4], strides=(2, 2), padding='same')
-        lrelu3 = lrelu(tf.layers.batch_normalization(conv3, training=isTrain), 0.2)
+        lrelu3 = tf.nn.leaky_relu(tf.layers.batch_normalization(conv3, training=isTrain))
 
         # 4th hidden layer. Goes from 6x6 -> 3x3
         conv4 = tf.layers.conv2d(lrelu3, 1024, [4, 4], strides=(2, 2), padding='same')
-        lrelu4 = lrelu(tf.layers.batch_normalization(conv4, training=isTrain), 0.2)
+        lrelu4 = tf.nn.leaky_relu(tf.layers.batch_normalization(conv4, training=isTrain))
 
         # output layer. Goes from 3x3 -> 1x1
         conv5 = tf.layers.conv2d(lrelu4, 1, [3, 3], strides=(1, 1), padding='valid')
