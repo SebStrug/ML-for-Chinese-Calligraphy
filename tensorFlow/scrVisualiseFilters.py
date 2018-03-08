@@ -12,6 +12,7 @@ gitHubRep = os.path.normpath(os.getcwd() + os.sep + os.pardir)# find github path
 #import own functions and classes
 os.chdir(os.path.join(gitHubRep,"dataHandling/"))
 from classFileFunctions import fileFunc as fF 
+from classImageFunctions import imageFunc as iF
 os.chdir(os.path.join(gitHubRep,"tensorFlow/"))
 from InputTFRecord import inputs
 #set other variables
@@ -24,14 +25,43 @@ relTrainDataPath = "Machine learning data/TFrecord"#path of training data relati
 relSavePath = "savedVisualisation" #path for saved images relative to dataPath
 relModelPath = 'TF_record_CNN/Outputs100_LR0.001_Batch128'# path of loaded model relative to LOGDIR
 modelName="LR0.001_Iter27720_TestAcc0.86.ckpt"#name of ckpt file with saved model
-SaveName = "CNN_LR0.001_BS128"#name for saved images
+saveName = "CNN_LR0.001_BS128"#name for saved images
 #import modules
 import tensorflow as tf
 import numpy as np
 import time as t
+import matplotlib.pyplot as plt
+import itertools 
 
 numImages = 1
+#%%Func defs
+def removeAndSwapAxes(array):
+    foo = array[0]
+    array=np.swapaxes(np.swapaxes(foo,1,2),0,1)
+    
+def show_result(features,featureDim, num_out, path, name, show = False, save = False):
+    test_images = features
 
+    size_figure_grid = int(num_out/8) #output 25 images in a 5x5 grid
+    fig, ax = plt.subplots(8, size_figure_grid, figsize=(8, int(num_out/8)))
+    for i, j in itertools.product(range(8), range(size_figure_grid)):
+        ax[i, j].get_xaxis().set_visible(False)
+        ax[i, j].get_yaxis().set_visible(False)
+
+    for k in range(num_out):
+        i = k // 8
+        j = k % size_figure_grid
+        ax[i, j].cla()
+        ax[i, j].imshow(np.reshape(test_images[k], (featureDim, featureDim)), cmap='gray')
+    #label = 'Epoch {0}'.format(num_epoch)
+    #fig.text(0.5, 0.04, label, ha='center')
+    if save:
+        os.chdir(path)
+        plt.savefig(name)
+    if show:
+        plt.show()
+    else:
+        plt.close() 
 #%% import data
 train_tfrecord_filename = os.path.join(os.path.join(dataPath,relTrainDataPath),'train'+str(numOutputs)+'.tfrecords')
 test_tfrecord_filename = os.path.join(os.path.join(dataPath,relTrainDataPath),'test'+str(numOutputs)+'.tfrecords')
@@ -68,7 +98,15 @@ conv2Activations = graph.get_tensor_by_name("conv_2/Relu:0")
 getBottleneck = graph.get_tensor_by_name("add:0")
 print("took ",t.time()-start," seconds\n")
 
-#%%
+#%% extract  feature maps
 images,labels=sess.run([train_image_batch,train_label_batch])
 layer1Activations=sess.run(conv1Activations,feed_dict={x: images, keep_prob: 1.0})
 layer2Activations=sess.run(conv2Activations,feed_dict={x: images, keep_prob: 1.0})
+#%%process feature maps
+removeAndSwapAxes(layer1Activations)
+removeAndSwapAxes(layer2Activations)
+fF.saveNPZ(os.path.join(dataPath,relSavePath),"features_raw_"+saveName+".npz",\
+           image=np.reshape(images,(inputDim,inputDim)),layer1=layer1Activations,layer2=layer2Activations)
+show_result(layer1Activations, inputDim,32,os.path.join(dataPath,relSavePath),"layer1Features.jpg",True,True)
+show_result(layer2Activations, inputDim/2,64,os.path.join(dataPath,relSavePath),"layer2Features.jpg",True,True)
+
