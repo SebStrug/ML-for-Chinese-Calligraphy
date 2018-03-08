@@ -97,6 +97,7 @@ def makeDir(baseLOGDIR,name,numOutputs,learningRate,trainBatchSize):
             LOGDIR = baseLOGDIR + str(datetime.date.today()) + '/' + name + \
                 '_run_' + str(run_number) +  '/' + '/Outputs{}_LR{}_Batch{}'\
                 .format(numOutputs,learningRate,trainBatchSize)
+    print("Directory of LOGDIR: {}".format(LOGDIR))
     return LOGDIR
 
         
