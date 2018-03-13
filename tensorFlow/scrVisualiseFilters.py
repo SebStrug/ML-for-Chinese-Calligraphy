@@ -40,7 +40,7 @@ def removeAndSwapAxes(array):
     boo=np.swapaxes(foo,1,2)
     return boo
     
-def show_result(features,featureDim, num_out, path, name, show = False, save = False):
+def show_activations(features,featureDim, num_out, path, name, show = False, save = False):
     test_images = features
 
     size_figure_grid = int(num_out/8) #output 25 images in a 5x5 grid
@@ -98,7 +98,8 @@ conv1Weights = graph.get_tensor_by_name("conv_1/Variable:0")
 conv2Activations = graph.get_tensor_by_name("conv_2/Relu:0")
 conv2Weights = graph.get_tensor_by_name("conv_2/Variable:0")
 #accuracy=graph.get_tensor_by_name("accuracy/Mean:0")
-getBottleneck = graph.get_tensor_by_name("add:0")
+getBottleneck = graph.get_tensor_by_name("dropout/dropout/mul:0")
+output = graph.get_tensor_by_name("add:0")
 print("took ",t.time()-start," seconds\n")
 
 #%% extract  feature maps
@@ -111,11 +112,26 @@ bottlenecks = sess.run(getBottleneck,feed_dict={x: images, keep_prob: 1.0})
 #%%process feature maps
 layer1Activations=removeAndSwapAxes(layer1Activations)
 layer2Activations=removeAndSwapAxes(layer2Activations)
+#save activations, weights, bottlenecks and outputs
 fF.saveNPZ(os.path.join(dataPath,relSavePath),"features_raw_{}".format(numImages)+saveName+".npz",\
            images=np.reshape(images,(numImages,inputDim,inputDim)),\
            layer1=layer1Activations,weight1=layer1Weights,\
            layer2=layer2Activations,weight2=layer2Weights,\
            bottlenecks=bottlenecks)
-show_result(layer1Activations, inputDim,32,os.path.join(dataPath,relSavePath),"layer1Features.jpg",True,True)
-show_result(layer2Activations, inputDim/2,64,os.path.join(dataPath,relSavePath),"layer2Features.jpg",True,True)
+#find for each feature the image that creaates the highest activation.  
+layer1Highest = []
+layer2Highest = []
+activationTot = np.sum(layer1Activations,axis=(2,3))
+maxIndices = np.argmax(activationTot,axis=0)
+for i in range(0,32):
+        layer1Highest.append(layer1Activations[maxIndices[i]][i])
+        
+activationTot = np.sum(layer2Activations,axis=(2,3))
+maxIndices = np.argmax(activationTot,axis=0)
+for i in range(0,64):
+        layer1Highest.append(layer2Activations[maxIndices[i]][i])
+    
+    
+show_activations(layer1Highest, inputDim,32,os.path.join(dataPath,relSavePath),"layer1Features.jpg",True,True)
+show_activations(layer2Highest, inputDim/2,64,os.path.join(dataPath,relSavePath),"layer2Features.jpg",True,True)
 
