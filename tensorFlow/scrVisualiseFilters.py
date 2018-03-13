@@ -33,11 +33,11 @@ import time as t
 import matplotlib.pyplot as plt
 import itertools 
 
-numImages = 1
+numImages = 128
 #%%Func defs
 def removeAndSwapAxes(array):
-    foo = array[0]
-    array=np.swapaxes(np.swapaxes(foo,1,2),0,1)
+    foo = array
+    array=np.swapaxes(np.swapaxes(foo,2,3),1,2)
     
 def show_result(features,featureDim, num_out, path, name, show = False, save = False):
     test_images = features
@@ -93,7 +93,9 @@ x=graph.get_tensor_by_name("images:0")
 y_=graph.get_tensor_by_name("labels:0")
 keep_prob=graph.get_tensor_by_name("dropout/dropout/keep_prob:0")
 conv1Activations = graph.get_tensor_by_name("conv_1/Relu:0")
+conv1Weights = graph.get_tensor_by_name("conv_1/Varaible:0")
 conv2Activations = graph.get_tensor_by_name("conv_2/Relu:0")
+conv2Weights = graph.get_tensor_by_name("conv_2/Varaible:0")
 #accuracy=graph.get_tensor_by_name("accuracy/Mean:0")
 getBottleneck = graph.get_tensor_by_name("add:0")
 print("took ",t.time()-start," seconds\n")
@@ -101,12 +103,14 @@ print("took ",t.time()-start," seconds\n")
 #%% extract  feature maps
 images,labels=sess.run([train_image_batch,train_label_batch])
 layer1Activations=sess.run(conv1Activations,feed_dict={x: images, keep_prob: 1.0})
+layer1Weights=sess.run(conv1Weights)
 layer2Activations=sess.run(conv2Activations,feed_dict={x: images, keep_prob: 1.0})
+layer2Weights=sess.run(conv2Weights)
 #%%process feature maps
 removeAndSwapAxes(layer1Activations)
 removeAndSwapAxes(layer2Activations)
-fF.saveNPZ(os.path.join(dataPath,relSavePath),"features_raw_"+saveName+".npz",\
-           image=np.reshape(images,(inputDim,inputDim)),layer1=layer1Activations,layer2=layer2Activations)
+fF.saveNPZ(os.path.join(dataPath,relSavePath),"features_raw_{}".format(numImages)+saveName+".npz",\
+           images=np.reshape(images,(inputDim,inputDim)),layer1=layer1Activations,weight1=layer1Weights,layer2=layer2Activations,weight2=layer2Weights)
 show_result(layer1Activations, inputDim,32,os.path.join(dataPath,relSavePath),"layer1Features.jpg",True,True)
 show_result(layer2Activations, inputDim/2,64,os.path.join(dataPath,relSavePath),"layer2Features.jpg",True,True)
 

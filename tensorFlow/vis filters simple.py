@@ -4,7 +4,8 @@ Created on Thu Mar  8 15:57:32 2018
 
 @author: ellio
 """
-
+#This script is like scrVisualiseFilters but doesnt load the graph, only modifies 
+#loaded in activations and weights
 #%% Imports and paths
 import os
 gitHubRep = os.path.normpath(os.getcwd() + os.sep + os.pardir)# find github path
