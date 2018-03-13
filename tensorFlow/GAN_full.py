@@ -6,6 +6,7 @@ Generative Adversarial network with the discriminator only
 import os
 import glob
 import time
+import math
 import itertools
 import imageio
 import numpy as np
@@ -19,12 +20,14 @@ from classDataManip import makeDir
 #reset the existing graph << start of any tensorflow code!
 tf.reset_default_graph() 
 
+#%% Set all parameters
+
 # initialise the parameters
 inputDim = 48
-num_output = 10
+num_output = 100
 batch_size = 128
-num_epochs = 100
-learning_rate = 1e-4
+num_epochs = 1000
+learning_rate = 1e-4 # I manually set learning rates to 1e-3 for generator, 1e-4 for discriminator
 images_out = 3  #images_out**2: number of test images produced
 paramStruct = namedtuple("ModelParameters","inputDim num_output, \
                          batch_size, num_epochs, learning_rate, images_out")
@@ -35,14 +38,19 @@ print(parameters); print("\n");
 
 localPath = 'C:\\Users\\Sebastian\\Desktop\\MLChinese\\CASIA\\1.0' #local data path
 savePath = 'C:/Users/Sebastian/Desktop/MLChinese/Saved_runs/' #path to save tensorboard data to
-name_of_run = 'full_GAN' 
+name_of_run = 'testing' # updates the generator twice for every discriminator update
 
 def generate_gif(): #run this after you're finished to generate a gif for the images produced
     images = []
-    for filename in glob.glob(LOGDIR+'/Image_outputs' + '/*.png'): #assuming gif
-        im=Image.open(filename)
+    filenames = [i for i in glob.glob(LOGDIR+'/Image_outputs' + '/*.png')]
+    sorted_files = sorted(filenames, key = lambda x: int(x.split('DCGAN_')[1][:-4]))
+    print(sorted_files)
+    for i in sorted_files:
+        im = Image.open(i)
         images.append(np.array(im))
     imageio.mimsave(LOGDIR + '/Image_outputs/' + 'generation_animation.gif', images, fps=3)
+    
+#%% The network
 
 # Discriminator, D(x)
 # reuse must be set to true by default
@@ -189,8 +197,8 @@ G_vars = [var for var in T_vars if var.name.startswith('generator')]
 print("Creating the optimizer...")
 with tf.name_scope("Train"):
     with tf.control_dependencies(tf.get_collection(tf.GraphKeys.UPDATE_OPS)):
-        D_optim = tf.train.AdamOptimizer(learning_rate, beta1=0.5).minimize(D_loss, var_list=D_vars)
-        G_optim = tf.train.AdamOptimizer(learning_rate, beta1=0.5).minimize(G_loss, var_list=G_vars)
+        D_optim = tf.train.AdamOptimizer(1e-4, beta1=0.5).minimize(D_loss, var_list=D_vars)
+        G_optim = tf.train.AdamOptimizer(1e-3, beta1=0.5).minimize(G_loss, var_list=G_vars)
     
 # Create a saver to save these summary operations
 saver = tf.train.Saver()
@@ -219,33 +227,49 @@ with tf.Session() as sess: # or tf.InteractiveSession() ?
     step = 0
     try:
         while True:
-            # update discriminator
+            # get inputs
             x_, train_labels = sess.run([image_batch, label_batch])
             #print("Output images: {}".format(x_))
             z_ = np.random.normal(0, 1, (batch_size, 1, 1, 100))
-            loss_d_, _, discrim_summary = sess.run([D_loss, D_optim, D_summary], \
+            
+            if step % 10 == 0: #get summaries every 10th step
+                #update discriminator
+                loss_d_, _, discrim_summary = sess.run([D_loss, D_optim, D_summary], \
                                                    {x: x_, z: z_, isTrain: True})
-            print("Step: {}, Discriminator loss: {:.3}".format(step, loss_d_))
+                print("Step: {}, Discriminator loss: {:.3}".format(step, loss_d_))
+                discrim_writer.add_summary(discrim_summary, step)
+                
+                # update generator
+                z_ = np.random.normal(0, 1, (batch_size, 1, 1, 100))
+                loss_g_, _, gen_summary = sess.run([G_loss, G_optim, G_summary], \
+                                                   {z: z_, x: x_, isTrain: True})
+                gen_writer.add_summary(gen_summary, step)
+                loss_g_, _, gen_summary = sess.run([G_loss, G_optim, G_summary], \
+                                                   {z: z_, x: x_, isTrain: True})
+                print("Step: {}, Generator loss: {:.3}".format(step, loss_g_))
+                gen_writer.add_summary(gen_summary, step+1)
             
-            # update generator
-            z_ = np.random.normal(0, 1, (batch_size, 1, 1, 100))
-            loss_g_, _, gen_summary = sess.run([G_loss, G_optim, G_summary], \
-                                               {z: z_, x: x_, isTrain: True})
-            print("Step: {}, Generator loss: {:.3}".format(step, loss_g_))
-            
-            if step % 10 == 0: ## epoch = math.floor(numFiles/batch_size)
+            else: #if not at 10th step don't bother getting summaries
+                loss_d_, _, discrim_summary = sess.run([D_loss, D_optim, D_summary], \
+                                                   {x: x_, z: z_, isTrain: True})
+                print("Step: {}, Discriminator loss: {:.3}".format(step, loss_d_))
+                
+                # update generator
+                z_ = np.random.normal(0, 1, (batch_size, 1, 1, 100))
+                loss_g_, _, gen_summary = sess.run([G_loss, G_optim, G_summary], \
+                                                   {z: z_, x: x_, isTrain: True})
+                loss_g_, _, gen_summary = sess.run([G_loss, G_optim, G_summary], \
+                                                   {z: z_, x: x_, isTrain: True})
+                print("Step: {}, Generator loss: {:.3}".format(step, loss_g_))
+                
+            if step % 20 == 0: #if also at the 20th step, produce an output
                 print("Showing a generated result for step {}...".format(step))
-                print("Currently at epoch {:.1}".format(numFiles/(parameters.batch_size*step)))
+                print("Currently at epoch {}".format(math.floor((parameters.batch_size*step)/numFiles)))
                 fixed_p = LOGDIR + '/Image_outputs/' + 'DCGAN_' + str(step) + '.png'
                 show_result(images_out, show=True, save=True, path=fixed_p)
-                
-                discrim_writer.add_summary(discrim_summary, step)
-                gen_writer.add_summary(gen_summary, step)
-                
-                
-            if step % 20 == 0:
                 saver.save(sess, os.path.join(LOGDIR, "DLoss{:.3}_GLoss{:.3}.ckpt".\
-                                                  format(loss_d_, loss_g_)))        
+                                                  format(loss_d_, loss_g_))) 
+       
             step += 1
             
     except tf.errors.OutOfRangeError:
