@@ -44,13 +44,13 @@ def show_activations(features,featureDim, num_out, path, name, show = False, sav
     test_images = features
 
     size_figure_grid = int(num_out/8) #output 25 images in a 5x5 grid
-    fig, ax = plt.subplots(8, size_figure_grid, figsize=(8, int(num_out/8)))
+    fig, ax = plt.subplots(8, size_figure_grid, figsize=(8, int(8*8/size_figure_grid)))
     for i, j in itertools.product(range(8), range(size_figure_grid)):
         ax[i, j].get_xaxis().set_visible(False)
         ax[i, j].get_yaxis().set_visible(False)
 
     for k in range(num_out):
-        i = k // 8
+        i = k // size_figure_grid
         j = k % size_figure_grid
         ax[i, j].cla()
         ax[i, j].imshow(np.reshape(test_images[k], (featureDim, featureDim)), cmap='gray')
@@ -124,14 +124,14 @@ layer2Highest = []
 activationTot = np.sum(layer1Activations,axis=(2,3))
 maxIndices = np.argmax(activationTot,axis=0)
 for i in range(0,32):
-        layer1Highest.append(layer1Activations[maxIndices[i]][i])
+        layer1Highest.append(layer1Activations[int(maxIndices[i])][i])
         
 activationTot = np.sum(layer2Activations,axis=(2,3))
 maxIndices = np.argmax(activationTot,axis=0)
 for i in range(0,64):
-        layer1Highest.append(layer2Activations[maxIndices[i]][i])
+        layer2Highest.append(layer2Activations[int(maxIndices[i])][i])
     
     
 show_activations(layer1Highest, inputDim,32,os.path.join(dataPath,relSavePath),"layer1Features.jpg",True,True)
-show_activations(layer2Highest, inputDim/2,64,os.path.join(dataPath,relSavePath),"layer2Features.jpg",True,True)
+show_activations(layer2Highest, inputDim//2,64,os.path.join(dataPath,relSavePath),"layer2Features.jpg",True,True)
 
