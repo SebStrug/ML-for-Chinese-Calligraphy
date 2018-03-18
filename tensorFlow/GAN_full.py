@@ -36,8 +36,10 @@ parameters = paramStruct(inputDim, num_output, \
 train_kwargs = {"normalize_images": True, "augment_images": False, "shuffle_data": True}
 print(parameters); print("\n");
 
-localPath = 'C:\\Users\\Sebastian\\Desktop\\MLChinese\\CASIA\\1.0' #local data path
-savePath = 'C:/Users/Sebastian/Desktop/MLChinese/Saved_runs/' #path to save tensorboard data to
+#localPath = 'C:\\Users\\Sebastian\\Desktop\\MLChinese\\CASIA\\1.0' #local data path
+#savePath = 'C:/Users/Sebastian/Desktop/MLChinese/Saved_runs/' #path to save tensorboard data to
+localPath = 'C:\\Users\ellio\\Documents\\training data\\Machine learning data\\TFrecord'
+savePath = 'C:\\Users\\ellio\\Anaconda3\\Lib\\site-packages\\tensorflow\\tmp\\GAN'
 name_of_run = 'testing' # updates the generator twice for every discriminator update
 
 def generate_gif(): #run this after you're finished to generate a gif for the images produced
