@@ -15,16 +15,16 @@ from classFileFunctions import fileFunc as fF
 os.chdir(os.path.join(gitHubRep,"tensorFlow/"))
 from InputTFRecord import inputs
 #set other variables
-inputDim = 40
-inputChars= 30#number of unique characters in dataset
-numOutputs= 10#number of outputs in original network
+inputDim = 48
+inputChars= 3866#number of unique characters in dataset
+numOutputs= 100#number of outputs in original network
 bottleneckLength = 1024
 #set paths and file names
 dataPath, LOGDIR, rawDatapath = fF.whichUser("Elliot")
 relTrainDataPath = "Machine learning data/TFrecord"#path of training data relative to datapath in classFileFunc
 relBottleneckSavePath = "Machine learning data/bottlenecks" #path for saved bottlenecks relative to dataPath
-relModelPath = 'TF_record_CNN/Outputs10_LR0.001_Batch128'# path of loaded model relative to LOGDIR
-modelName="LR0.001_Iter7020_TestAcc0.992.ckpt"#name of ckpt file with saved model
+relModelPath = '2_Conv/Outputs100_LR0.001_Batch128'# path of loaded model relative to LOGDIR
+modelName="LR0.001_Iter27720_TestAcc0.86.ckpt"#name of ckpt file with saved model
 SaveName = "CNN_LR0.001_BS128"#name for saved bottlenecks
 #import modules
 import tensorflow as tf
@@ -38,7 +38,9 @@ test_tfrecord_filename = os.path.join(os.path.join(dataPath,relTrainDataPath),'t
  #%% Open a tensorflow session
 print("Importing graph.....")
 start = t.time()
+tf.reset_default_graph()
 sess = tf.InteractiveSession()
+
 # Initialise all variables
 #tf.global_variables_initializer().run()
 loadLOGDIR = os.path.join(LOGDIR,relModelPath)
@@ -54,9 +56,9 @@ test_image_batch, test_label_batch = inputs('test',test_tfrecord_filename,bottle
     
 x=graph.get_tensor_by_name("images:0")
 y_=graph.get_tensor_by_name("labels:0")
-keep_prob=graph.get_tensor_by_name("dropout/keep_prob:0")
+keep_prob=graph.get_tensor_by_name("keep_prob:0")
 #accuracy=graph.get_tensor_by_name("accuracy/Mean:0")
-getBottleneck = graph.get_tensor_by_name("fc1/bottleneck:0")
+getBottleneck = graph.get_tensor_by_name("fc_1/Relu:0")
 
 print("took ",t.time()-start," seconds\n")
 
