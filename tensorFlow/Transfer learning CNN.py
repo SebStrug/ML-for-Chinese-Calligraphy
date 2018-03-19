@@ -22,8 +22,10 @@ import tensorflow as tf
 import time as t
 #set other variables
 bottleneckLength = 1024
-oldNumOutputs = 10
-newNumOutputs = 30      
+oldNumOutputs = 100
+newNumOutputs = 3866
+trainFiles = 4
+testFiles = 1   
 saveName = "finalLayerCNN"          
 #%%Import the data
 print("Importing the data...")
