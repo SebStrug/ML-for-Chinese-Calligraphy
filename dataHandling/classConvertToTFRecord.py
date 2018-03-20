@@ -80,34 +80,87 @@ class convertToTFRecord:
                             saveImagePath+"\\test",dataForSaving,enumeratedList)
                 else:
                     print("Error, file name not in train or test")
-                print("Time taken to process one file: {}".format(time.time()-start_time))
+                print("Time taken to process one file: {}\n".format(time.time()-start_time))
                 step += 1
                     
+    def processGNTasImageGeneric(saveImagePath,gntPath,imageSize,trainGNT,testGNT):
+        """Processes training and test files into one tfrecord rather than saving images/labels separately"""
+        totalFiles = 0
+        for subdir, dirs, filenames in os.walk(gntPath):
+            totalFiles += len(filenames)
+        print("{} .gnt files".format(totalFiles))
+        
+        #create train and test folders
+        if not os.path.exists(saveImagePath+"\\generic"):
+            os.mkdir(saveImagePath+"\\generic")
+        
+        step = 0
+        for subdir, dirs, filenames in os.walk(gntPath):
+            for file in filenames:
+                start_time = time.time()
+                print(file) #print the filename
+                fullpath = os.path.join(subdir, file)
+                with open(fullpath, 'rb') as openFile:
+                    byteInfo = fF.readByte(fullpath) #read in file as bytes
+                    openFile.close()
+                dataInfo = fF.infoGNT(byteInfo) #get the info for one file
+                #extract characters, images
+                dataForSaving = fF.arraysFromGNT(byteInfo,dataInfo,imageSize)
+                del byteInfo; del dataInfo
+                if step == 0:
+                    enumeratedList = []
+                    for i in range(len(dataForSaving[0])):
+                        #dataForSaving[0][i] denotes each character
+                        if dataForSaving[0][i] not in enumeratedList:
+                            enumeratedList.append(dataForSaving[0][i])
+                
+                if int(file[:file.index('-f.gnt')]) in trainGNT:
+                    print('Saving training images as generic...')
+                    convertToTFRecord.saveImages(\
+                            saveImagePath+"\\generic",dataForSaving,enumeratedList)
+                elif int(file[:file.index('-f.gnt')]) in testGNT:
+                    print('Saving testing images as generic...')
+                    convertToTFRecord.saveImages(\
+                            saveImagePath+"\\generic",dataForSaving,enumeratedList)
+                else:
+                    print("Error, file name not in train or test")
+                print("Time taken to process one file: {}\n".format(time.time()-start_time))
+                step += 1
+    
     #Read in the addresses, and convert the image names into actual labels
     def convLabels(saveImagePath,trainType,addrs):
         #label each file, first remove the '_copy0'
         labels = [addr[0:addr.index('_')] for addr in addrs]
+        print('First conversion: {}'.format(labels[0:2]))
         #then remove the first part
         labels = [int(x.replace(saveImagePath+"\\"+trainType+"\\","")) for x in labels]
+        print('Second conversion: {}'.format(labels[0:2]))
         return labels
      
     #Now we only want to save 10 unique characters
     def generateUniqueAddrs(saveImagePath,numUnique,trainType,addrs_labels):
         """We are going to generate 10 unique characters in the addrs and labels"""
-        print("Saving only {} unique characters for ".format(numUnique) + trainType)
+        print("Saving only {} unique characters for {}".format(numUnique,trainType))
         train_addrs = addrs_labels[0]
         train_labels = addrs_labels[1]
         test_addrs = addrs_labels[2]
         test_labels = addrs_labels[3]
-        startNum = 171
+        generic_addrs = addrs_labels[4]
+        generic_labels = addrs_labels[5]
+        startNum = 171 #skip the alphanumeric characters
+        print('Type of data is: {}'.format(trainType))
         if trainType == 'train':
             labels = train_labels
             addrs = train_addrs
         elif trainType == 'test':
             labels = test_labels
             addrs = test_addrs
+        elif trainType == 'generic':
+            labels = generic_labels
+            addrs = generic_addrs
         else:
-            raise ValueError("Error, not running train or test labels, exiting")
+            raise ValueError("Error, not running train, test, or generic labels, exiting")
+            exit()
         
         unique_labels = list(set(labels))[startNum:numUnique+startNum] #skip non-Chinese chars
         unique_addrs = []
@@ -169,7 +222,27 @@ class convertToTFRecord:
             # Serialize to string and write on the file
             writer.write(example.SerializeToString())
         writer.close()
-    
+        
+    def generateGenericTFRecord(addrs,labels,numOutputs):
+        """Processes training and test files into one tfrecord rather than saving images/labels separately"""
+        print("Generating TFRecord containing training and test files for {} outputs...".format(numOutputs))
+        filename = 'generic'+str(numOutputs)+'.tfrecords'
+        writer = tf.python_io.TFRecordWriter(filename)
+        labels = [i-171 for i in labels] #to start from Chinese characters, ignore alphanumeric
+        for i in range(len(addrs)):
+            # Load the image
+            img = Image.open(addrs[i])
+            img = np.array(img)
+            label = labels[i]
+            # Create a feature
+            feature = {'label': convertToTFRecord._int64_feature(label),
+                       'image': convertToTFRecord._bytes_feature(tf.compat.as_bytes(img.tostring()))}
+            # Create an example protocol buffer
+            example = tf.train.Example(features=tf.train.Features(feature=feature))
+            # Serialize to string and write on the file
+            writer.write(example.SerializeToString())
+        writer.close()        
+        
     # Delete the saved images so they don't take up space
     def delete_images(saveImagePath):
         for the_file in os.listdir(saveImagePath):

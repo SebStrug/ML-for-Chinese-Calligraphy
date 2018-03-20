@@ -8,7 +8,8 @@ import glob
 
 gitHubRep = os.path.normpath(os.getcwd() + os.sep + os.pardir)# find github path
 #import own functions and classes
-os.chdir(os.path.join(gitHubRep,"dataHandling/"))
+#os.chdir(os.path.join(gitHubRep,"dataHandling/")) # << doesn't work for Seb
+os.chdir('C:/Users/Sebastian/Desktop/GitHub/ML-for-Chinese-Calligraphy/dataHandling')
 
 from classConvertToTFRecord import convertToTFRecord as cTF
 
@@ -16,8 +17,8 @@ from classConvertToTFRecord import convertToTFRecord as cTF
 imageSize = 48 #size of characters desired
 
 # Main path containing gnt files, folders, and so on.
-#mainPath = "C:\\Users\\Sebastian\\Desktop\\MLChinese\\CASIA\\1.0"
-mainPath = 'C:\\Users\\ellio\\Documents\\training data\\Machine learning data'
+mainPath = "C:\\Users\\Sebastian\\Desktop\\MLChinese\\CASIA\\1.0"
+#mainPath = 'C:\\Users\\ellio\\Documents\\training data\\Machine learning data'
 
 # Path containing gnt files
 dataPath = mainPath + '\\1.0 test'
@@ -26,6 +27,10 @@ gntPath = dataPath
 
 # Path to save the images to
 saveImagePath = mainPath + "\\savedImages"
+
+#Choose to generate TFRecords for a GAN or Neural net
+# what_net = 'Neural'
+what_net = 'GAN'
 
 #%%Check if the .gnt file is supposed to be training or test
 def checkTrainTest():
@@ -36,36 +41,68 @@ def checkTrainTest():
         trainGNT = [int(line.split()[0]) for line in file]
     return testGNT, trainGNT
 
+#read directories of each image in training, and get their corresponding labels
+def read_dir(saveImagePath):
+    train_addrs = glob.glob(saveImagePath+"\\train\\*.png")
+    train_labels = cTF.convLabels(saveImagePath,'train',train_addrs)
+    #now repeat for the test files
+    test_addrs = glob.glob(saveImagePath+"\\test\\*.png")
+    test_labels = cTF.convLabels(saveImagePath,'test',test_addrs)
+    #now a combination of train and test for the .gnt files
+    generic_addrs = glob.glob(saveImagePath+"\\generic\\*.png")
+    generic_labels = cTF.convLabels(saveImagePath,'generic',generic_addrs)
+    #store as single array for readability
+    addrs_labels = [train_addrs, train_labels, test_addrs, test_labels, generic_addrs, generic_labels] 
+
+    numUniq = 0; numTotal = 0;
+    for i in addrs_labels:
+        numUniq += len(list(set(i)) + list(set(i)))
+        numTotal += len(i) + len(i)
+    print("Number of unique characters in training and test: {}".format(numUniq))
+    print("Total number of samples in training and test: {}".format(numTotal))
+    print("Average number of samples per character: {}\n".format(numTotal/numUniq))
+    return addrs_labels
+
 #create a list of gnt files that will be split into training or test
 testGNT,trainGNT = checkTrainTest()
 
 #process the images from the .gnt files and save them (as images)
 #this is the majority of the processing
-cTF.processGNTasImage(saveImagePath,gntPath,imageSize,trainGNT,testGNT)                
+if what_net == 'Neural':
+    #for the neural nets/supervised learning
+    print("Processing for a neural net")
+    cTF.processGNTasImage(saveImagePath,gntPath,imageSize,trainGNT,testGNT)
+    # Saves training and test files as tfrecords separately, for supervised learning
+    #save TFRecord files containing the following numbers of unique Chinese characters
+    for numOutputs in [10,20,30,50,100]:
+        #generate the addresses and corresponding labels of all Chinese characters 
+        #that are in the set of X unique Chinese characters being saved
+        addrs_labels = read_dir(saveImagePath)
+        unique_train_addrs, unique_train_labels = \
+            cTF.generateUniqueAddrs(saveImagePath,numOutputs,'train',addrs_labels)
+        unique_test_addrs, unique_test_labels = \
+                cTF.generateUniqueAddrs(saveImagePath,numOutputs,'test',addrs_labels)
+        os.chdir(mainPath)
+        cTF.generateTrainTFRecord(unique_train_addrs,unique_train_labels,numOutputs)
+        cTF.generateTestTFRecord(unique_test_addrs,unique_test_labels,numOutputs)
+    
+elif what_net == 'GAN':
+    # for the GAN
+    print("Processing for a GAN")
+    cTF.processGNTasImageGeneric(saveImagePath,gntPath,imageSize,trainGNT,testGNT) 
+    # This is for processing the images into a generic tfrecords file, that lumps together training and test
+    # this is for the GAN
+    for numOutputs in [3866]:
+        #generate the addresses and corresponding labels of all Chinese characters 
+        #that are in the set of X unique Chinese characters being saved
+        addrs_labels = read_dir(saveImagePath)
+        unique_addrs, unique_labels = cTF.generateUniqueAddrs(saveImagePath,numOutputs,'generic',addrs_labels)
+        os.chdir(mainPath)
+        cTF.generateGenericTFRecord(unique_addrs,unique_labels,numOutputs)       
 
+else: 
+    print("Did not choose Neural or GAN, exiting")
+    
 #%%
-#read directories of each image in training, and get their corresponding labels
-train_addrs = glob.glob(saveImagePath+"\\train\\*.png")
-train_labels = cTF.convLabels(saveImagePath,'train',train_addrs)
-#now repeat for the test files
-test_addrs = glob.glob(saveImagePath+"\\test\\*.png")
-test_labels = cTF.convLabels(saveImagePath,'test',test_addrs)
-addrs_labels = [train_addrs,train_labels,test_addrs,test_labels] #store as single array for readability
-
-print("Number of unique characters: {}".format(len(list(set(train_labels)))))
-print("Total number of samples: {}".format(len(train_labels)))
-
-#save TFRecord files containing the following numbers of unique Chinese characters
-for numOutputs in [10,20,30,50,100]:
-    #generate the addresses and corresponding labels of all Chinese characters 
-    #that are in the set of X unique Chinese characters being saved
-    unique_train_addrs, unique_train_labels = \
-        cTF.generateUniqueAddrs(saveImagePath,numOutputs,'train',addrs_labels)
-    unique_test_addrs, unique_test_labels = \
-            cTF.generateUniqueAddrs(saveImagePath,numOutputs,'test',addrs_labels)
-    os.chdir(mainPath)
-    cTF.generateTrainTFRecord(unique_train_addrs,unique_train_labels,numOutputs)
-    cTF.generateTestTFRecord(unique_test_addrs,unique_test_labels,numOutputs)
-
 #delete the saved images
 #cTF.delete_images(saveImagePath)
