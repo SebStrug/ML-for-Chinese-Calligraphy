@@ -70,12 +70,10 @@ print("took ",t.time()-start," seconds\n")
 #train data
 print("Extracting Bottlenecks for train data......")
 start=t.time()
-trainBottlenecks=np.zeros((0,bottleneckLength))
-trainLabels = np.asarray([])
-
 try:
     print("Extracting batches.....")
     start = t.time()
+    f=h.File(bottleneckPath,"bottleneck_"+SaveName+"_{}to{}chars_train".format(numOutputs,inputChars))
     while True:
         trainImageBatch,trainLabelBatch=sess.run([train_image_batch,train_label_batch])
         bottleneckBatch=sess.run(getBottleneck,feed_dict={x: trainImageBatch, keep_prob: 1.0})
