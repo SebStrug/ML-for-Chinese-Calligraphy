@@ -27,6 +27,7 @@ class buildNet(object):
     def weight_variable(shape):
         """weight_variable generates a weight variable of a given shape."""
         initial = tf.truncated_normal(shape, stddev=0.1)
+        print("Weights shape: {}".format(initial))
         tf.summary.histogram("weights", initial)
         return tf.Variable(initial)
 
@@ -39,6 +40,7 @@ class buildNet(object):
     def conv2d(x, W, stride_input, padding_type):
         """conv2d returns a 2d convolution layer with full stride."""  
         #stride_input in form [2,2], or [1,1]
+        #tf.summary.image("weights_image",W)
         return tf.nn.conv2d(x, W, strides=[1] + stride_input + [1], padding = padding_type)
     
     def deconv2d(x, W, output_dim, stride_input, padding_type):

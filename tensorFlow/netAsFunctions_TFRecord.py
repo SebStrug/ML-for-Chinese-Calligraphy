@@ -111,7 +111,21 @@ def run_training():
         #initialise the variables
         sess.run(init_op)
         maxAccuracy=0
-        start_time = time.time()  
+        start_time = time.time() 
+        
+        #visualise conv_1 features
+        with tf.variable_scope('conv_1') as scope_conv:
+            weights = tf.get_variable('weights')
+            # scale weights to [0 255] and convert to uint8 (maybe change scaling?)
+            x_min = tf.reduce_min(weights)
+            x_max = tf.reduce_max(weights)
+            weights_0_to_1 = (weights - x_min) / (x_max - x_min)
+            weights_0_to_255_uint8 = tf.image.convert_image_dtype (weights_0_to_1, dtype=tf.uint8)
+            # to tf.image_summary format [batch_size, height, width, channels]
+            weights_transposed = tf.transpose (weights_0_to_255_uint8, [train_batch_size, 48, 48, 32])
+            # this will display random 3 filters from the 64 in conv1
+            tf.image_summary('conv_1/weights', weights_transposed, max_images=10)
+        
         try:
             step = 0
             while True: #train until we run out of epochs
@@ -143,6 +157,8 @@ def run_training():
                 sess.run(train_step, feed_dict={x: train_images,\
                                                 y_: tf.one_hot(train_labels,num_output).eval(),\
                                                 keep_prob:0.5})              
+                    
+    
                 step += 1
         except tf.errors.OutOfRangeError:
             duration = time.time() - start_time
@@ -168,7 +184,7 @@ savePath = 'C:\\Users\\Sebastian\\Desktop\\MLChinese\\Saved_runs\\'
 localPath = 'C:\\Users\\Sebastian\\Desktop\\MLChinese\\CASIA\\1.0'
 
 
-name_of_run = 'testing_code'
+name_of_run = 'testing_weights_image'
 
 for num_output in num_output_list:
     train_tfrecord_filename = \
