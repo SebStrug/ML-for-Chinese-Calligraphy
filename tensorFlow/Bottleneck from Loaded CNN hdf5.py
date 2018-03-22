@@ -20,7 +20,6 @@ inputChars= 3866#number of unique characters in dataset
 numOutputs= 100#number of outputs in original network
 bottleneckLength = 1024
 batchSize = 1024
-batchesPerFile = 320
 #set paths and file names
 dataPath, LOGDIR, rawDatapath = fF.whichUser("Elliot")
 relTrainDataPath = "Machine learning data/TFrecord"#path of training data relative to datapath in classFileFunc
@@ -28,10 +27,16 @@ relBottleneckSavePath = "Machine learning data/bottlenecks" #path for saved bott
 relModelPath = '2_Conv/Outputs100_LR0.001_Batch128'# path of loaded model relative to LOGDIR
 modelName="LR0.001_Iter27720_TestAcc0.86.ckpt"#name of ckpt file with saved model
 SaveName = "CNN_LR0.001_BS128"#name for saved bottlenecks
+
+bottleneckPath = os.path.join(dataPath,relBottleneckSavePath)
+
 #import modules
 import tensorflow as tf
 import numpy as np
 import time as t
+import h5py as h
+
+
 
 #%% import data
 train_tfrecord_filename = os.path.join(os.path.join(dataPath,relTrainDataPath),'train'+str(inputChars)+'.tfrecords')
@@ -66,59 +71,61 @@ print("took ",t.time()-start," seconds\n")
 
 
 #%% extract bottlencks
+#Create hdf5 file
+f=h.File(bottleneckPath+"/bottleneck_"+SaveName+"_{}to{}chars_train".format(numOutputs,inputChars),'w')
+f.create_group('train')
+f.create_group('test')
+f.close()
 
 #train data
 print("Extracting Bottlenecks for train data......")
 start=t.time()
 try:
+    f=h.File(bottleneckPath,"bottleneck_"+SaveName+"_{}to{}chars_train".format(numOutputs,inputChars),'w')
+    data=f.get('train')
+    b=data.create_dataset('bottlenecks',(0,bottleneckLength),chunks=True)
+    l=data.create_dataset('labels',(0,1),chunks=True)
     print("Extracting batches.....")
-    start = t.time()
-    f=h.File(bottleneckPath,"bottleneck_"+SaveName+"_{}to{}chars_train".format(numOutputs,inputChars))
     while True:
         trainImageBatch,trainLabelBatch=sess.run([train_image_batch,train_label_batch])
         bottleneckBatch=sess.run(getBottleneck,feed_dict={x: trainImageBatch, keep_prob: 1.0})
         trainImageBatch = 0
+        b.resize(b.shape[0]+batchSize, axis=0)   
+        b[-batchSize:] = bottleneckBatch
+        bottleneckBatch=0
+        l.resize(l.shape[0]+batchSize,axis=0)
+        l[-batchSize:] = trainLabelBatch
+        trainLabelBatch= 0 
+        
         
 except tf.errors.OutOfRangeError:
     print("done")
-    print("train data took ",t.time()-start2," seconds\n")
+    print("train data took ",t.time()-start," seconds\n")
+    f.close()
 
 #test data
 print("Extracting Bottlenecks for test data......")
-start2=t.time()
-testBottlenecks=np.zeros((0,bottleneckLength))
-testLabels = np.asarray([])
+start=t.time()
 try:
-    print("Extracting batch.....")
-    start = t.time()
-    i = 1
-    file=1
+    f=h.File(bottleneckPath+"/bottleneck_"+SaveName+"_{}to{}chars_train".format(numOutputs,inputChars),'w')
+    data=f.get('test')
+    b=data.create_dataset('bottlenecks',(0,bottleneckLength),chunks=True)
+    l=data.create_dataset('labels',(0,1),chunks=True)
+    print("Extracting batches.....")
     while True:
         testImageBatch,testLabelBatch=sess.run([test_image_batch,test_label_batch])
         bottleneckBatch=sess.run(getBottleneck,feed_dict={x: testImageBatch, keep_prob: 1.0})
         testImageBatch = 0
-        testBottlenecks=np.concatenate((testBottlenecks,bottleneckBatch),axis=0)
-        testLabels=np.concatenate((testLabels,testLabelBatch))
-        if i%batchesPerFile == 0 or len(testLabelBatch) != batchSize:
-            print("extraction took ",t.time()-start," seconds\n") 
-            print("Saving Test Bottlenecks.....")
-            start=t.time()
-            fF.saveNPZ(os.path.join(dataPath,relBottleneckSavePath),\
-                       "bottleneck_"+SaveName+"_{}to{}chars_test_pt{}".format(numOutputs,inputChars,int(file)),\
-                       bottlenecks=testBottlenecks,labels = testLabels )
-            bottleneckBatch = 0
-            testLabelBatch = 0
-            testBottlenecks=np.zeros((0,bottleneckLength))
-            testLabels = np.asarray([])
-            print("Save took ",t.time()-start," seconds\n")   
-            print("Extracting batches.....")
-            start = t.time()
-            file+=1
-        i+=1
-#        trainBottlenecks=np.concatenate((trainBottlenecks,bottleneckBatch),axis=0)
-#        trainLabels=np.concatenate((trainLabels,trainLabelBatch))
+        b.resize(b.shape[0]+batchSize, axis=0)   
+        b[-batchSize:] = bottleneckBatch
+        bottleneckBatch=0
+        l.resize(l.shape[0]+batchSize,axis=0)
+        l[-batchSize:] = testLabelBatch
+        testLabelBatch = 0 
+        
+        
 except tf.errors.OutOfRangeError:
     print("done")
-    print("test data took ",t.time()-start2," seconds\n")
-
+    print("train data took ",t.time()-start," seconds\n")
+    f.close()
 print("Whole process took ",t.time()-start1," seconds")
