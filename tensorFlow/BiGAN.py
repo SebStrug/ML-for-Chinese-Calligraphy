@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 """
+SEB PULL FROM THE ORIGIN
 Generative Adversarial network with the discriminator only
 """
 
@@ -14,6 +15,8 @@ import tensorflow as tf
 import matplotlib.pyplot as plt
 from PIL import Image
 from collections import namedtuple
+
+os.chdir('C:/Users/Sebastian/Desktop/GitHub/ML-for-Chinese-Calligraphy/tensorFlow')
 from InputTFRecord import inputs
 from classDataManip import makeDir
 
@@ -36,16 +39,16 @@ parameters = paramStruct(inputDim, num_output, \
 train_kwargs = {"normalize_images": True, "augment_images": False, "shuffle_data": True}
 print(parameters); print("\n");
 
-#localPath = 'C:\\Users\\Sebastian\\Desktop\\MLChinese\\CASIA\\1.0' #local data path
-#savePath = 'C:/Users/Sebastian/Desktop/MLChinese/Saved_runs/' #path to save tensorboard data to
-localPath = 'C:\\Users\ellio\\Documents\\training data\\Machine learning data\\TFrecord'
-savePath = 'C:\\Users\\ellio\\Anaconda3\\Lib\\site-packages\\tensorflow\\tmp\\GAN'
-name_of_run = 'testing' # updates the generator twice for every discriminator update
+localPath = 'C:\\Users\\Sebastian\\Desktop\\MLChinese\\CASIA\\1.0' #local data path
+savePath = 'C:/Users/Sebastian/Desktop/MLChinese/Saved_runs/' #path to save tensorboard data to
+#localPath = 'C:\\Users\ellio\\Documents\\training data\\Machine learning data\\TFrecord'
+#savePath = 'C:\\Users\\ellio\\Anaconda3\\Lib\\site-packages\\tensorflow\\tmp\\GAN'
+name_of_run = 'testing_BiGAN' # updates the generator twice for every discriminator update
 
 def generate_gif(): #run this after you're finished to generate a gif for the images produced
     images = []
     filenames = [i for i in glob.glob(LOGDIR+'/Image_outputs' + '/*.png')]
-    sorted_files = sorted(filenames, key = lambda x: int(x.split('DCGAN_')[1][:-4]))
+    sorted_files = sorted(filenames, key = lambda x: int(x.split('BiGAN_')[1][:-4]))
     print(sorted_files)
     for i in sorted_files:
         im = Image.open(i)
@@ -83,8 +86,9 @@ def discriminator_image(x, isTrain=True, reuse=False): #reuse=True by default?
         # need VALID padding so it reduces to a 1x1
         conv5 = tf.layers.conv2d(lrelu4, 512, [3, 3], strides=(1, 1), padding='valid')
         print("Conv5 shape: {}\n".format(conv5.get_shape()))
+        lrelu5 = tf.nn.leaky_relu(tf.layers.batch_normalization(conv5, training=isTrain))
 
-        return tf.nn.sigmoid(conv5), conv5
+        return lrelu5
     
 def discriminator_latent(z, isTrain=True, reuse=False):
      with tf.variable_scope('discriminator_latent', reuse=reuse): 
@@ -95,14 +99,14 @@ def discriminator_latent(z, isTrain=True, reuse=False):
          
          conv2 = tf.layers.conv2d(lrelu1, 512, [1,1], strides=(1,1),padding='same')
          print("Conv2 shape: {}\n".format(conv2.get_shape()))
-         lrelu2 = tf.nn.leaky_relu(conv2)
+         lrelu2 = tf.nn.leaky_relu(tf.layers.batch_normalization(conv2, training=isTrain))
          
          return lrelu2
     
 def discriminator_tuple(x,z, isTrain=True, reuse=False):
     with tf.variable_scope('discriminator_tuple', reuse=reuse): 
         print("Running discriminator which takes in tuples...")
-        x = tf.reshape(x, [-1,inputDim,inputDim,1])
+        #x = tf.reshape(x, [-1,inputDim,inputDim,1])
         output = tf.concat([x,z],0) #which axis?
         # output should be size 200, image of 100, latent representation of 100
         conv1 = tf.layers.conv2d(output,128, [1,1], strides = (1,1), padding='same')
@@ -115,14 +119,16 @@ def discriminator_tuple(x,z, isTrain=True, reuse=False):
         
         conv3 = tf.layers.conv2d(lrelu2,1, [1,1], strides = (1,1), padding='same')
         print("Conv3 shape: {}\n".format(conv3.get_shape()))
-        return tf.nn.sigmoid(conv3), conv3
+        lrelu3 = tf.nn.leaky_relu(tf.layers.batch_normalization(conv3, training=isTrain))
+        
+        return lrelu3
          
     
-def generator_z(x, isTrain=True, reuse=False):
+def generator_latent(x, isTrain=True, reuse=False):
     with tf.variable_scope('generator_z', reuse=reuse):
         print("Running generator which takes in image to produce latent representation...")
         # 1st hidden layer. Goes from 48x48 -> 24x24
-        conv1 = tf.layers.conv2d(z, 128, [4, 4], strides=(2, 2), padding='same')
+        conv1 = tf.layers.conv2d(x, 128, [4, 4], strides=(2, 2), padding='same')
         print("Conv1 shape: {}".format(conv1.get_shape()))
         lrelu1 = tf.nn.leaky_relu(conv1)
         
@@ -145,17 +151,17 @@ def generator_z(x, isTrain=True, reuse=False):
         # need VALID padding so it reduces to a 1x1
         conv5 = tf.layers.conv2d(lrelu4, 100, [3, 3], strides=(1, 1), padding='valid')
         print("Conv5 shape: {}\n".format(conv5.get_shape()))
-#        lrelu5 = tf.nn.leaky_relu(tf.layers.batch_normalization(conv5, training=isTrain))
+        lrelu5 = tf.nn.leaky_relu(tf.layers.batch_normalization(conv5, training=isTrain))
 #        
 #        conv6 = tf.layers.conv2d(lrelu5, 100, [1,1], strides=(1,1), padding='same')
 #        lrelu6 = tf.nn.leaky_relu(tf.layers.batch_normalization(conv6, training=isTrain))
 #        
 #        conv7 = tf.layers.conv2d(lrelu6, 100, [1,1], strides=(1,1), padding='same')
 
-        return conv5
+        return lrelu5
         
 
-def generator_x(z, isTrain=True, reuse=False):
+def generator_image(z, isTrain=True, reuse=False):
     with tf.variable_scope('generator_x', reuse=reuse):
         print("Running generator to generate images from latent representations...")
         # lrelu is a 'leaky relu layer'
@@ -226,9 +232,7 @@ def show_result(num_out, show = False, save = False, path = 'result.png'):
         plt.close()   
    
 #end of definitions
-     
-#%%
-        
+
 image_batch, label_batch, numFiles = load_data(parameters, train_kwargs, localPath)
 
 #Define the placeholders for the images and labels
@@ -245,11 +249,35 @@ with tf.name_scope('reshape'):
 
 image_summary = tf.summary.image('input', x_image, 4) # Show 4 examples of output images on tensorboard
 
-# networks : generator
-G_z = generator(z, isTrain)
-# networks: discriminator
-D_real, D_real_logits = discriminator(x_image, isTrain)
-D_fake, D_fake_logits = discriminator(G_z, isTrain, reuse=True)
+
+#%% Add reuse onto these?
+
+def network(x_image, z, isTrain=True, reuse=False): #overall network architecture
+    # networks : generator
+    G_x = generator_image(z, isTrain)
+    generator_summary_image = tf.summary.image('gen_image', G_x, 4)
+    # networks: encoder
+    E_z = generator_latent(x_image, isTrain)
+        
+    # discriminator for real images
+    D_real_image_logits = discriminator_image(x_image, isTrain)
+    # discriminator for real encodings
+    D_real_latent_logits = discriminator_latent(E_z, isTrain)
+    # discriminator for fake images
+    D_fake_image_logits = discriminator_image(G_x, isTrain, reuse=True)
+    # discriminator for fake encodings
+    D_fake_latent_logits = discriminator_latent(z, isTrain, reuse=True)
+    
+    # discriminator for tuples of real image/latent
+    D_real_logits = discriminator_tuple(D_real_image_logits, D_real_latent_logits, isTrain)
+    D_fake_logits = discriminator_tuple(D_fake_image_logits, D_fake_latent_logits, isTrain, reuse=True)
+    
+    return D_real_logits, D_fake_logits, generator_summary_image
+
+D_real_logits, D_fake_logits, generator_summary_image = \
+            network(x_image, z, isTrain)
+
+#%%
 
 # loss for each network
 with tf.name_scope("Losses"):
@@ -264,14 +292,23 @@ with tf.name_scope("Losses"):
     with tf.name_scope("Discriminator_loss"):
         D_loss = D_loss_real + D_loss_fake
         D_loss_total_summ = tf.summary.scalar("Discriminator_loss_total",D_loss)
+    with tf.name_scope("Generator_loss_real"):
+        G_loss_real = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(\
+                            logits=D_real_logits, labels=tf.zeros([batch_size, 1, 1, 1])))
+        G_loss_real_summ = tf.summary.scalar("Generator_loss_real",G_loss_real)
+    with tf.name_scope("Generator_loss_fake"):
+        G_loss_fake = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(\
+                            logits = D_fake_logits, labels=tf.ones([batch_size,1,1,1])))
+        G_loss_fake_summ = tf.summary.scalar("Generator_loss_fake",G_loss_fake)
     with tf.name_scope("Generator_loss"):
-        G_loss = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(\
-                            logits=D_fake_logits, labels=tf.ones([batch_size, 1, 1, 1])))
-        G_loss_summ = tf.summary.scalar("Generator_loss",G_loss)
+        G_loss = G_loss_real+G_loss_fake
+        G_loss_total_summ = tf.summary.scalar("Generator_loss_total",G_loss)
+    
         
 # have separate summaries for the discriminator and generator
 D_summary = tf.summary.merge([D_loss_real_summ, D_loss_fake_summ, D_loss_total_summ])
-G_summary = tf.summary.merge([G_loss_summ,image_summary])
+G_summary = tf.summary.merge([G_loss_real_summ,G_loss_fake_summ,G_loss_total_summ,image_summary, \
+                              generator_summary_image])
 
 # trainable variables for each network
 print("Creating the variables...")
@@ -283,7 +320,7 @@ G_vars = [var for var in T_vars if var.name.startswith('generator')]
 print("Creating the optimizer...")
 with tf.name_scope("Train"):
     with tf.control_dependencies(tf.get_collection(tf.GraphKeys.UPDATE_OPS)):
-        D_optim = tf.train.AdamOptimizer(1e-4, beta1=0.5).minimize(D_loss, var_list=D_vars)
+        D_optim = tf.train.AdamOptimizer(1e-3, beta1=0.5).minimize(D_loss, var_list=D_vars)
         G_optim = tf.train.AdamOptimizer(1e-3, beta1=0.5).minimize(G_loss, var_list=G_vars)
     
 # Create a saver to save these summary operations
@@ -351,7 +388,7 @@ with tf.Session() as sess: # or tf.InteractiveSession() ?
             if step % 20 == 0: #if also at the 20th step, produce an output
                 print("Showing a generated result for step {}...".format(step))
                 print("Currently at epoch {}".format(math.floor((parameters.batch_size*step)/numFiles)))
-                fixed_p = LOGDIR + '/Image_outputs/' + 'DCGAN_' + str(step) + '.png'
+                fixed_p = LOGDIR + '/Image_outputs/' + 'BiGAN_' + str(step) + '.png'
                 show_result(images_out, show=True, save=True, path=fixed_p)
                 saver.save(sess, os.path.join(LOGDIR, "DLoss{:.3}_GLoss{:.3}.ckpt".\
                                                   format(loss_d_, loss_g_))) 
