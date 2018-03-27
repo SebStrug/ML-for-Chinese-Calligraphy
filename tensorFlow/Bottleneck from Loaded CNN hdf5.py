@@ -26,7 +26,7 @@ relTrainDataPath = "Machine learning data/TFrecord"#path of training data relati
 relBottleneckSavePath = "Machine learning data/bottlenecks" #path for saved bottlenecks relative to dataPath
 relModelPath = '2_Conv/Outputs100_LR0.001_Batch128'# path of loaded model relative to LOGDIR
 modelName="LR0.001_Iter27720_TestAcc0.86.ckpt"#name of ckpt file with saved model
-SaveName = "CNN_LR0.001_BS128"#name for saved bottlenecks
+SaveName = "CNN_LR1e-3_BS128"#name for saved bottlenecks
 
 bottleneckPath = os.path.join(dataPath,relBottleneckSavePath)
 
@@ -72,21 +72,27 @@ print("took ",t.time()-start," seconds\n")
 
 #%% extract bottlencks
 #Create hdf5 file
-f=h.File(bottleneckPath+"/bottleneck_"+SaveName+"_{}to{}chars_train".format(numOutputs,inputChars),'w')
-f.create_group('train')
-f.create_group('test')
-f.close()
 
 #train data
 print("Extracting Bottlenecks for train data......")
 start=t.time()
 try:
-    f=h.File(bottleneckPath,"bottleneck_"+SaveName+"_{}to{}chars_train".format(numOutputs,inputChars),'w')
-    data=f.get('train')
-    b=data.create_dataset('bottlenecks',(0,bottleneckLength),chunks=True)
-    l=data.create_dataset('labels',(0,1),chunks=True)
+    #open file and create dataset
+    f=h.File(bottleneckPath+"/bottleneck_"+SaveName+"_{}to{}chars_train".format(numOutputs,inputChars),'w')
+    data=f.create_group('train')
+    b=data.create_dataset('bottlenecks',(batchSize,bottleneckLength),chunks=True,maxshape=(None,bottleneckLength))
+    l=data.create_dataset('labels',(batchSize,),chunks=True,maxshape=(None,))
+     ##load first batch
+    trainImageBatch,trainLabelBatch=sess.run([train_image_batch,train_label_batch])
+    bottleneckBatch=sess.run(getBottleneck,feed_dict={x: trainImageBatch, keep_prob: 1.0})
+    trainImageBatch = 0
+    b[-batchSize:] = bottleneckBatch
+    bottleneckBatch=0
+    l[-batchSize:] = trainLabelBatch
+    trainLabelBatch= 0 
     print("Extracting batches.....")
     while True:
+        #continue adding batches until all data saved
         trainImageBatch,trainLabelBatch=sess.run([train_image_batch,train_label_batch])
         bottleneckBatch=sess.run(getBottleneck,feed_dict={x: trainImageBatch, keep_prob: 1.0})
         trainImageBatch = 0
@@ -107,12 +113,22 @@ except tf.errors.OutOfRangeError:
 print("Extracting Bottlenecks for test data......")
 start=t.time()
 try:
+    #open file and create dataset
     f=h.File(bottleneckPath+"/bottleneck_"+SaveName+"_{}to{}chars_train".format(numOutputs,inputChars),'w')
-    data=f.get('test')
-    b=data.create_dataset('bottlenecks',(0,bottleneckLength),chunks=True)
-    l=data.create_dataset('labels',(0,1),chunks=True)
+    data=f.create_group('test')
+    b=data.create_dataset('bottlenecks',(batchSize,bottleneckLength),chunks=True,maxshape=(None, bottleneckLength))
+    l=data.create_dataset('labels',(batchSize,),chunks=True,maxshape=(None,))
+    ##load first batch
+    testImageBatch,testLabelBatch=sess.run([test_image_batch,test_label_batch])
+    bottleneckBatch=sess.run(getBottleneck,feed_dict={x: testImageBatch, keep_prob: 1.0})
+    testImageBatch = 0
+    b[-batchSize:] = bottleneckBatch
+    bottleneckBatch=0
+    l[-batchSize:] = testLabelBatch
+    testLabelBatch = 0 
     print("Extracting batches.....")
     while True:
+        #continue adding batches until all data saved
         testImageBatch,testLabelBatch=sess.run([test_image_batch,test_label_batch])
         bottleneckBatch=sess.run(getBottleneck,feed_dict={x: testImageBatch, keep_prob: 1.0})
         testImageBatch = 0
