@@ -24,7 +24,7 @@ batchSize = 1024
 dataPath, LOGDIR, rawDatapath = fF.whichUser("Elliot")
 relTrainDataPath = "Machine learning data/TFrecord"#path of training data relative to datapath in classFileFunc
 relBottleneckSavePath = "Machine learning data/bottlenecks" #path for saved bottlenecks relative to dataPath
-relModelPath = '2_Conv/Outputs100_LR0.001_Batch128'# path of loaded model relative to LOGDIR
+relModelPath = 'TF_record_CNN/Outputs100_LR0.001_Batch128'# path of loaded model relative to LOGDIR
 modelName="LR0.001_Iter27720_TestAcc0.86.ckpt"#name of ckpt file with saved model
 SaveName = "CNN_LR1e-3_BS128"#name for saved bottlenecks
 
@@ -69,7 +69,8 @@ getBottleneck = graph.get_tensor_by_name("fc_1/Relu:0")
 
 print("took ",t.time()-start," seconds\n")
 
-
+numExamples = 420*inputChars
+numBatches = float(numExamples)/batchSize
 #%% extract bottlencks
 #Create hdf5 file
 
@@ -77,6 +78,7 @@ print("took ",t.time()-start," seconds\n")
 print("Extracting Bottlenecks for train data......")
 start=t.time()
 try:
+    batch = 0 
     #open file and create dataset
     f=h.File(bottleneckPath+"/bottleneck_"+SaveName+"_{}to{}chars_train".format(numOutputs,inputChars),'w')
     data=f.create_group('train')
@@ -86,22 +88,23 @@ try:
     trainImageBatch,trainLabelBatch=sess.run([train_image_batch,train_label_batch])
     bottleneckBatch=sess.run(getBottleneck,feed_dict={x: trainImageBatch, keep_prob: 1.0})
     trainImageBatch = 0
-    b[-batchSize:] = bottleneckBatch
+    b[-len(bottleneckBatch):] = bottleneckBatch
     bottleneckBatch=0
-    l[-batchSize:] = trainLabelBatch
+    l[-len(trainLabelBatch):] = trainLabelBatch
     trainLabelBatch= 0 
-    print("Extracting batches.....")
     while True:
+        print("Extracting batches.....",100.0*0.8*batch/numBatches,"%\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n")
         #continue adding batches until all data saved
         trainImageBatch,trainLabelBatch=sess.run([train_image_batch,train_label_batch])
         bottleneckBatch=sess.run(getBottleneck,feed_dict={x: trainImageBatch, keep_prob: 1.0})
         trainImageBatch = 0
         b.resize(b.shape[0]+batchSize, axis=0)   
-        b[-batchSize:] = bottleneckBatch
+        b[-len(bottleneckBatch):] = bottleneckBatch
         bottleneckBatch=0
         l.resize(l.shape[0]+batchSize,axis=0)
-        l[-batchSize:] = trainLabelBatch
+        l[-len(trainLabelBatch):] = trainLabelBatch
         trainLabelBatch= 0 
+        batch +=1
         
         
 except tf.errors.OutOfRangeError:
@@ -113,8 +116,9 @@ except tf.errors.OutOfRangeError:
 print("Extracting Bottlenecks for test data......")
 start=t.time()
 try:
+    batch = 0
     #open file and create dataset
-    f=h.File(bottleneckPath+"/bottleneck_"+SaveName+"_{}to{}chars_train".format(numOutputs,inputChars),'w')
+    f=h.File(bottleneckPath+"/bottleneck_"+SaveName+"_{}to{}chars_test".format(numOutputs,inputChars),'w')
     data=f.create_group('test')
     b=data.create_dataset('bottlenecks',(batchSize,bottleneckLength),chunks=True,maxshape=(None, bottleneckLength))
     l=data.create_dataset('labels',(batchSize,),chunks=True,maxshape=(None,))
@@ -122,26 +126,27 @@ try:
     testImageBatch,testLabelBatch=sess.run([test_image_batch,test_label_batch])
     bottleneckBatch=sess.run(getBottleneck,feed_dict={x: testImageBatch, keep_prob: 1.0})
     testImageBatch = 0
-    b[-batchSize:] = bottleneckBatch
+    b[-len(bottleneckBatch):] = bottleneckBatch
     bottleneckBatch=0
-    l[-batchSize:] = testLabelBatch
+    l[-len(testLabelBatch):] = testLabelBatch
     testLabelBatch = 0 
-    print("Extracting batches.....")
     while True:
+        print("Extracting batches.....",100.0*0.2*batch/numBatches,"%\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n")
         #continue adding batches until all data saved
         testImageBatch,testLabelBatch=sess.run([test_image_batch,test_label_batch])
         bottleneckBatch=sess.run(getBottleneck,feed_dict={x: testImageBatch, keep_prob: 1.0})
         testImageBatch = 0
         b.resize(b.shape[0]+batchSize, axis=0)   
-        b[-batchSize:] = bottleneckBatch
+        b[-len(bottleneckBatch):] = bottleneckBatch
         bottleneckBatch=0
         l.resize(l.shape[0]+batchSize,axis=0)
-        l[-batchSize:] = testLabelBatch
-        testLabelBatch = 0 
+        l[-len(testLabelBatch):] = testLabelBatch
+        testLabelBatch = 0
+        batch+=1
         
         
 except tf.errors.OutOfRangeError:
     print("done")
-    print("train data took ",t.time()-start," seconds\n")
+    print("test data took ",t.time()-start," seconds\n")
     f.close()
 print("Whole process took ",t.time()-start1," seconds")
