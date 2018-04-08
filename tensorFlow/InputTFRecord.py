@@ -29,13 +29,13 @@ def decodeTrain(serialized_example):
 #    image1 = tf.reshape(image, [inputDim, inputDim, 1]); #2D no batch
 #    image2 = tf.reshape(image, [inputDim**2,1]);         #1D no batch
     """Try with no '1' on the end of array (which denotes RGB or greyscale)"""
-    image1 = tf.reshape(image, [inputDim, inputDim]); #2D no batch
-    image2 = tf.reshape(image, [inputDim**2]);         #1D no batch
-    print(image1)
-    print(image2)
+    #image1 = tf.reshape(image, [inputDim, inputDim]); #2D no batch
+    #image2 = tf.reshape(image, [inputDim**2]);         #1D no batch
+    #print(image1)
+    #print(image2)
     # Cast label data
     label = tf.cast(features['train/label'], tf.int32)
-    return image2, label
+    return image, label
 
 def decodeTest(serialized_example):
     features = tf.parse_single_example(

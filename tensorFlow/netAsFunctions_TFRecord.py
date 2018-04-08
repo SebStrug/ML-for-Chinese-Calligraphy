@@ -25,11 +25,11 @@ from classFileFunctions import fileFunc as fF
 def run_training():
     tf.reset_default_graph()
         
-    train_kwargs = {"normalize_images": True, "augment_images": False, "shuffle_data": True}
+    train_kwargs = {"normalize_images": False, "augment_images": False, "shuffle_data": False}
     train_image_batch, train_label_batch = inputs('train',train_tfrecord_filename,\
                                                   train_batch_size,num_epochs,\
                                                   **train_kwargs)
-    test_kwargs = {"normalize_images": True, "augment_images": False, "shuffle_data": True}
+    test_kwargs = {"normalize_images": False, "augment_images": False, "shuffle_data": False}
     test_image_batch, test_label_batch = inputs('test',test_tfrecord_filename,\
                                                 test_batch_size,0,\
                                                 **test_kwargs)
@@ -41,20 +41,20 @@ def run_training():
 
     
     """4 convolution network"""
-    # placeholder for dropout means we can turn it on during training, turn off during testing
-    keep_prob = tf.placeholder(tf.float32, name = 'keep_prob')
-    
-    with tf.name_scope('reshape'):
-        # reshape x to a 4D tensor with second and third dimensions being width/height
-        x_image = tf.reshape(x, [-1,inputDim,inputDim,1])
-    
-    tf.summary.image('input', x_image, 4) # Show 4 examples of output images on tensorboard
-    
-    conv_layer_1, output_dim, output_channels = \
-        buildNet.conv_layer('conv_1', x_image, inputDim, 5, [1,1], 1, 32, do_pool=True)
-    conv_layer_2, output_dim, output_channels = \
-        buildNet.conv_layer('conv_2', conv_layer_1, output_dim, 5, [1,1], \
-                            output_channels, 64, do_pool=True)
+#    # placeholder for dropout means we can turn it on during training, turn off during testing
+#    keep_prob = tf.placeholder(tf.float32, name = 'keep_prob')
+#    
+#    with tf.name_scope('reshape'):
+#        # reshape x to a 4D tensor with second and third dimensions being width/height
+#        x_image = tf.reshape(x, [-1,inputDim,inputDim,1])
+#    
+#    tf.summary.image('input', x_image, 4) # Show 4 examples of output images on tensorboard
+#    
+#    conv_layer_1, output_dim, output_channels = \
+#        buildNet.conv_layer('conv_1', x_image, inputDim, 5, [1,1], 1, 32, do_pool=True)
+#    conv_layer_2, output_dim, output_channels = \
+#        buildNet.conv_layer('conv_2', conv_layer_1, output_dim, 5, [1,1], \
+#                            output_channels, 64, do_pool=True)
 #    conv_layer_3, output_dim, output_channels = \
 #        buildNet.conv_layer('conv_3',conv_layer_2, output_dim, 4, \
 #                            output_channels, 96, do_pool=False)
@@ -170,8 +170,8 @@ def run_training():
             
 
 inputDim = 48
-num_output_list = [10]
-num_epoch_list = [10]
+num_output_list = [100]
+num_epoch_list = [50]
 train_batch_size_list = [128]
 learning_rate_list = [1E-3]
 test_batch_size = 500
@@ -184,7 +184,7 @@ savePath = 'C:\\Users\\Sebastian\\Desktop\\MLChinese\\Saved_runs\\'
 localPath = 'C:\\Users\\Sebastian\\Desktop\\MLChinese\\CASIA\\1.0'
 
 
-name_of_run = 'testing_weights_image'
+name_of_run = 'simple_net_noShuffle_noNorm'
 
 for num_output in num_output_list:
     train_tfrecord_filename = \
