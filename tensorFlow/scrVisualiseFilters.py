@@ -8,7 +8,8 @@ and produce an embedding etc.
 
 #%% Imports and paths
 import os
-gitHubRep = os.path.normpath(os.getcwd() + os.sep + os.pardir)# find github path
+#gitHubRep = os.path.normpath(os.getcwd() + os.sep + os.pardir)# find github path
+gitHubRep = 'C:/Users/Sebastian/Desktop/GitHub/ML-for-Chinese-Calligraphy'
 #import own functions and classes
 os.chdir(os.path.join(gitHubRep,"dataHandling/"))
 from classFileFunctions import fileFunc as fF 
@@ -20,20 +21,25 @@ inputDim = 48
 numOutputs= 100#number of outputs in original network
 
 #set paths and file names
-dataPath, LOGDIR, rawDatapath = fF.whichUser("Elliot")
-relTrainDataPath = "Machine learning data/TFrecord"#path of training data relative to datapath in classFileFunc
+dataPath, LOGDIR, rawDatapath = fF.whichUser("Seb")
+#relTrainDataPath = "Machine learning data/TFrecord"#path of training data relative to datapath in classFileFunc
+relTrainDataPath = ''
 relSavePath = "savedVisualisation" #path for saved images relative to dataPath
-relModelPath = 'TF_record_CNN/Outputs100_LR0.001_Batch128'# path of loaded model relative to LOGDIR
-modelName="LR0.001_Iter27720_TestAcc0.86.ckpt"#name of ckpt file with saved model
-saveName = "CNN_LR0.001_BS128"#name for saved images
-#import modules
+#relModelPath = 'TF_record_CNN/Outputs100_LR0.001_Batch128'# path of loaded model relative to LOGDIR
+relModelPath = '2conv_100Out_model'
+#modelName="LR0.001_Iter27720_TestAcc0.86.ckpt"#name of ckpt file with saved model
+modelName = 'LR0.0001_Iter9270_TestAcc0.718.ckpt'
+saveName = "2CNN_LR0.001_BS128"#name for saved images
+
+#import rest of the modules modules
 import tensorflow as tf
 import numpy as np
 import time as t
 import matplotlib.pyplot as plt
 import itertools 
 
-numImages = 128
+numImages = 128 #batch size?
+
 #%%Func defs
 def removeAndSwapAxes(array):
     foo=np.swapaxes(array,2,3)
@@ -63,21 +69,26 @@ def show_activations(features,featureDim, num_out, path, name, show = False, sav
         plt.show()
     else:
         plt.close() 
+        
 #%% import data
 train_tfrecord_filename = os.path.join(os.path.join(dataPath,relTrainDataPath),'train'+str(numOutputs)+'.tfrecords')
 test_tfrecord_filename = os.path.join(os.path.join(dataPath,relTrainDataPath),'test'+str(numOutputs)+'.tfrecords')
+
 #%% Open a tensorflow session
 print("Importing graph.....")
 start = t.time()
 sess = tf.InteractiveSession()
-print(0)
+print("Initialising all variables...")
 # Initialise all variables
-loadLOGDIR = os.path.join(LOGDIR,relModelPath)
+#loadLOGDIR = os.path.join(LOGDIR,relModelPath)
+loadLOGDIR = os.path.join(dataPath, relModelPath) #Seb's directory
 os.chdir(loadLOGDIR)
 saver = tf.train.import_meta_graph(modelName+".meta")
-print(1)
+
+print("Restoring the session...")
 saver.restore(sess,'./'+modelName)
 
+print("Getting default graph...")
 graph = tf.get_default_graph()
 print("took ",t.time()-start," seconds\n")
 #print(graph.get_operations())
@@ -109,6 +120,7 @@ layer1Weights=sess.run(conv1Weights)
 layer2Activations=sess.run(conv2Activations,feed_dict={x: images, keep_prob: 1.0})
 layer2Weights=sess.run(conv2Weights)
 bottlenecks = sess.run(getBottleneck,feed_dict={x: images, keep_prob: 1.0})
+
 #%%process feature maps
 layer1Activations=removeAndSwapAxes(layer1Activations)
 layer2Activations=removeAndSwapAxes(layer2Activations)
