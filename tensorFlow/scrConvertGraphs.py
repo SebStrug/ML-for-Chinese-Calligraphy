@@ -84,12 +84,12 @@ def plotAll(wallTime, relTime, stepTime, accValues, plot_type='step', smoothVal 
         if plot_type == 'step': #if we want to plot the step count
             lines = plt.plot(stepTime[i],smooth(accValues[i],smoothVal))
             plt.ylim(ymin=0,ymax=1)
-            plt.xlim(xmin=0)
+            plt.xlim(xmin=0,xmax=9)
             plt.xlabel('Iterations *10^3')
             plt.title('No. of outputs: {}, Batch size: {}'.\
               format(numOutputs,batchSize))
             plt.grid(True)
-            plt.ylabel('Accuracy')
+            plt.ylabel('Test accuracy')
             plt.setp(lines, linewidth=2.0)
             plt.savefig("Figure_step.svg")
             plt.savefig("Figure_step.png")
@@ -101,7 +101,7 @@ def plotAll(wallTime, relTime, stepTime, accValues, plot_type='step', smoothVal 
             plt.title('No. of outputs: {}, Batch size: {}'.\
               format(numOutputs,batchSize))
             plt.grid(True)
-            plt.ylabel('Accuracy')
+            plt.ylabel('Test accuracy')
             plt.setp(lines, linewidth=2.0)
             plt.savefig("Figure_relative.svg")
             plt.savefig("Figure_relative.png")            
@@ -113,7 +113,7 @@ def plotAll(wallTime, relTime, stepTime, accValues, plot_type='step', smoothVal 
             plt.title('No. of outputs: {}, Batch size: {}'.\
               format(numOutputs,batchSize))
             plt.grid(True)
-            plt.ylabel('Accuracy')
+            plt.ylabel('Test accuracy')
             plt.setp(lines, linewidth=2.0)
             plt.savefig("Figure_wall.svg")
             plt.savefig("Figure_wall.png")
@@ -134,7 +134,7 @@ savePathSeb = "C:/Users/Sebastian/Desktop/MLChinese/Saved_runs/"
 
 savePath = savePathSeb
 nameFileElliot = "CSV"
-nameFileSeb = '/2018-04-13/100Out_convNet_comparisons'
+nameFileSeb = '/conv100_comparisons'
 nameFile = nameFileSeb
 
 os.chdir(savePath+nameFile)
