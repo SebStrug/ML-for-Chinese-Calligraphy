@@ -26,6 +26,8 @@ import h5py as h
 bottleneckLength = 1024
 oldNumOutputs = 100
 newNumOutputs = 3866 
+testBatchSize = 1024
+trainRatio=0.8
 saveName = "finalLayerCNN"          
 #%%Import the data
 print("Importing the data...")
@@ -34,16 +36,16 @@ start = t.time()
 
 trainFile=h.File(bottleneckPath+"/bottleneck_"+bottleneckSaveName+"_{}to{}chars_train".format(oldNumOutputs,newNumOutputs),'r')
 trainData=trainFile.require_group("train")
-trainBottlenecks = trainData.require_dataset("bottlenecks")
-trainLabels = trainData.require_dataset("labels")
-trainDataObject = Data(trainBottlenecks,trainLabels.astype(int)-171);
+trainBottlenecks = trainData.get("bottlenecks")
+trainLabels = trainData.get("labels")
+trainDataObject = Data(trainBottlenecks,trainLabels);
 
 #testing data
 testFile=h.File(bottleneckPath+"/bottleneck_"+bottleneckSaveName+"_{}to{}chars_test".format(oldNumOutputs,newNumOutputs),'r')
 testData=testFile.require_group("test")
-testBottlenecks = testData.require_dataset("bottlenecks")
-testLabels = testData.require_dataset("labels")
-testDataObject = Data(testBottlenecks,testLabels.astype(int)-171);
+testBottlenecks = testData.get("bottlenecks")
+testLabels = testData.get("labels")
+testDataObject = Data(testBottlenecks,testLabels);
 
 
 print("Took ",t.time()-start," seconds.")
@@ -141,7 +143,7 @@ def neural_net(LOGDIR,name,whichTest,numOutputs,learningRate,trainBatchSize,test
     whichEpoch = 0
     print("Number of batches per epoch: {}".format(epochLength))
     displayNum = 30
-    testNum = 90
+    testNum = 30
     maxAccuracy = 0.0
     for i in range(epochLength*epochs):
         """Check a random value in the batch matches its label"""
@@ -153,14 +155,14 @@ def neural_net(LOGDIR,name,whichTest,numOutputs,learningRate,trainBatchSize,test
         if i % displayNum == 0:
             train_accuracy, train_summary =sess.run([accuracy, mergedSummaryOp], \
                          feed_dict={x: batchImages, y_: batchLabels})
-            train_writer.add_summary(train_summary, i*trainBatchSize)
+            train_writer.add_summary(train_summary, i)
             
         if i % testNum == 0:
             print("Testing the net...")
             testBatchImages, testBatchLabels = testData.nextImageBatch(testBatchSize),testData.nextOneHotLabelBatch(testBatchSize,newNumOutputs)
             test_accuracy, test_summary = sess.run([accuracy,mergedSummaryOp], \
                            feed_dict={x: testBatchImages,y_: testBatchLabels})
-            test_writer.add_summary(test_summary, i*trainBatchSize)
+            test_writer.add_summary(test_summary, i)
             print("testing accuracy:",test_accuracy)
             if test_accuracy > maxAccuracy:
                 maxAccuracy = test_accuracy
@@ -178,11 +180,9 @@ def neural_net(LOGDIR,name,whichTest,numOutputs,learningRate,trainBatchSize,test
 whichTest = 1
 
 #trainRatio = 0.8
-for numOutputs in [30]:
-    for trainRatio in [0.8]:
-        for learning_rate in [1E-3]:
-            for trainBatchSize in [128]:      
-                epochs = 300
-                #LOGDIR, whichTest, numOutputs, learningRate, trainBatchSize, iterations
-                neural_net(LOGDIR,saveName+"_was{}Out".format(oldNumOutputs),whichTest,numOutputs,learning_rate,trainBatchSize,epochs,\
-                           trainData,testBottlenecks,testLabels,trainRatio)
+for learning_rate in [1E-4]:
+    for trainBatchSize in [128]:      
+        epochs = 300
+        #LOGDIR, whichTest, numOutputs, learningRate, trainBatchSize, iterations
+        neural_net(LOGDIR,saveName+"_was{}Out".format(oldNumOutputs),whichTest,newNumOutputs,learning_rate,\
+                   trainBatchSize,testBatchSize,epochs,trainDataObject,testDataObject,trainRatio)
