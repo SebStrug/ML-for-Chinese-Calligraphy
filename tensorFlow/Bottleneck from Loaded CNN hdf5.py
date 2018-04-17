@@ -32,7 +32,6 @@ bottleneckPath = os.path.join(dataPath,relBottleneckSavePath)
 
 #import modules
 import tensorflow as tf
-import numpy as np
 import time as t
 import h5py as h
 
