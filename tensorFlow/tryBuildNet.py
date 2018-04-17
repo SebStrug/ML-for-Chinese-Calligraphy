@@ -72,7 +72,6 @@ class buildNet(object):
             # convolve x with the weight tensor, add bias and apply ReLU function
             h_conv = tf.nn.relu(buildNet.conv2d(prev_layer, W_conv, stride, padding_type) + b_conv)
             tf.summary.histogram("activations", h_conv)
-            print("Output dimension: {}".format(h_conv.shape))
         if do_pool == True:
             pool_name = conv_name + '_pool'
             with tf.name_scope(pool_name):
@@ -81,9 +80,11 @@ class buildNet(object):
                 h_pool = buildNet.max_pool_2x2(h_conv)
                 output_dim = h_pool.shape[1] #can be index 1 or 2
                 #return the pooling layer if we did a pool
+                print("Output dimension: {}".format(h_pool.shape))
                 return h_pool, output_dim, output_channels
         else: #return the convolutional layer if we didn't do a pool
             output_dim = h_conv.shape[1] #can be index 1 or 2   
+            print("Output dimension: {}".format(h_conv.shape))
             return h_conv, output_dim, output_channels
         
     def deconv_layer(deconv_name, prev_layer, input_dim, patch_size, stride, input_channels, \
@@ -116,8 +117,9 @@ class buildNet(object):
             print("Name: {}, Weight shape: [{}*{}*{},{}], Bias shape: [{}]".\
                   format(fc_name,input_dim,input_dim,input_features,output_channel, output_channel))
             print("Doing a pool: {}".format(do_pool))
-            
-            W_fc = buildNet.weight_variable([input_dim * input_dim * input_features, output_channel])
+
+            W_fc_input = [int(input_dim*input_dim*input_features), output_channel]
+            W_fc = buildNet.weight_variable(W_fc_input)
             b_fc = buildNet.bias_variable([output_channel])
             
             if do_pool == True:

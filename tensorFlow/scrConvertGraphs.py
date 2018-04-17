@@ -11,6 +11,7 @@ import matplotlib.dates as mdates
 import glob
 import numpy as np
 from datetime import datetime
+from datetime import timedelta
 
 gitHubRep = os.path.normpath(os.getcwd() + os.sep + os.pardir)# find github path
 #import own functions and classes
@@ -39,22 +40,28 @@ def findPlateau(values,limit):
 
 def convertData(accData):
     """Converts data from strings into usable things, plus wall time"""
-    relTime = []; stepTime = []; accValues = [];
+    wallTime = []; stepTime = []; accValues = [];
+    relativeTime = [];
     for i in range(len(accData)):
         print(i)
+        starting_wallTime = datetime.fromtimestamp(float(accData[i][1][0]))
         wallTime_one = [float(j[0]) for j in accData[i][1:]] # get time in seconds
-        #wallTime_one = [j - wallTime_one[0] for j in wallTime_one] #get relative time
         wallTime_one = [datetime.fromtimestamp(i) for i in wallTime_one]
+        #wallTime_one = [j - wallTime_one[0] for j in wallTime_one] #get relative time
+        
+        relativeTime_one = [i - starting_wallTime for i in wallTime_one]
+        relativeTime_mins = [i.seconds/60 for i in relativeTime_one]
         
         #wallTime_one = [matplotlib.dates.date2num(i) for i in wallTime_one]
 #        relativeTime_one = [convWallTime(j) for j in wallTime_one]  # convert to hours, mins, seconds
-        stepTime_one = [int(j[1])/(10**4) for j in accData[i][1:]] # get the step count
+        stepTime_one = [int(j[1])/(10**3) for j in accData[i][1:]] # get the step count
         accValues_one = [float(j[2][0:5]) for j in accData[i][1:]] #get the accuracy values
         
-        relTime.append(wallTime_one)
+        relativeTime.append(relativeTime_mins)
+        wallTime.append(wallTime_one)
         stepTime.append(stepTime_one)
         accValues.append(accValues_one)
-    return relTime, stepTime, accValues
+    return wallTime, stepTime, accValues, relativeTime
 
 def smooth(y, box_pts):
     """Smooths with a moving average box (convolution)"""
@@ -71,47 +78,71 @@ def loadFiles(savePath,nameFile):
         allAcc.append(accOneFile)
     return allAcc
 
-def plotAll(relTime,stepTime,accValues,plot_step=False):
+def plotAll(wallTime, relTime, stepTime, accValues, plot_type='step', smoothVal = 1):
     plt.figure()
     for i in range(len(accValues)):
-        
-        if plot_step == True: #if we want to plot the step count
-            lines = plt.plot(stepTime[i],smooth(accValues[i],1))
+        if plot_type == 'step': #if we want to plot the step count
+            lines = plt.plot(stepTime[i],smooth(accValues[i],smoothVal))
             plt.ylim(ymin=0,ymax=1)
             plt.xlim(xmin=0)
-            plt.xlabel('Iterations *10^4')
-        else:
+            plt.xlabel('Iterations *10^3')
+            plt.title('No. of outputs: {}, Batch size: {}'.\
+              format(numOutputs,batchSize))
+            plt.grid(True)
+            plt.ylabel('Accuracy')
+            plt.setp(lines, linewidth=2.0)
+            plt.savefig("Figure_step.svg")
+            plt.savefig("Figure_step.png")
+        elif plot_type == 'relative':
+            lines = plt.plot(relTime[i],smooth(accValues[i],smoothVal))
+            plt.ylim(ymin=0,ymax=1)
+            plt.xlim(xmin=0)
+            plt.xlabel('Relative time in minutes')
+            plt.title('No. of outputs: {}, Batch size: {}'.\
+              format(numOutputs,batchSize))
+            plt.grid(True)
+            plt.ylabel('Accuracy')
+            plt.setp(lines, linewidth=2.0)
+            plt.savefig("Figure_relative.svg")
+            plt.savefig("Figure_relative.png")            
+        elif plot_type == 'wall':
             plt.gca().xaxis.set_major_formatter(mdates.DateFormatter('%H:%M'))
-            lines = plt.plot(relTime[i],smooth(accValues[i],1))
+            lines = plt.plot(wallTime[i],smooth(accValues[i],smoothVal))
             plt.gcf().autofmt_xdate()
             plt.xlabel('Time in hours:minutes')
+            plt.title('No. of outputs: {}, Batch size: {}'.\
+              format(numOutputs,batchSize))
+            plt.grid(True)
+            plt.ylabel('Accuracy')
+            plt.setp(lines, linewidth=2.0)
+            plt.savefig("Figure_wall.svg")
+            plt.savefig("Figure_wall.png")
+        else:
+            print('Bad input entered')
+            break
         
-        plt.title('No. of outputs: {}, Batch size: {}'.\
-                      format(numOutputs,batchSize))
-        plt.grid(True)
-        plt.ylabel('Accuracy')
-        plt.setp(lines, linewidth=2.0)
-        plt.savefig("Figure.svg")
-        plt.savefig("Figure.png")
+
 
 #%% load in files
 """tensorboard csv to graph function"""
 #change path so figure saves correctly
-dataPath, LOGDIR, rawDataPAth = fF.whichUser("Elliot")
+dataPath, LOGDIR, rawDataPAth = fF.whichUser("Seb")
 
 
 savePathElliot = LOGDIR
 savePathSeb = "C:/Users/Sebastian/Desktop/MLChinese/Saved_runs/"
 
-savePath=savePathElliot
-nameFile = "CSV"
+savePath = savePathSeb
+nameFileElliot = "CSV"
+nameFileSeb = '/2018-04-13/100Out_convNet_comparisons'
+nameFile = nameFileSeb
 
-os.chdir(savePath)
+os.chdir(savePath+nameFile)
 
 accData = loadFiles(savePath,nameFile)
-relTime, stepTime, accValues = convertData(accData)
+wallTime, stepTime, accValues, relTime = convertData(accData)
 
 batchSize = 128
 numOutputs = 100
 
-plotAll(relTime, stepTime, accValues, plot_step=False)
+plotAll(wallTime, relTime, stepTime, accValues, plot_type = 'relative', smoothVal = 2)

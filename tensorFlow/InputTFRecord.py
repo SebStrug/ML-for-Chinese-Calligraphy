@@ -95,7 +95,7 @@ def augment(image, label):
 
 def normalize(image, label):
     # Convert from [0, 255] -> [-0.5, 0.5] floats (normalisation in example)
-    #image = tf.cast(image, tf.float32) * (1. / 255) - 0.5
+#    image = tf.cast(image, tf.float32) * (1. / 255) - 0.5
     # More advanced normalisation that uses the mean and standard deviation
     image = tf.reshape(image, [inputDim, inputDim,1])
     image = tf.image.per_image_standardization(image)
