@@ -25,11 +25,11 @@ from classFileFunctions import fileFunc as fF
 def run_training():
     tf.reset_default_graph()
         
-    train_kwargs = {"normalize_images": False, "augment_images": False, "shuffle_data": False}
+    train_kwargs = {"normalize_images": True, "augment_images": False, "shuffle_data": True}
     train_image_batch, train_label_batch = inputs('train',train_tfrecord_filename,\
                                                   train_batch_size,num_epochs,\
                                                   **train_kwargs)
-    test_kwargs = {"normalize_images": False, "augment_images": False, "shuffle_data": False}
+    test_kwargs = {"normalize_images": True, "augment_images": False, "shuffle_data": True}
     test_image_batch, test_label_batch = inputs('test',test_tfrecord_filename,\
                                                 test_batch_size,0,\
                                                 **test_kwargs)
@@ -41,39 +41,39 @@ def run_training():
 
     
     """4 convolution network"""
-#    # placeholder for dropout means we can turn it on during training, turn off during testing
-#    keep_prob = tf.placeholder(tf.float32, name = 'keep_prob')
-#    
-#    with tf.name_scope('reshape'):
-#        # reshape x to a 4D tensor with second and third dimensions being width/height
-#        x_image = tf.reshape(x, [-1,inputDim,inputDim,1])
-#    
-#    tf.summary.image('input', x_image, 4) # Show 4 examples of output images on tensorboard
-#    
-#    conv_layer_1, output_dim, output_channels = \
-#        buildNet.conv_layer('conv_1', x_image, inputDim, 5, [1,1], 1, 32, do_pool=True)
-#    conv_layer_2, output_dim, output_channels = \
-#        buildNet.conv_layer('conv_2', conv_layer_1, output_dim, 5, [1,1], \
-#                            output_channels, 64, do_pool=True)
+    # placeholder for dropout means we can turn it on during training, turn off during testing
+    keep_prob = tf.placeholder(tf.float32, name = 'keep_prob')
+    
+    with tf.name_scope('reshape'):
+        # reshape x to a 4D tensor with second and third dimensions being width/height
+        x_image = tf.reshape(x, [-1,inputDim,inputDim,1])
+    
+    tf.summary.image('input', x_image, 4) # Show 4 examples of output images on tensorboard
+    
+    conv_layer_1, output_dim, output_channels = \
+        buildNet.conv_layer('conv_1', x_image, inputDim, 5, [1,1], 1, 32, do_pool=False)
+    conv_layer_2, output_dim, output_channels = \
+        buildNet.conv_layer('conv_2', conv_layer_1, output_dim, 5, [1,1], \
+                             output_channels, 64, do_pool=False)
 #    conv_layer_3, output_dim, output_channels = \
-#        buildNet.conv_layer('conv_3',conv_layer_2, output_dim, 4, \
+#        buildNet.conv_layer('conv_3',conv_layer_2, output_dim, 4, [1,1], \
 #                            output_channels, 96, do_pool=False)
 #    conv_layer_4, output_dim, output_channels = \
-#        buildNet.conv_layer('conv_4',conv_layer_3, output_dim, 3, \
+#        buildNet.conv_layer('conv_4',conv_layer_3, output_dim, 3, [1,1], \
 #                            output_channels, 128, do_pool=False)
 #    conv_layer_5, output_dim, output_channels = \
-#        buildNet.conv_layer('conv_5',conv_layer_4, output_dim, 2, \
+#        buildNet.conv_layer('conv_5',conv_layer_4, output_dim, 2, [1,1], \
 #                        output_channels, 160, do_pool=True)
 #    conv_layer_6, output_dim, output_channels = \
-#        buildNet.conv_layer('conv_6',conv_layer_5, output_dim, 2, \
-#                        output_channels, 256, do_pool=False)
-#    fc_layer_1, output_channels = \
-#        buildNet.fc_layer('fc_1', conv_layer_2, output_dim, output_channels, \
-#                          1024, do_pool=True)
-#    y_conv = buildNet.output_layer(output_channels, num_output, fc_layer_1,0.5)
+#        buildNet.conv_layer('conv_6',conv_layer_5, output_dim, 2, [1,1], \
+#                        output_channels, 192, do_pool=False)
+    fc_layer_1, output_channels = \
+        buildNet.fc_layer('fc_1', conv_layer_2, output_dim, output_channels, \
+                          1024, do_pool=True)
+    y_conv = buildNet.output_layer(output_channels, num_output, fc_layer_1,0.5)
     
     """Simple network"""
-    y_conv = buildNet.output_layer(inputDim**2, num_output, x, 1)      
+#    y_conv = buildNet.output_layer(inputDim**2, num_output, x, 1)      
       
     with tf.name_scope("xent"):    
         cross_entropy = tf.reduce_mean(\
@@ -113,18 +113,18 @@ def run_training():
         maxAccuracy=0
         start_time = time.time() 
         
-        #visualise conv_1 features
-        with tf.variable_scope('conv_1') as scope_conv:
-            weights = tf.get_variable('weights')
-            # scale weights to [0 255] and convert to uint8 (maybe change scaling?)
-            x_min = tf.reduce_min(weights)
-            x_max = tf.reduce_max(weights)
-            weights_0_to_1 = (weights - x_min) / (x_max - x_min)
-            weights_0_to_255_uint8 = tf.image.convert_image_dtype (weights_0_to_1, dtype=tf.uint8)
-            # to tf.image_summary format [batch_size, height, width, channels]
-            weights_transposed = tf.transpose (weights_0_to_255_uint8, [train_batch_size, 48, 48, 32])
-            # this will display random 3 filters from the 64 in conv1
-            tf.image_summary('conv_1/weights', weights_transposed, max_images=10)
+#        #visualise conv_1 features
+#        with tf.variable_scope('conv_1') as scope_conv:
+#            weights = tf.get_variable('weights')
+#            # scale weights to [0 255] and convert to uint8 (maybe change scaling?)
+#            x_min = tf.reduce_min(weights)
+#            x_max = tf.reduce_max(weights)
+#            weights_0_to_1 = (weights - x_min) / (x_max - x_min)
+#            weights_0_to_255_uint8 = tf.image.convert_image_dtype (weights_0_to_1, dtype=tf.uint8)
+#            # to tf.image_summary format [batch_size, height, width, channels]
+#            weights_transposed = tf.transpose (weights_0_to_255_uint8, [train_batch_size, 48, 48, 32])
+#            # this will display random 3 filters from the 64 in conv1
+#            tf.image_summary('conv_1/weights', weights_transposed, max_images=10)
         
         try:
             step = 0
@@ -135,8 +135,8 @@ def run_training():
                 if step % 30 == 0:
                     train_accuracy, train_summary = sess.run([accuracy, mergedSummaryOp], \
                                  feed_dict={x: train_images, \
-                                            y_: tf.one_hot(train_labels,num_output).eval(),\
-                                            keep_prob: 1.0})
+                                            y_: tf.one_hot(train_labels,num_output).eval()})#,\
+                                            #keep_prob: 1.0})
                     train_writer.add_summary(train_summary, step)
                     print('Step: {}, Training accuracy = {:.3}'.format(step, train_accuracy))
                     
@@ -144,8 +144,8 @@ def run_training():
                     print("Testing the net...")
                     test_accuracy, test_summary = sess.run([accuracy,mergedSummaryOp], \
                                    feed_dict={x: test_images,\
-                                              y_: tf.one_hot(test_labels,num_output).eval(),\
-                                              keep_prob: 1.0})
+                                              y_: tf.one_hot(test_labels,num_output).eval()})#,\
+                                              #keep_prob: 1.0})
                     test_writer.add_summary(test_summary, step)
                     if test_accuracy > maxAccuracy:
                         maxAccuracy=test_accuracy
@@ -155,8 +155,8 @@ def run_training():
                 
                 #run the training
                 sess.run(train_step, feed_dict={x: train_images,\
-                                                y_: tf.one_hot(train_labels,num_output).eval(),\
-                                                keep_prob:0.5})              
+                                                y_: tf.one_hot(train_labels,num_output).eval()})#,\
+                                                #keep_prob:0.5})              
                     
     
                 step += 1
@@ -171,10 +171,10 @@ def run_training():
 
 inputDim = 48
 num_output_list = [100]
-num_epoch_list = [50]
+num_epoch_list = [4000]
 train_batch_size_list = [128]
 learning_rate_list = [1E-3]
-test_batch_size = 500
+test_batch_size = 1000
 
 #dataPath, LOGDIR, rawDataPath = fF.whichUser("Elliot")
 #savePath=LOGDIR
@@ -184,7 +184,7 @@ savePath = 'C:\\Users\\Sebastian\\Desktop\\MLChinese\\Saved_runs\\'
 localPath = 'C:\\Users\\Sebastian\\Desktop\\MLChinese\\CASIA\\1.0'
 
 
-name_of_run = 'simple_net_noShuffle_noNorm'
+name_of_run = '2conv_100Out_noPool'
 
 for num_output in num_output_list:
     train_tfrecord_filename = \
