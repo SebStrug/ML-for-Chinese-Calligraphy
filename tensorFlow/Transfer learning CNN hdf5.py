@@ -16,10 +16,12 @@ from classDataManip import oneHot,makeDir,Data
 #set paths
 dataPath, LOGDIR,rawDataPath= fF.whichUser("Elliot")
 relBottleneckPath="Machine learning data/bottlenecks"#path of bottlencks relative to dataPath
-bottleneckSaveName="CNN_LR0.001_BS128"#bit of save name for bottlenecks specified when they were saved in previous script
+bottleneckSaveName="CNN_LR1e-3_BS128"#bit of save name for bottlenecks specified when they were saved in previous script
+bottleneckPath = os.path.join(dataPath,relBottleneckPath)
 #import modules
 import tensorflow as tf
 import time as t
+import h5py as h 
 #set other variables
 bottleneckLength = 1024
 oldNumOutputs = 100
@@ -29,23 +31,21 @@ saveName = "finalLayerCNN"
 print("Importing the data...")
 start = t.time()
 #training data
-labels,bottlenecks=fF.readNPZ(os.path.join(dataPath,relBottleneckPath),\
-                                 "bottleneck_"+bottleneckSaveName+"_{}to{}chars_train"\
-                                 .format(oldNumOutputs,newNumOutputs),\
-                                 "labels","bottlenecks")
 
-trainData = Data(bottlenecks,labels.astype(int)-171);
+trainFile=h.File(bottleneckPath+"/bottleneck_"+bottleneckSaveName+"_{}to{}chars_train".format(oldNumOutputs,newNumOutputs),'r')
+trainData=trainFile.require_group("train")
+trainBottlenecks = trainData.require_dataset("bottlenecks")
+trainLabels = trainData.require_dataset("labels")
+trainDataObject = Data(trainBottlenecks,trainLabels.astype(int)-171);
 
 #testing data
-labels,bottlenecks=fF.readNPZ(os.path.join(dataPath,relBottleneckPath),\
-                                 "bottleneck_"+bottleneckSaveName+"_{}to{}chars_test"\
-                                 .format(oldNumOutputs,newNumOutputs),\
-                                 "labels","bottlenecks")
+testFile=h.File(bottleneckPath+"/bottleneck_"+bottleneckSaveName+"_{}to{}chars_test".format(oldNumOutputs,newNumOutputs),'r')
+testData=testFile.require_group("test")
+testBottlenecks = testData.require_dataset("bottlenecks")
+testLabels = testData.require_dataset("labels")
+testDataObject = Data(testBottlenecks,testLabels.astype(int)-171);
 
-testLabels = labels.astype(int)-171
-testBottlenecks=bottlenecks
-#delete unused variables
-del bottlenecks; del labels
+
 print("Took ",t.time()-start," seconds.")
 
 
@@ -54,8 +54,8 @@ print("Took ",t.time()-start," seconds.")
 #Reset the graph (since we are not creating this in a function!)
 
 
-def neural_net(LOGDIR,name,whichTest,numOutputs,learningRate,trainBatchSize,\
-               epochs,trainData,testImages,testLabels,trainRatio):
+def neural_net(LOGDIR,name,whichTest,numOutputs,learningRate,trainBatchSize,testBatchSize,\
+               epochs,trainData,testData,trainRatio):
     print("Building the net...")
     start=t.time()
     tf.reset_default_graph()
@@ -135,6 +135,8 @@ def neural_net(LOGDIR,name,whichTest,numOutputs,learningRate,trainBatchSize,\
     print("Starting training!")
     trainData.imagePos=0
     trainData.labelPos=0
+    testData.imagePos = 0
+    testData.labelPos = 0
     epochLength = int(len(trainData.labels)/trainBatchSize) #no. of iterations per epoch
     whichEpoch = 0
     print("Number of batches per epoch: {}".format(epochLength))
@@ -143,7 +145,7 @@ def neural_net(LOGDIR,name,whichTest,numOutputs,learningRate,trainBatchSize,\
     maxAccuracy = 0.0
     for i in range(epochLength*epochs):
         """Check a random value in the batch matches its label"""
-        batchImages, batchLabels = trainData.nextImageBatch(trainBatchSize), trainData.nextOneHotLabelBatch(trainBatchSize,numOutputs)
+        batchImages, batchLabels = trainData.nextImageBatch(trainBatchSize), trainData.nextOneHotLabelBatch(trainBatchSize,newNumOutputs)
 
     #    randomIndex = random.randint(0,trainBatchSize-1)
     #    print(display(batchImages.eval()[randomIndex], inputDim),batchLabels.eval()[randomIndex])
@@ -155,8 +157,9 @@ def neural_net(LOGDIR,name,whichTest,numOutputs,learningRate,trainBatchSize,\
             
         if i % testNum == 0:
             print("Testing the net...")
+            testBatchImages, testBatchLabels = testData.nextImageBatch(testBatchSize),testData.nextOneHotLabelBatch(testBatchSize,newNumOutputs)
             test_accuracy, test_summary = sess.run([accuracy,mergedSummaryOp], \
-                           feed_dict={x: testImages,y_: oneHot(testLabels,numOutputs)})
+                           feed_dict={x: testBatchImages,y_: testBatchLabels})
             test_writer.add_summary(test_summary, i*trainBatchSize)
             print("testing accuracy:",test_accuracy)
             if test_accuracy > maxAccuracy:
