@@ -78,7 +78,7 @@ def subSet(numClasses,images,labels):
 
 def oneHot(labelList,numOutputs):
         oneHots = np.zeros((len(labelList),numOutputs))
-        oneHots[np.arange(len(labelList)), labelList] = 1
+        oneHots[np.arange(len(labelList)), labelList.astype(int)] = 1
         return oneHots
 
 def makeDir(baseLOGDIR,name,numOutputs,learningRate,trainBatchSize):
