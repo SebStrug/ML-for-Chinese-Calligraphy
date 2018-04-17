@@ -51,10 +51,10 @@ def run_training():
     tf.summary.image('input', x_image, 4) # Show 4 examples of output images on tensorboard
     
     conv_layer_1, output_dim, output_channels = \
-        buildNet.conv_layer('conv_1', x_image, inputDim, 5, [1,1], 1, 32, do_pool=False)
+        buildNet.conv_layer('conv_1', x_image, inputDim, 5, [1,1], 1, 32, do_pool=True)
     conv_layer_2, output_dim, output_channels = \
         buildNet.conv_layer('conv_2', conv_layer_1, output_dim, 5, [1,1], \
-                             output_channels, 64, do_pool=False)
+                             output_channels, 64, do_pool=True)
 #    conv_layer_3, output_dim, output_channels = \
 #        buildNet.conv_layer('conv_3',conv_layer_2, output_dim, 4, [1,1], \
 #                            output_channels, 96, do_pool=False)
