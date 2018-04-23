@@ -25,7 +25,7 @@ dataPath, LOGDIR, rawDatapath = fF.whichUser("Elliot")
 relTrainDataPath = "Machine learning data/TFrecord"#path of training data relative to datapath in classFileFunc
 relBottleneckSavePath = "Machine learning data/bottlenecks" #path for saved bottlenecks relative to dataPath
 relModelPath = 'TF_record_CNN/Outputs100_LR0.001_Batch128'# path of loaded model relative to LOGDIR
-modelName="LR0.001_Iter27720_TestAcc0.86.ckpt"#name of ckpt file with saved model
+modelName="LR0.001_Iter20520_TestAcc0.845.ckpt"#name of ckpt file with saved model
 SaveName = "CNN_LR1e-3_BS128"#name for saved bottlenecks
 
 bottleneckPath = os.path.join(dataPath,relBottleneckSavePath)
@@ -92,7 +92,7 @@ try:
     l[-len(trainLabelBatch):] = trainLabelBatch
     trainLabelBatch= 0 
     while True:
-        print("Extracting batches.....",100.0*0.8*batch/numBatches,"%\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n")
+        print("Extracting batches.....",100.0*(1/0.8)*batch/numBatches,"%\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n")
         #continue adding batches until all data saved
         trainImageBatch,trainLabelBatch=sess.run([train_image_batch,train_label_batch])
         bottleneckBatch=sess.run(getBottleneck,feed_dict={x: trainImageBatch, keep_prob: 1.0})
@@ -130,7 +130,7 @@ try:
     l[-len(testLabelBatch):] = testLabelBatch
     testLabelBatch = 0 
     while True:
-        print("Extracting batches.....",100.0*0.2*batch/numBatches,"%\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n")
+        print("Extracting batches.....",100.0*(1/0.2)*batch/numBatches,"%\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n")
         #continue adding batches until all data saved
         testImageBatch,testLabelBatch=sess.run([test_image_batch,test_label_batch])
         bottleneckBatch=sess.run(getBottleneck,feed_dict={x: testImageBatch, keep_prob: 1.0})

@@ -180,7 +180,7 @@ def neural_net(LOGDIR,name,whichTest,numOutputs,learningRate,trainBatchSize,test
 whichTest = 1
 
 #trainRatio = 0.8
-for learning_rate in [1E-4]:
+for learning_rate in [1E-3]:
     for trainBatchSize in [128]:      
         epochs = 300
         #LOGDIR, whichTest, numOutputs, learningRate, trainBatchSize, iterations
