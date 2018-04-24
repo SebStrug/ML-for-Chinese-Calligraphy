@@ -24,7 +24,7 @@ mainPath = "C:\\Users\\Sebastian\\Desktop\\MLChinese\\CASIA\\1.0"
 #mainPath = 'C:\\Users\\ellio\\Documents\\training data\\Machine learning data'
 
 # Path containing gnt files
-dataPath = mainPath + '\\1.0 test'
+dataPath = mainPath + '\\gnt Files'
 #dataPath = mainPath + '\\forConversion'
 gntPath = dataPath
 
@@ -32,29 +32,29 @@ gntPath = dataPath
 saveImagePath = mainPath + "\\savedImages"
 
 #Choose to generate TFRecords for a GAN or Neural net
-# what_net = 'Neural'
-what_net = 'GAN'
+what_net = 'Neural'
+#what_net = 'GAN'
 
 #%% Process the calligraphy characters into tfrecords files
-imagePath = 'C:\\Users\\Sebastian\\Desktop\\MLChinese\\Calligraphy\\Individual_characters_normalised'
-addrs = glob.glob(imagePath+'\*')
-labels = [1]*len(addrs)
-print("Number of calligraphy characters: {}".format(len(addrs)))
-filename = 'calligraphy.tfrecords'
-writer = tf.python_io.TFRecordWriter(filename)
-for i in range(len(addrs)):
-    # Load the image
-    img = Image.open(addrs[i])
-    img = np.array(img)
-    label = labels[i]
-    # Create a feature
-    feature = {'train/label': cTF._int64_feature(label),
-               'train/image': cTF._bytes_feature(tf.compat.as_bytes(img.tostring()))}
-    # Create an example protocol buffer
-    example = tf.train.Example(features=tf.train.Features(feature=feature))
-    # Serialize to string and write on the file
-    writer.write(example.SerializeToString())
-writer.close()        
+#imagePath = 'C:\\Users\\Sebastian\\Desktop\\MLChinese\\Calligraphy\\Individual_characters_normalised'
+#addrs = glob.glob(imagePath+'\*')
+#labels = [1]*len(addrs)
+#print("Number of calligraphy characters: {}".format(len(addrs)))
+#filename = 'calligraphy.tfrecords'
+#writer = tf.python_io.TFRecordWriter(filename)
+#for i in range(len(addrs)):
+#    # Load the image
+#    img = Image.open(addrs[i])
+#    img = np.array(img)
+#    label = labels[i]
+#    # Create a feature
+#    feature = {'train/label': cTF._int64_feature(label),
+#               'train/image': cTF._bytes_feature(tf.compat.as_bytes(img.tostring()))}
+#    # Create an example protocol buffer
+#    example = tf.train.Example(features=tf.train.Features(feature=feature))
+#    # Serialize to string and write on the file
+#    writer.write(example.SerializeToString())
+#writer.close()        
 
 #%%Check if the .gnt file is supposed to be training or test
 def checkTrainTest():
@@ -98,7 +98,7 @@ if what_net == 'Neural':
     cTF.processGNTasImage(saveImagePath,gntPath,imageSize,trainGNT,testGNT)
     # Saves training and test files as tfrecords separately, for supervised learning
     #save TFRecord files containing the following numbers of unique Chinese characters
-    for numOutputs in [10,20,30,50,100]:
+    for numOutputs in [10]:
         #generate the addresses and corresponding labels of all Chinese characters 
         #that are in the set of X unique Chinese characters being saved
         addrs_labels = read_dir(saveImagePath)

@@ -65,11 +65,16 @@ class convertToTFRecord:
                 
                 if step == 0:
                     enumeratedList = []
-                    for i in range(len(dataForSaving[0])):
-                        #dataForSaving[0][i] denotes each character
-                        if dataForSaving[0][i] not in enumeratedList:
-                            enumeratedList.append(dataForSaving[0][i])
+                for i in range(len(dataForSaving[0])):
+                    #dataForSaving[0][i] denotes each character
+                    if dataForSaving[0][i] not in enumeratedList:
+                        enumeratedList.append(dataForSaving[0][i])
                 
+                # save chars as numpy and 
+                #np.savetxt('List_of_chars_TEXT',enumeratedList, delimiter = ',')
+                print("Length of enumerated list: {}, -171: {}".format(len(enumeratedList), len(enumeratedList)-171))
+                np.save('List_of_chars_NUMPY', enumeratedList)
+                    
                 if int(file[:file.index('-f.gnt')]) in trainGNT:
                     print('Saving training images...')
                     convertToTFRecord.saveImages(\
