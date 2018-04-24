@@ -121,10 +121,10 @@ def load_data(parameters, train_kwargs, localPath): #function to load in the dat
     return image_batch, label_batch, numFiles   
         
 def show_result(num_out, show = False, save = False, path = 'result.png'):
-    fixed_z_ = np.random.normal(0, 1, (25, 1, 1, 100))
+    fixed_z_ = np.random.normal(0, 1, (num_out**2, 1, 1, 100))
     test_images = sess.run(G_z, {z: fixed_z_, isTrain: False})
 
-    size_figure_grid = num_out #output 25 images in a 5x5 grid
+    size_figure_grid = num_out
     fig, ax = plt.subplots(size_figure_grid, size_figure_grid, figsize=(num_out, num_out))
     for i, j in itertools.product(range(size_figure_grid), range(size_figure_grid)):
         ax[i, j].get_xaxis().set_visible(False)
@@ -199,7 +199,7 @@ G_vars = [var for var in T_vars if var.name.startswith('generator')]
 print("Creating the optimizer...")
 with tf.name_scope("Train"):
     with tf.control_dependencies(tf.get_collection(tf.GraphKeys.UPDATE_OPS)):
-        D_optim = tf.train.AdamOptimizer(1e-4, beta1=0.5).minimize(D_loss, var_list=D_vars)
+        D_optim = tf.train.AdamOptimizer(1e-3, beta1=0.5).minimize(D_loss, var_list=D_vars)
         G_optim = tf.train.AdamOptimizer(1e-3, beta1=0.5).minimize(G_loss, var_list=G_vars)
     
 # Create a saver to save these summary operations
@@ -241,7 +241,7 @@ with tf.Session() as sess: # or tf.InteractiveSession() ?
                 print("Step: {}, Discriminator loss: {:.3}".format(step, loss_d_))
                 discrim_writer.add_summary(discrim_summary, step)
                 
-                # update generator
+                # update generator twice for everytime the discriminator is updated
                 z_ = np.random.normal(0, 1, (batch_size, 1, 1, 100))
                 loss_g_, _, gen_summary = sess.run([G_loss, G_optim, G_summary], \
                                                    {z: z_, x: x_, isTrain: True})
@@ -269,6 +269,8 @@ with tf.Session() as sess: # or tf.InteractiveSession() ?
                 print("Currently at epoch {}".format(math.floor((parameters.batch_size*step)/numFiles)))
                 fixed_p = LOGDIR + '/Image_outputs/' + 'DCGAN_' + str(step) + '.png'
                 show_result(images_out, show=True, save=True, path=fixed_p)
+                
+                # save the model
                 saver.save(sess, os.path.join(LOGDIR, "DLoss{:.3}_GLoss{:.3}.ckpt".\
                                                   format(loss_d_, loss_g_))) 
        
