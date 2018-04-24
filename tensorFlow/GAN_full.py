@@ -24,7 +24,7 @@ tf.reset_default_graph()
 
 # initialise the parameters
 inputDim = 48
-num_output = 100
+num_output = 3866
 batch_size = 128
 num_epochs = 1000
 learning_rate = 1e-4 # I manually set learning rates to 1e-3 for generator, 1e-4 for discriminator
@@ -36,11 +36,11 @@ parameters = paramStruct(inputDim, num_output, \
 train_kwargs = {"normalize_images": True, "augment_images": False, "shuffle_data": True}
 print(parameters); print("\n");
 
-#localPath = 'C:\\Users\\Sebastian\\Desktop\\MLChinese\\CASIA\\1.0' #local data path
-#savePath = 'C:/Users/Sebastian/Desktop/MLChinese/Saved_runs/' #path to save tensorboard data to
-localPath = 'C:\\Users\ellio\\Documents\\training data\\Machine learning data\\TFrecord'
-savePath = 'C:\\Users\\ellio\\Anaconda3\\Lib\\site-packages\\tensorflow\\tmp\\GAN'
-name_of_run = 'testing' # updates the generator twice for every discriminator update
+localPath = 'C:\\Users\\Sebastian\\Desktop\\MLChinese\\CASIA\\1.0' #local data path
+savePath = 'C:/Users/Sebastian/Desktop/MLChinese/Saved_runs/' #path to save tensorboard data to
+#localPath = 'C:\\Users\ellio\\Documents\\training data\\Machine learning data\\TFrecord'
+#savePath = 'C:\\Users\\ellio\\Anaconda3\\Lib\\site-packages\\tensorflow\\tmp\\GAN'
+name_of_run = 'GAN_test_GIF_Images' # updates the generator twice for every discriminator update
 
 def generate_gif(): #run this after you're finished to generate a gif for the images produced
     images = []
@@ -105,11 +105,11 @@ def generator(x, isTrain=True, reuse=False):
         return tf.nn.tanh(conv5) 
     
 def load_data(parameters, train_kwargs, localPath): #function to load in the data
-    train_tfrecord_filename = localPath+'\\train'+str(parameters.num_output)+'.tfrecords'
+    #train_tfrecord_filename = localPath+'\\train'+str(parameters.num_output)+'.tfrecords'
     #test_tfrecord_filename = localPath+'\\test'+str(num_output)+'.tfrecords'
     #tfrecord_files = [train_tfrecord_filename, test_tfrecord_filename]
-    tfrecord_files = [train_tfrecord_filename]
-    image_batch, label_batch = inputs('train', tfrecord_files, parameters.batch_size, \
+    tfrecord_files = [localPath+'\\generic'+str(parameters.num_output)+'.tfrecords']
+    image_batch, label_batch = inputs('generic', tfrecord_files, parameters.batch_size, \
                                       parameters.num_epochs, **train_kwargs)
     """Can't incorporate the test files too right now because the decoder
     has a separate 'train/...' and 'test/...' option"""

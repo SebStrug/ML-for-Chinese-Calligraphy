@@ -58,6 +58,27 @@ def decodeTest(serialized_example):
     label = tf.cast(features['test/label'], tf.int32)
     return image2, label
 
+def decodeGeneric(serialized_example):
+    features = tf.parse_single_example(
+        serialized_example,
+        # Defaults are not specified since both keys are required.
+        features={'image': tf.FixedLenFeature([], tf.string),
+                  'label': tf.FixedLenFeature([], tf.int64)})
+    # tfrecords is saved in raw bytes, need to convert this into usable format
+    # May want to save this as tf.float32???
+    image = tf.decode_raw(features['image'], tf.uint8)
+    # Reshape image data into the original shape (try different forms)
+#    image1 = tf.reshape(image, [inputDim, inputDim, 1]); #2D no batch
+#    image2 = tf.reshape(image, [inputDim**2,1]);         #1D no batch
+    """Try with no '1' on the end of array (which denotes RGB or greyscale)"""
+    image1 = tf.reshape(image, [inputDim, inputDim]); #2D no batch
+    image2 = tf.reshape(image, [inputDim**2]);         #1D no batch
+    print(image1)
+    print(image2)
+    # Cast label data
+    label = tf.cast(features['label'], tf.int32)
+    return image2, label
+
 def augment(image, label):
     """Apply distortions to the image, here rotation and translation
     Not included yet"""
@@ -123,6 +144,8 @@ def inputs(trainType, tfrecord_filename, batch_size, num_epochs,\
     elif trainType == 'test':
         #do not augment testing data! Only need to augment training data
         dataset = dataset.map(decodeTest)
+    elif trainType == 'generic':
+        dataset = dataset.map(decodeGeneric)
     else:
         raise ValueError("trainType not specified properly as train or test")
     if normalize_images == True:
