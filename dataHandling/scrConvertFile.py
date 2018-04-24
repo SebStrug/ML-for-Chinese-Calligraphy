@@ -5,6 +5,9 @@ Script to convert gnt files to TFRecord files
 #%%
 import os
 import glob
+import tensorflow as tf
+from PIL import Image
+import numpy as np
 
 gitHubRep = os.path.normpath(os.getcwd() + os.sep + os.pardir)# find github path
 #import own functions and classes
@@ -31,6 +34,27 @@ saveImagePath = mainPath + "\\savedImages"
 #Choose to generate TFRecords for a GAN or Neural net
 # what_net = 'Neural'
 what_net = 'GAN'
+
+#%% Process the calligraphy characters into tfrecords files
+imagePath = 'C:\\Users\\Sebastian\\Desktop\\MLChinese\\Calligraphy\\Individual_characters_normalised'
+addrs = glob.glob(imagePath+'\*')
+labels = [1]*len(addrs)
+print("Number of calligraphy characters: {}".format(len(addrs)))
+filename = 'calligraphy.tfrecords'
+writer = tf.python_io.TFRecordWriter(filename)
+for i in range(len(addrs)):
+    # Load the image
+    img = Image.open(addrs[i])
+    img = np.array(img)
+    label = labels[i]
+    # Create a feature
+    feature = {'train/label': cTF._int64_feature(label),
+               'train/image': cTF._bytes_feature(tf.compat.as_bytes(img.tostring()))}
+    # Create an example protocol buffer
+    example = tf.train.Example(features=tf.train.Features(feature=feature))
+    # Serialize to string and write on the file
+    writer.write(example.SerializeToString())
+writer.close()        
 
 #%%Check if the .gnt file is supposed to be training or test
 def checkTrainTest():

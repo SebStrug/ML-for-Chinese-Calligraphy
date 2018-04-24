@@ -17,7 +17,7 @@ class fileFunc(object):
         trainDataPathSeb = 'C:\\Users\\Sebastian\\Desktop\\MLChinese\\CASIA\\1.0'
         rawDataPathSeb = 'C:\\Users\\Sebastian\\Desktop\\MLChinese\\CASIA\\1.0'
         rawDataPathElliot = 'C:\\Users\\ellio\\Documents\\training data\\'
-        SebLOGDIR = r'C:/Users/Sebastian/Anaconda3/Lib/site-packages/tensorflow/tmp/ChineseCaligCNN/'
+        SebLOGDIR = r'C:/Users/Sebastian/Desktop/MLChinese/Saved_runs'
         elliotLOGDIR = r'C:/Users/ellio/Anaconda3/Lib/site-packages/tensorflow/tmp/'
         if user == "Elliot":
             return trainDataPathElliot, elliotLOGDIR, rawDataPathElliot

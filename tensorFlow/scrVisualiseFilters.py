@@ -8,6 +8,7 @@ and produce an embedding etc.
 
 #%% Imports and paths
 import os
+import scipy as sp
 #gitHubRep = os.path.normpath(os.getcwd() + os.sep + os.pardir)# find github path
 gitHubRep = 'C:/Users/Sebastian/Desktop/GitHub/ML-for-Chinese-Calligraphy'
 #import own functions and classes
@@ -18,15 +19,17 @@ os.chdir(os.path.join(gitHubRep,"tensorFlow/"))
 from InputTFRecord import inputs
 #set other variables
 inputDim = 48
-numOutputs= 100#number of outputs in original network
+numOutputs= 3866#number of outputs in original network
 
 #set paths and file names
 dataPath, LOGDIR, rawDatapath = fF.whichUser("Seb")
-#relTrainDataPath = "Machine learning data/TFrecord"#path of training data relative to datapath in classFileFunc
-relTrainDataPath = ''
-relSavePath = "savedVisualisation" #path for saved images relative to dataPath
+dataPath = 'C:/Users/Sebastian/Desktop/MLChinese'
+#relTrainDataPath = "Machine learning data/TFrecord" #path of training data relative to datapath in classFileFunc
+relTrainDataPath = 'CASIA/1.0'
+#relSavePath = "savedVisualisation" #path for saved images relative to dataPath
+relSavePath = 'Visualising_filters'
 #relModelPath = 'TF_record_CNN/Outputs100_LR0.001_Batch128'# path of loaded model relative to LOGDIR
-relModelPath = '2conv_100Out_model'
+relModelPath = '2conv_test100_outputs_run\Outputs100_LR0.0001_Batch128'
 #modelName="LR0.001_Iter27720_TestAcc0.86.ckpt"#name of ckpt file with saved model
 modelName = 'LR0.0001_Iter9270_TestAcc0.718.ckpt'
 saveName = "2CNN_LR0.001_BS128"#name for saved images
@@ -38,6 +41,7 @@ import time as t
 import matplotlib.pyplot as plt
 import itertools 
 
+tf.reset_default_graph()
 numImages = 128 #batch size?
 
 #%%Func defs
@@ -49,8 +53,9 @@ def removeAndSwapAxes(array):
 def show_activations(features,featureDim, num_out, path, name, show = False, save = False):
     test_images = features
 
-    size_figure_grid = int(num_out/8) #output 25 images in a 5x5 grid
+    size_figure_grid = int(num_out/8)
     fig, ax = plt.subplots(8, size_figure_grid, figsize=(8, int(8*8/size_figure_grid)))
+    print("Number of images: {}, size of grid: {}".format(num_out, size_figure_grid))
     for i, j in itertools.product(range(8), range(size_figure_grid)):
         ax[i, j].get_xaxis().set_visible(False)
         ax[i, j].get_yaxis().set_visible(False)
@@ -59,7 +64,7 @@ def show_activations(features,featureDim, num_out, path, name, show = False, sav
         i = k // size_figure_grid
         j = k % size_figure_grid
         ax[i, j].cla()
-        ax[i, j].imshow(np.reshape(test_images[k], (featureDim, featureDim)), cmap='gray')
+        ax[i, j].imshow(np.reshape(test_images[k], (featureDim, featureDim)) )#, cmap='gray')
     #label = 'Epoch {0}'.format(num_epoch)
     #fig.text(0.5, 0.04, label, ha='center')
     if save:
@@ -71,8 +76,9 @@ def show_activations(features,featureDim, num_out, path, name, show = False, sav
         plt.close() 
         
 #%% import data
-train_tfrecord_filename = os.path.join(os.path.join(dataPath,relTrainDataPath),'train'+str(numOutputs)+'.tfrecords')
-test_tfrecord_filename = os.path.join(os.path.join(dataPath,relTrainDataPath),'test'+str(numOutputs)+'.tfrecords')
+#train_tfrecord_filename = os.path.join(os.path.join(dataPath,relTrainDataPath),'train'+str(numOutputs)+'.tfrecords')
+#test_tfrecord_filename = os.path.join(os.path.join(dataPath,relTrainDataPath),'test'+str(numOutputs)+'.tfrecords')
+train_tfrecord_filename = 'C:\\Users\\Sebastian\\Desktop\\MLChinese\\CASIA\\1.0\\calligraphy.tfrecords'
 
 #%% Open a tensorflow session
 print("Importing graph.....")
@@ -80,8 +86,7 @@ start = t.time()
 sess = tf.InteractiveSession()
 print("Initialising all variables...")
 # Initialise all variables
-#loadLOGDIR = os.path.join(LOGDIR,relModelPath)
-loadLOGDIR = os.path.join(dataPath, relModelPath) #Seb's directory
+loadLOGDIR = os.path.join(LOGDIR,relModelPath)
 os.chdir(loadLOGDIR)
 saver = tf.train.import_meta_graph(modelName+".meta")
 
@@ -108,6 +113,17 @@ conv1Activations = graph.get_tensor_by_name("conv_1/Relu:0")
 conv1Weights = graph.get_tensor_by_name("conv_1/Variable:0")
 conv2Activations = graph.get_tensor_by_name("conv_2/Relu:0")
 conv2Weights = graph.get_tensor_by_name("conv_2/Variable:0")
+
+#conv3Activations = graph.get_tensor_by_name("conv_3/Relu:0")
+#conv3Weights = graph.get_tensor_by_name("conv_3/Variable:0")
+#conv4Activations = graph.get_tensor_by_name("conv_4/Relu:0")
+#conv4Weights = graph.get_tensor_by_name("conv_4/Variable:0")
+#
+#conv5Activations = graph.get_tensor_by_name("conv_5/Relu:0")
+#conv5Weights = graph.get_tensor_by_name("conv_5/Variable:0")
+#conv6Activations = graph.get_tensor_by_name("conv_6/Relu:0")
+#conv6Weights = graph.get_tensor_by_name("conv_6/Variable:0")
+
 #accuracy=graph.get_tensor_by_name("accuracy/Mean:0")
 getBottleneck = graph.get_tensor_by_name("dropout/dropout/mul:0")
 output = graph.get_tensor_by_name("add:0")
@@ -115,35 +131,82 @@ print("took ",t.time()-start," seconds\n")
 
 #%% extract  feature maps
 images,labels=sess.run([train_image_batch,train_label_batch])
+print(labels)
+print("Max label:{}, min label:{}".format(max(labels),min(labels)))
 layer1Activations=sess.run(conv1Activations,feed_dict={x: images, keep_prob: 1.0})
 layer1Weights=sess.run(conv1Weights)
 layer2Activations=sess.run(conv2Activations,feed_dict={x: images, keep_prob: 1.0})
 layer2Weights=sess.run(conv2Weights)
+
+#layer3Activations=sess.run(conv3Activations,feed_dict={x: images, keep_prob: 1.0})
+#layer3Weights=sess.run(conv3Weights)
+#layer4Activations=sess.run(conv4Activations,feed_dict={x: images, keep_prob: 1.0})
+#layer4Weights=sess.run(conv4Weights)
+#
+#layer5Activations=sess.run(conv5Activations,feed_dict={x: images, keep_prob: 1.0})
+#layer5Weights=sess.run(conv5Weights)
+#layer6Activations=sess.run(conv6Activations,feed_dict={x: images, keep_prob: 1.0})
+#layer6Weights=sess.run(conv6Weights)
+
 bottlenecks = sess.run(getBottleneck,feed_dict={x: images, keep_prob: 1.0})
 
 #%%process feature maps
 layer1Activations=removeAndSwapAxes(layer1Activations)
 layer2Activations=removeAndSwapAxes(layer2Activations)
+
+#layer3Activations = removeAndSwapAxes(layer3Activations)
+#layer4Activations = removeAndSwapAxes(layer4Activations)
+#
+#layer5Activations = removeAndSwapAxes(layer5Activations)
+#layer6Activations = removeAndSwapAxes(layer6Activations)
+
 #save activations, weights, bottlenecks and outputs
 fF.saveNPZ(os.path.join(dataPath,relSavePath),"features_raw_{}".format(numImages)+saveName+".npz",\
            images=np.reshape(images,(numImages,inputDim,inputDim)),\
            layer1=layer1Activations,weight1=layer1Weights,\
            layer2=layer2Activations,weight2=layer2Weights,\
+           
+#           layer3 = layer3Activations, weight3 = layer3Weights, \
+#           layer4 = layer4Activations, weight4 = layer4Weights, \
+           
            bottlenecks=bottlenecks)
-#find for each feature the image that creaates the highest activation.  
-layer1Highest = []
-layer2Highest = []
-activationTot = np.sum(layer1Activations,axis=(2,3))
-maxIndices = np.argmax(activationTot,axis=0)
-for i in range(0,32):
-        layer1Highest.append(layer1Activations[int(maxIndices[i])][i])
-        
-activationTot = np.sum(layer2Activations,axis=(2,3))
-maxIndices = np.argmax(activationTot,axis=0)
-for i in range(0,64):
-        layer2Highest.append(layer2Activations[int(maxIndices[i])][i])
-    
-    
-show_activations(layer1Highest, inputDim,32,os.path.join(dataPath,relSavePath),"layer1Features.jpg",True,True)
-show_activations(layer2Highest, inputDim//2,64,os.path.join(dataPath,relSavePath),"layer2Features.jpg",True,True)
 
+activations_list = [layer1Activations, layer2Activations] #\
+                    #, layer3Activations, layer4Activations \
+                    #, layer5Activations, layer6Activations]
+weights_list = [layer1Weights, layer2Weights]# \
+                   # , layer3Weights, layer4Weights \
+                   # , layer5Weights, layer6Weights]
+
+#%%find for each feature the image that creaates the highest activation.
+def maximum_activation(layerActivations):
+    layerHighest = []
+    activationTot = np.sum(layerActivations,axis=(2,3))
+    maxIndices = np.argmax(activationTot,axis=0)
+    for i in range(0,layerActivations.shape[1]):
+            layerHighest.append(layerActivations[int(maxIndices[i])][i])
+    return layerHighest
+
+for i in activations_list:
+    print("Layer {} activations...".format(activations_list.index(i)))
+    layerHighest = maximum_activation(i)
+    show_activations(layerHighest, len(layerHighest[0]), len(layerHighest), os.path.join(dataPath,relSavePath),\
+                 "layer{}Features.jpg".format(activations_list.index(i)), show=True, save=True)
+
+def convert_weight_filters(layerWeights):
+    weight_filters = [layerWeights[:,:,:,i] for i in range(layerWeights.shape[3])]
+    weight_filters = [np.sum(i,axis=2) for i in weight_filters]
+    weight_upscaled = [sp.misc.imresize(weight_filters[i],10.0) for i \
+                        in range(layerWeights.shape[3])]
+    return weight_upscaled
+
+for i in weights_list:
+    print("Layer {} weights...".format(weights_list.index(i)))
+    weights_upscaled = convert_weight_filters(i)
+    show_activations(weights_upscaled, len(weights_upscaled[0]), len(weights_upscaled),\
+                     os.path.join(dataPath,relSavePath), 'layer{}Weights.jpg'.format(weights_list.index(i)),\
+                     show=True, save=True)
+    
+sess.close()
+tf.reset_default_graph()
+    
