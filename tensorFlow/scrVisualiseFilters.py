@@ -76,8 +76,9 @@ def show_activations(features,featureDim, num_out, path, name, show = False, sav
         plt.close() 
         
 #%% import data
-train_tfrecord_filename = os.path.join(os.path.join(dataPath,relTrainDataPath),'train'+str(numOutputs)+'.tfrecords')
-test_tfrecord_filename = os.path.join(os.path.join(dataPath,relTrainDataPath),'test'+str(numOutputs)+'.tfrecords')
+#train_tfrecord_filename = os.path.join(os.path.join(dataPath,relTrainDataPath),'train'+str(numOutputs)+'.tfrecords')
+#test_tfrecord_filename = os.path.join(os.path.join(dataPath,relTrainDataPath),'test'+str(numOutputs)+'.tfrecords')
+train_tfrecord_filename = 'C:\\Users\\Sebastian\\Desktop\\MLChinese\\CASIA\\1.0\\calligraphy.tfrecords'
 
 #%% Open a tensorflow session
 print("Importing graph.....")
