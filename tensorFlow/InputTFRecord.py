@@ -128,14 +128,11 @@ def inputs(trainType, tfrecord_filename, batch_size, num_epochs,\
     if normalize_images == True:
         dataset=dataset.map(normalize) #normalize the image values to be between -0.5 and 0.5
     if shuffle_data == True:
-<<<<<<< HEAD
         dataset = dataset.shuffle(int(1e7)) #shuffle the order of the images
-=======
         shuffTime = time.time()
         #dataset = dataset.shuffle(1000 + 3 * batch_size) #shuffle the order of the images
         dataset = dataset.shuffle(buffer_size=10**7)
         print("Time taken to shuffle dataset: {}".format(time.time()-shuffTime))
->>>>>>> Update-visualise-filters
     dataset = dataset.batch(batch_size)
     iterator = dataset.make_one_shot_iterator()
     return iterator.get_next()

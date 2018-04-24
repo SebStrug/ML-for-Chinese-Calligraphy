@@ -44,6 +44,14 @@ import itertools
 tf.reset_default_graph()
 numImages = 128 #batch size?
 
+## Go to the directory where you have the numpy file containing the list of characters
+#os.chdir("C:\\Users\\Sebastian\\Desktop\\MLChinese\\CASIA\\1.0")
+all_chars = np.load("List_of_chars_NUMPY.npy")
+chinese_only = []
+for i in range(len(all_chars)):
+    if i > 170:
+        chinese_only.append(all_chars[i])
+
 #%%Func defs
 def removeAndSwapAxes(array):
     foo=np.swapaxes(array,2,3)
