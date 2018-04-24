@@ -9,8 +9,8 @@ and produce an embedding etc.
 #%% Imports and paths
 import os
 import scipy as sp
-#gitHubRep = os.path.normpath(os.getcwd() + os.sep + os.pardir)# find github path
-gitHubRep = 'C:/Users/Sebastian/Desktop/GitHub/ML-for-Chinese-Calligraphy'
+gitHubRep = os.path.normpath(os.getcwd() + os.sep + os.pardir)# find github path
+#gitHubRep = 'C:/Users/Sebastian/Desktop/GitHub/ML-for-Chinese-Calligraphy'
 #import own functions and classes
 os.chdir(os.path.join(gitHubRep,"dataHandling/"))
 from classFileFunctions import fileFunc as fF 
@@ -22,16 +22,18 @@ inputDim = 48
 numOutputs= 3866#number of outputs in original network
 
 #set paths and file names
-dataPath, LOGDIR, rawDatapath = fF.whichUser("Seb")
-dataPath = 'C:/Users/Sebastian/Desktop/MLChinese'
-#relTrainDataPath = "Machine learning data/TFrecord" #path of training data relative to datapath in classFileFunc
-relTrainDataPath = 'CASIA/1.0'
-#relSavePath = "savedVisualisation" #path for saved images relative to dataPath
-relSavePath = 'Visualising_filters'
-#relModelPath = 'TF_record_CNN/Outputs100_LR0.001_Batch128'# path of loaded model relative to LOGDIR
-relModelPath = '2conv_test100_outputs_run\Outputs100_LR0.0001_Batch128'
-#modelName="LR0.001_Iter27720_TestAcc0.86.ckpt"#name of ckpt file with saved model
-modelName = 'LR0.0001_Iter9270_TestAcc0.718.ckpt'
+dataPath, LOGDIR, rawDatapath = fF.whichUser("Elliot")
+#dataPath = 'C:/Users/Sebastian/Desktop/MLChinese'
+relTrainDataPath = "Machine learning data/TFrecord" #path of training data relative to datapath in classFileFunc
+#relTrainDataPath = 'CASIA/1.0'
+relSavePath = "savedVisualisation" #path for saved images relative to dataPath
+#relSavePath = 'Visualising_filters'
+relModelPath = 'TF_record_CNN/Outputs100_LR0.001_Batch128'# path of loaded model relative to LOGDIR
+#relModelPath = '2conv_test100_outputs_run\Outputs100_LR0.0001_Batch128'
+relTransferModelPath ='transfer_learning/finalLayerCNN_was100Out_run_1/Outputs3866_LR0.001_Batch128'
+originalModelName="LR0.001_Iter20520_TestAcc0.845.ckpt"#name of ckpt file with saved original model
+#originalModelName = 'LR0.0001_Iter9270_TestAcc0.718.ckpt'
+transferModelName ='LR0.001_Iter19710_TestAcc0.6796875.ckpt' #name of model that contains the retrained last layer
 saveName = "2CNN_LR0.001_BS128"#name for saved images
 
 #import rest of the modules modules
@@ -96,10 +98,10 @@ print("Initialising all variables...")
 # Initialise all variables
 loadLOGDIR = os.path.join(LOGDIR,relModelPath)
 os.chdir(loadLOGDIR)
-saver = tf.train.import_meta_graph(modelName+".meta")
+saver = tf.train.import_meta_graph(originalModelName+".meta")
 
 print("Restoring the session...")
-saver.restore(sess,'./'+modelName)
+saver.restore(sess,'./'+originalModelName)
 
 print("Getting default graph...")
 graph = tf.get_default_graph()
@@ -217,4 +219,35 @@ for i in weights_list:
     
 sess.close()
 tf.reset_default_graph()
-    
+#%%    
+#deploy network
+print("Now deploying the full network by first loading the last layer from the transfer learn")
+print("Importing graph.....")
+start = t.time()
+sess = tf.InteractiveSession()
+print("Initialising all variables...")
+# Initialise all variables
+loadLOGDIR = os.path.join(LOGDIR,relTransferModelPath)
+os.chdir(loadLOGDIR)
+saver = tf.train.import_meta_graph(transferModelName+".meta")
+
+print("Restoring the session...")
+saver.restore(sess,'./'+transferModelName)
+
+print("Getting default graph...")
+graph = tf.get_default_graph()
+print("took ",t.time()-start," seconds\n")
+#print(graph.get_operations())
+print("Assign operations and placeholders......")  
+start = t.time()  
+x=graph.get_tensor_by_name("images:0")
+y_=graph.get_tensor_by_name("labels:0")
+keep_prob=graph.get_tensor_by_name("dropout/dropout/keep_prob:0")
+getAccuracy=graph.get_tensor_by_name("accuracy/accuracy:0")
+getPredictions = graph.get_tensor_by_name("accuracy/ArgMax:0")
+print("took ",t.time()-start," seconds\n")
+#get accuracy and predictions for batch
+accuracy = sess.run(getAccuracy,feed_dict={x: images,y_:labels, keep_prob: 1.0})
+predictions = sess.run(getPredictions,feed_dict={x:images,y_:labels,keep_prob:1.0})
+sess.close()
+tf.reset_default_graph()
