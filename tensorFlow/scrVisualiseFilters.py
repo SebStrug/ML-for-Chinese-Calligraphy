@@ -6,6 +6,7 @@ and produce an embedding etc.
 @author: ellio
 """
 
+
 #%% Imports and paths
 import os
 import scipy as sp
@@ -44,15 +45,12 @@ import matplotlib.pyplot as plt
 import itertools 
 
 tf.reset_default_graph()
-numImages = 128 #batch size?
+numImages = 352 #batch size?
 
-## Go to the directory where you have the numpy file containing the list of characters
-#os.chdir("C:\\Users\\Sebastian\\Desktop\\MLChinese\\CASIA\\1.0")
+# Go to the directory where you have the numpy file containing the list of characters
+os.chdir(gitHubRep)
 all_chars = np.load("List_of_chars_NUMPY.npy")
-chinese_only = []
-for i in range(len(all_chars)):
-    if i > 170:
-        chinese_only.append(all_chars[i])
+chinese_only = all_chars[171:]
 
 #%%Func defs
 def removeAndSwapAxes(array):
@@ -88,8 +86,8 @@ def show_activations(features,featureDim, num_out, path, name, show = False, sav
 #%% import data
 #train_tfrecord_filename = os.path.join(os.path.join(dataPath,relTrainDataPath),'train'+str(numOutputs)+'.tfrecords')
 #test_tfrecord_filename = os.path.join(os.path.join(dataPath,relTrainDataPath),'test'+str(numOutputs)+'.tfrecords')
-train_tfrecord_filename = 'C:\\Users\\Sebastian\\Desktop\\MLChinese\\CASIA\\1.0\\calligraphy.tfrecords'
-
+#train_tfrecord_filename = 'C:\\Users\\Sebastian\\Desktop\\MLChinese\\CASIA\\1.0\\calligraphy.tfrecords'
+train_tfrecord_filename = os.path.join(os.path.join(dataPath,relTrainDataPath),'calligraphy.tfrecords')
 #%% Open a tensorflow session
 print("Importing graph.....")
 start = t.time()
@@ -242,12 +240,24 @@ print("Assign operations and placeholders......")
 start = t.time()  
 x=graph.get_tensor_by_name("images:0")
 y_=graph.get_tensor_by_name("labels:0")
-keep_prob=graph.get_tensor_by_name("dropout/dropout/keep_prob:0")
 getAccuracy=graph.get_tensor_by_name("accuracy/accuracy:0")
 getPredictions = graph.get_tensor_by_name("accuracy/ArgMax:0")
 print("took ",t.time()-start," seconds\n")
 #get accuracy and predictions for batch
-accuracy = sess.run(getAccuracy,feed_dict={x: images,y_:labels, keep_prob: 1.0})
-predictions = sess.run(getPredictions,feed_dict={x:images,y_:labels,keep_prob:1.0})
+#accuracy = sess.run(getAccuracy,feed_dict={x: bottlenecks,y_:tf.one_hot(labels,})
+predictions = sess.run(getPredictions,feed_dict={x:bottlenecks})
 sess.close()
 tf.reset_default_graph()
+charPredictions=[]
+for i in range (0,len(predictions)):
+    charPredictions.append(chinese_only[predictions[i]])
+    
+imagesReshape=np.reshape(images,(numImages,inputDim,inputDim))
+fF.saveNPZ(os.path.join(dataPath,relSavePath),"Images_+_predictions_calligraphy"+saveName+".npz",\
+           images=imagesReshape,\
+           predictions=charPredictions)
+for i in range(0,numImages):
+    plt.imshow(imagesReshape[i])
+    print(charPredictions[i])
+    input("Wait for iamge to load and press enter")
+    
