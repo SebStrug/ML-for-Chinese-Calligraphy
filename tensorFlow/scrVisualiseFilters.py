@@ -23,26 +23,28 @@ inputDim = 48
 numOutputs= 3866#number of outputs in original network
 
 #set paths and file names
-dataPath, LOGDIR, rawDatapath = fF.whichUser("Elliot")
-#dataPath = 'C:/Users/Sebastian/Desktop/MLChinese'
-relTrainDataPath = "Machine learning data/TFrecord" #path of training data relative to datapath in classFileFunc
-#relTrainDataPath = 'CASIA/1.0'
-relSavePath = "savedVisualisation" #path for saved images relative to dataPath
-#relSavePath = 'Visualising_filters'
-relModelPath = 'TF_record_CNN/Outputs100_LR0.001_Batch128'# path of loaded model relative to LOGDIR
-#relModelPath = '2conv_test100_outputs_run\Outputs100_LR0.0001_Batch128'
+dataPath, LOGDIR, rawDatapath = fF.whichUser("Seb")
+dataPath = 'C:/Users/Sebastian/Desktop/MLChinese'
+#relTrainDataPath = "Machine learning data/TFrecord" #path of training data relative to datapath in classFileFunc
+relTrainDataPath = 'CASIA/1.0'
+#relSavePath = "savedVisualisation" #path for saved images relative to dataPath
+relSavePath = 'Visualising_filters'
+#relModelPath = 'TF_record_CNN/Outputs100_LR0.001_Batch128'# path of loaded model relative to LOGDIR
+relModelPath = '2conv_100Train_TransferOriginal/Outputs100_LR0.001_Batch128'
 relTransferModelPath ='transfer_learning/finalLayerCNN_was100Out_run_1/Outputs3866_LR0.001_Batch128'
-originalModelName="LR0.001_Iter20520_TestAcc0.845.ckpt"#name of ckpt file with saved original model
-#originalModelName = 'LR0.0001_Iter9270_TestAcc0.718.ckpt'
+#originalModelName="LR0.001_Iter20520_TestAcc0.845.ckpt"#name of ckpt file with saved original model
+originalModelName = 'LR0.001_Iter20520_TestAcc0.845.ckpt'
 transferModelName ='LR0.001_Iter19710_TestAcc0.6796875.ckpt' #name of model that contains the retrained last layer
-saveName = "2CNN_LR0.001_BS128"#name for saved images
+saveName = "Transfer_learning_test"#name for saved images
 
 #import rest of the modules modules
 import tensorflow as tf
 import numpy as np
 import time as t
 import matplotlib.pyplot as plt
-import itertools 
+import itertools
+import PIL.ImageOps
+from PIL import Image, ImageDraw, ImageFont
 
 tf.reset_default_graph()
 numImages = 352 #batch size?
@@ -82,6 +84,20 @@ def show_activations(features,featureDim, num_out, path, name, show = False, sav
         plt.show()
     else:
         plt.close() 
+
+def sideBySide(charPrediction, reshapedImage):
+    img = Image.new('RGB', (48, 48), (255,255,255))
+    draw = ImageDraw.Draw(img) 
+    simsum_font = ImageFont.truetype('simsun.ttc',48) #font must be supported
+    draw.text((1,1), charPredictions[i], font = simsum_font, fill = "#000000")
+              
+    imgTotal = Image.new('RGB', (96,48), (255,255,255))
+    imgTotal.paste(img, (0,0))
+    charImage = Image.fromarray( np.asarray( imagesReshape[i], dtype="uint8"), "L" )
+    charImage_invert = PIL.ImageOps.invert(charImage)
+    imgTotal.paste(charImage_invert, (48,0))
+    print("Saving {}".format(i))
+    imgTotal.save(os.path.join(dataPath,relSavePath)+"\\Images_predictions_calligraphy\\{}.png".format(i))        
         
 #%% import data
 #train_tfrecord_filename = os.path.join(os.path.join(dataPath,relTrainDataPath),'train'+str(numOutputs)+'.tfrecords')
@@ -108,7 +124,7 @@ print("took ",t.time()-start," seconds\n")
 
 print("Set up data....")
 start = t.time()
-train_kwargs = {"normalize_images": True, "augment_images": False, "shuffle_data":True}
+train_kwargs = {"normalize_images": True, "augment_images": False, "shuffle_data":False}
 train_image_batch, train_label_batch = inputs('train',train_tfrecord_filename,numImages,1,**train_kwargs)
 print("took ",t.time()-start," seconds\n")
 
@@ -257,7 +273,8 @@ fF.saveNPZ(os.path.join(dataPath,relSavePath),"Images_+_predictions_calligraphy"
            images=imagesReshape,\
            predictions=charPredictions)
 for i in range(0,numImages):
-    plt.imshow(imagesReshape[i])
-    print(charPredictions[i])
-    input("Wait for iamge to load and press enter")
+#    plt.imshow(imagesReshape[i],cmap = 'gray')
+#    print(charPredictions[i])
+#    input("Wait for iamge to load and press enter")
+    sideBySide(charPredictions[i], imagesReshape[i])
     
