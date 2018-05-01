@@ -47,7 +47,7 @@ import PIL.ImageOps
 from PIL import Image, ImageDraw, ImageFont
 
 tf.reset_default_graph()
-numImages = 352 #batch size?
+numImages = 475 #batch size?
 
 # Go to the directory where you have the numpy file containing the list of characters
 os.chdir(gitHubRep)
