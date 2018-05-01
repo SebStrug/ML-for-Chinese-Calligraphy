@@ -89,7 +89,7 @@ def sideBySide(charPrediction, reshapedImage):
     img = Image.new('RGB', (48, 48), (255,255,255))
     draw = ImageDraw.Draw(img) 
     simsum_font = ImageFont.truetype('simsun.ttc',48) #font must be supported
-    draw.text((1,1), charPredictions[i], font = simsum_font, fill = "#000000")
+    draw.text((1,1), charPredictions[i][0], font = simsum_font, fill = "#000000")
               
     imgTotal = Image.new('RGB', (96,48), (255,255,255))
     imgTotal.paste(img, (0,0))
@@ -97,13 +97,13 @@ def sideBySide(charPrediction, reshapedImage):
     charImage_invert = PIL.ImageOps.invert(charImage)
     imgTotal.paste(charImage_invert, (48,0))
     print("Saving {}".format(i))
-    imgTotal.save(os.path.join(dataPath,relSavePath)+"\\Images_predictions_calligraphy\\{}.png".format(i))        
+    imgTotal.save(os.path.join(dataPath,relSavePath)+"\\Images_predictions_calligraphy\\{}.png".format(charPredictions[i][1]))        
         
 #%% import data
 #train_tfrecord_filename = os.path.join(os.path.join(dataPath,relTrainDataPath),'train'+str(numOutputs)+'.tfrecords')
 #test_tfrecord_filename = os.path.join(os.path.join(dataPath,relTrainDataPath),'test'+str(numOutputs)+'.tfrecords')
 #train_tfrecord_filename = 'C:\\Users\\Sebastian\\Desktop\\MLChinese\\CASIA\\1.0\\calligraphy.tfrecords'
-train_tfrecord_filename = os.path.join(os.path.join(dataPath,relTrainDataPath),'calligraphy.tfrecords')
+train_tfrecord_filename = os.path.join(os.path.join(dataPath,relTrainDataPath),'calligraphy_greyscaled.tfrecords')
 #%% Open a tensorflow session
 print("Importing graph.....")
 start = t.time()
@@ -264,9 +264,9 @@ print("took ",t.time()-start," seconds\n")
 predictions = sess.run(getPredictions,feed_dict={x:bottlenecks})
 sess.close()
 tf.reset_default_graph()
-charPredictions=[]
+charPredictions = []
 for i in range (0,len(predictions)):
-    charPredictions.append(chinese_only[predictions[i]])
+    charPredictions.append((chinese_only[predictions[i]],labels[i]))
     
 imagesReshape=np.reshape(images,(numImages,inputDim,inputDim))
 fF.saveNPZ(os.path.join(dataPath,relSavePath),"Images_+_predictions_calligraphy"+saveName+".npz",\

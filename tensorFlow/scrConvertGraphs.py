@@ -134,7 +134,7 @@ savePathSeb = "C:/Users/Sebastian/Desktop/MLChinese/Saved_runs/"
 
 savePath = savePathSeb
 nameFileElliot = "CSV"
-nameFileSeb = '/conv100_comparisons'
+nameFileSeb = '/2conv100_comparePooling'
 nameFile = nameFileSeb
 
 os.chdir(savePath+nameFile)

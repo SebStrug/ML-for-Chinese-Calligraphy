@@ -51,16 +51,16 @@ def run_training():
     tf.summary.image('input', x_image, 4) # Show 4 examples of output images on tensorboard
     
     conv_layer_1, output_dim, output_channels = \
-        buildNet.conv_layer('conv_1', x_image, inputDim, 5, [1,1], 1, 32, do_pool=True)
+        buildNet.conv_layer('conv_1', x_image, inputDim, 5, [1,1], 1, 32, do_pool=False)
     conv_layer_2, output_dim, output_channels = \
-        buildNet.conv_layer('conv_2', conv_layer_1, output_dim, 5, [1,1], \
-                             output_channels, 64, do_pool=True)
-#    conv_layer_3, output_dim, output_channels = \
-#        buildNet.conv_layer('conv_3',conv_layer_2, output_dim, 4, [1,1], \
-#                            output_channels, 96, do_pool=False)
-#    conv_layer_4, output_dim, output_channels = \
-#        buildNet.conv_layer('conv_4',conv_layer_3, output_dim, 3, [1,1], \
-#                            output_channels, 128, do_pool=False)
+        buildNet.conv_layer('conv_2', conv_layer_1, output_dim, 5, [2,2], \
+                             output_channels, 32, do_pool=False)
+    conv_layer_3, output_dim, output_channels = \
+        buildNet.conv_layer('conv_3',conv_layer_2, output_dim, 4, [1,1], \
+                            output_channels, 64, do_pool=False)
+    conv_layer_4, output_dim, output_channels = \
+        buildNet.conv_layer('conv_4',conv_layer_3, output_dim, 4, [2,2], \
+                            output_channels, 64, do_pool=False)
 #    conv_layer_5, output_dim, output_channels = \
 #        buildNet.conv_layer('conv_5',conv_layer_4, output_dim, 2, [1,1], \
 #                        output_channels, 160, do_pool=True)
@@ -68,7 +68,7 @@ def run_training():
 #        buildNet.conv_layer('conv_6',conv_layer_5, output_dim, 2, [1,1], \
 #                        output_channels, 192, do_pool=False)
     fc_layer_1, output_channels = \
-        buildNet.fc_layer('fc_1', conv_layer_2, output_dim, output_channels, \
+        buildNet.fc_layer('fc_1', conv_layer_4, output_dim, output_channels, \
                           1024, do_pool=True)
     y_conv = buildNet.output_layer(output_channels, num_output, fc_layer_1,0.5)
     
@@ -135,8 +135,8 @@ def run_training():
                 if step % 30 == 0:
                     train_accuracy, train_summary = sess.run([accuracy, mergedSummaryOp], \
                                  feed_dict={x: train_images, \
-                                            y_: tf.one_hot(train_labels,num_output).eval()})#,\
-                                            #keep_prob: 1.0})
+                                            y_: tf.one_hot(train_labels,num_output).eval(),\
+                                            keep_prob: 1.0})
                     train_writer.add_summary(train_summary, step)
                     print('Step: {}, Training accuracy = {:.3}'.format(step, train_accuracy))
                     
@@ -144,8 +144,8 @@ def run_training():
                     print("Testing the net...")
                     test_accuracy, test_summary = sess.run([accuracy,mergedSummaryOp], \
                                    feed_dict={x: test_images,\
-                                              y_: tf.one_hot(test_labels,num_output).eval()})#,\
-                                              #keep_prob: 1.0})
+                                              y_: tf.one_hot(test_labels,num_output).eval(),\
+                                              keep_prob: 1.0})
                     test_writer.add_summary(test_summary, step)
                     if test_accuracy > maxAccuracy:
                         maxAccuracy=test_accuracy
@@ -155,8 +155,8 @@ def run_training():
                 
                 #run the training
                 sess.run(train_step, feed_dict={x: train_images,\
-                                                y_: tf.one_hot(train_labels,num_output).eval()})#,\
-                                                #keep_prob:0.5})              
+                                                y_: tf.one_hot(train_labels,num_output).eval(), \
+                                                keep_prob:0.5})              
                     
     
                 step += 1
@@ -184,7 +184,7 @@ savePath = 'C:\\Users\\Sebastian\\Desktop\\MLChinese\\Saved_runs\\'
 localPath = 'C:\\Users\\Sebastian\\Desktop\\MLChinese\\CASIA\\1.0'
 
 
-name_of_run = '2conv_100Out_noPool'
+name_of_run = '2conv_100Out_AllConv'
 
 for num_output in num_output_list:
     train_tfrecord_filename = \
