@@ -96,7 +96,7 @@ def plotAll(wallTime, relTime, stepTime, accValues, plot_type='step', smoothVal 
         elif plot_type == 'relative':
             lines = plt.plot(relTime[i],smooth(accValues[i],smoothVal))
             plt.ylim(ymin=0,ymax=1)
-            plt.xlim(xmin=0)
+            plt.xlim(xmin=0,xmax=600)
             plt.xlabel('Relative time in minutes')
             plt.title('No. of outputs: {}, Batch size: {}'.\
               format(numOutputs,batchSize))
@@ -145,4 +145,4 @@ wallTime, stepTime, accValues, relTime = convertData(accData)
 batchSize = 128
 numOutputs = 100
 
-plotAll(wallTime, relTime, stepTime, accValues, plot_type = 'relative', smoothVal = 2)
+plotAll(wallTime, relTime, stepTime, accValues, plot_type = 'step', smoothVal = 2)
