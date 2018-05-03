@@ -11,8 +11,8 @@ import numpy as np
 
 gitHubRep = os.path.normpath(os.getcwd() + os.sep + os.pardir)# find github path
 #import own functions and classes
-#os.chdir(os.path.join(gitHubRep,"dataHandling/")) # << doesn't work for Seb
-os.chdir('C:/Users/Sebastian/Desktop/GitHub/ML-for-Chinese-Calligraphy/dataHandling')
+os.chdir(os.path.join(gitHubRep,"dataHandling/")) # << doesn't work for Seb
+#os.chdir('C:/Users/Sebastian/Desktop/GitHub/ML-for-Chinese-Calligraphy/dataHandling')
 
 from classConvertToTFRecord import convertToTFRecord as cTF
 
@@ -57,7 +57,8 @@ for i in range(len(tuples)):
 writer.close()   
 
 #%% Process the intersection of the calligraphy and CASIA into a tfrecords file
-imagePath = 'C:\\Users\\Sebastian\\Desktop\\MLChinese\\CASIA\\1.0\\savedImages\\test'
+#imagePath = 'C:\\Users\\Sebastian\\Desktop\\MLChinese\\CASIA\\1.0\\savedImages\\test'
+imagePath = 'C:/Users/ellio/Documents/training data/Machine learning data/savedImages/test'
 addrs = glob.glob(imagePath+'\*')
 def convert_addrs(addrs):
     return addrs.split('test\\')[1].split('_copy')[0]
