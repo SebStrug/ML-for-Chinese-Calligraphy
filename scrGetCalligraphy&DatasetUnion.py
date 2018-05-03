@@ -14,14 +14,7 @@ import numpy as np
 
 charListPath = gitHubRep
 calligCharListPath = gitHubRep
-charListName="List_of_chars_NUMPY.npy"
-calligCharListName = "calligCharList.txt"
-
-#load character list for CASIA dataset
-os.chdir(charListPath)
-with open(charListName, 'rb') as ifs:
-    fileNPZ = np.load(ifs)
-charListCASIA = fileNPZ[171:]
+charListName="List_of_chars_NUMPY.npy" #these are in order
 
 #load Calligraphy character list
 calligChars="行书\
@@ -85,17 +78,31 @@ calligChars="行书\
 保之。洪武己巳春三月 天台沙门清浚识。\
 "
 
+#load character list for CASIA dataset
+os.chdir(charListPath)
+with open(charListName, 'rb') as ifs:
+    fileNPZ = np.load(ifs)
+charListCASIA = fileNPZ[171:] #list of all chars in order
+charListCASIA = np.ndarray.tolist(charListCASIA) #convert numpy array -> list
+CharNumTuple = [(i,charListCASIA.index(i)) for i in charListCASIA]
 
-#
-#os.chdir(calligCharListPath)
-#with open(calligCharListName,'rb') as ifs:
-#   byteList=ifs.read()
-#chars=[]
-#i=0
-#while(i<len(byteList)):
-#    chars.append(byteList[i:i+2].decode(encoding='gbk'))
-#    i+=2
-calligCharList = set(calligChars)
-intersectionCharList =calligCharList.intersection(set(charListCASIA)  )
+calligCharList = list(set(calligChars))
+
+CharNumTupleDict = dict(CharNumTuple)
+calligTuple = []
+for i in calligCharList:
+    try:
+        calligTuple.append((i,CharNumTupleDict[i]+171))
+    except:
+        pass
+
+desiredLabels = [item[1] for item in calligTuple]
+
+"""Now we have the intersection of the calligraphy characters and the characters in
+the CASIA dataset
+We want to build a tfrecord containing all samples of images from the CASIA dataset
+that are in this intersection"""
+
+os.chdir('C:\\Users\\Sebastian\\Desktop\\MLChinese\\CASIA\\1.0\\savedImages\\test')
 
     
