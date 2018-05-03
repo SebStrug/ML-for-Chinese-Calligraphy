@@ -2,21 +2,32 @@
 import os
 import scipy as sp
 gitHubRep = os.path.normpath(os.getcwd() + os.sep + os.pardir)# find github path
-os.chdir('C:\\Users\\Sebastian\\Desktop\\GitHub\\ML-for-Chinese-Calligraphy\\dataHandling')
+#os.chdir('C:\\Users\\Sebastian\\Desktop\\GitHub\\ML-for-Chinese-Calligraphy\\dataHandling')
+os.chdir(os.path.join(gitHubRep,"dataHandling"))
 from classFileFunctions import fileFunc as fF 
 from classImageFunctions import imageFunc as iF
-os.chdir('C:\\Users\\Sebastian\\Desktop\\GitHub\\ML-for-Chinese-Calligraphy\\tensorFlow')
+#os.chdir('C:\\Users\\Sebastian\\Desktop\\GitHub\\ML-for-Chinese-Calligraphy\\tensorFlow')
+os.chdir(os.path.join(gitHubRep,"tensorFlow"))
 from InputTFRecord import inputs
 #set other variables
 inputDim = 48
 
-#set paths and file names
-dataPath, LOGDIR, rawDatapath = fF.whichUser("Seb")
-dataPath = 'C:/Users/Sebastian/Desktop/MLChinese'
-relTrainDataPath = 'CASIA/1.0'
-relSavePath = 'Visualising_filters'
-relModelPath = '2conv_100Train_TransferOriginal/Outputs100_LR0.001_Batch128'
+##set paths and file names Seb
+#dataPath, LOGDIR, rawDatapath = fF.whichUser("Seb")
+#dataPath = 'C:/Users/Sebastian/Desktop/MLChinese'
+#relTrainDataPath = 'CASIA/1.0'
+#relSavePath = 'Visualising_filters'
+#relModelPath = '2conv_100Train_TransferOriginal/Outputs100_LR0.001_Batch128'
+#relTransferModelPath = 'transfer_learning/finalLayerCNN_was100Out_run_1/Outputs3866_LR0.001_Batch128'
+
+#set paths and file names Elliot
+dataPath, LOGDIR, rawDatapath = fF.whichUser("Elliot")
+relTrainDataPath = 'Machine learning data/TFrecord'
+relSavePath = 'savedVisualisation'
+relModelPath = 'TF_record_CNN/Outputs100_LR0.001_Batch128'
 relTransferModelPath = 'transfer_learning/finalLayerCNN_was100Out_run_1/Outputs3866_LR0.001_Batch128'
+
+
 originalModelName = 'LR0.001_Iter20520_TestAcc0.845.ckpt'
 transferModelName = 'LR0.001_Iter19710_TestAcc0.6796875.ckpt'
 
@@ -30,8 +41,8 @@ from PIL import Image, ImageDraw, ImageFont
 
 tf.reset_default_graph()
 
-test_tfrecord_filename = 'C:\\Users\\Sebastian\\Desktop\\GitHub\\ML-for-Chinese-Calligraphy\\dataHandling\\calligraphy_CASIA.tfrecords'
-
+#test_tfrecord_filename = 'C:\\Users\\Sebastian\\Desktop\\GitHub\\ML-for-Chinese-Calligraphy\\dataHandling\\calligraphy_CASIA.tfrecords'
+test_tfrecord_filename = os.path.join(gitHubRep,"dataHandling")+"/calligraphy_CASIA.tfrecords"
 
 #%% Load in first graph, get the bottlenecks from it
 print("FIRST GRAPH")
@@ -53,7 +64,7 @@ getBottleneck = graph.get_tensor_by_name("dropout/dropout/mul:0")
 
 print("Setting up data....")
 start = t.time()
-train_kwargs = {"normalize_images": True, "augment_images": False, "shuffle_data":True}
+train_kwargs = {"normalize_images": True, "augment_images": False, "shuffle_data":False}
 train_image_batch, train_label_batch = inputs('test',test_tfrecord_filename,1000,1,**train_kwargs)
 print("took ",t.time()-start," seconds\n")
 
