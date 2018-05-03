@@ -13,14 +13,14 @@ import scipy as sp
 gitHubRep = os.path.normpath(os.getcwd() + os.sep + os.pardir)# find github path
 #gitHubRep = 'C:/Users/Sebastian/Desktop/GitHub/ML-for-Chinese-Calligraphy'
 #import own functions and classes
-os.chdir(os.path.join(gitHubRep,"dataHandling/"))
+os.chdir(os.path.join(gitHubRep,"ML-for-Chinese-Calligraphy/dataHandling"))
 from classFileFunctions import fileFunc as fF 
 from classImageFunctions import imageFunc as iF
-os.chdir(os.path.join(gitHubRep,"tensorFlow/"))
+os.chdir(os.path.join(gitHubRep,"ML-for-Chinese-Calligraphy/tensorFlow"))
 from InputTFRecord import inputs
 #set other variables
 inputDim = 48
-numOutputs= 3866#number of outputs in original network
+numOutputs= 245#number of outputs in original network
 
 #set paths and file names
 dataPath, LOGDIR, rawDatapath = fF.whichUser("Seb")
@@ -50,9 +50,9 @@ tf.reset_default_graph()
 numImages = 475 #batch size?
 
 # Go to the directory where you have the numpy file containing the list of characters
-os.chdir(gitHubRep)
-all_chars = np.load("List_of_chars_NUMPY.npy")
-chinese_only = all_chars[171:]
+#os.chdir(gitHubRep)
+#all_chars = np.load("List_of_chars_NUMPY.npy")
+#chinese_only = all_chars[171:]
 
 #%%Func defs
 def removeAndSwapAxes(array):
@@ -103,7 +103,8 @@ def sideBySide(charPrediction, reshapedImage):
 #train_tfrecord_filename = os.path.join(os.path.join(dataPath,relTrainDataPath),'train'+str(numOutputs)+'.tfrecords')
 #test_tfrecord_filename = os.path.join(os.path.join(dataPath,relTrainDataPath),'test'+str(numOutputs)+'.tfrecords')
 #train_tfrecord_filename = 'C:\\Users\\Sebastian\\Desktop\\MLChinese\\CASIA\\1.0\\calligraphy.tfrecords'
-train_tfrecord_filename = os.path.join(os.path.join(dataPath,relTrainDataPath),'calligraphy_greyscaled.tfrecords')
+#train_tfrecord_filename = os.path.join(os.path.join(dataPath,relTrainDataPath),'calligraphy_greyscaled.tfrecords')
+test_tfrecord_filename
 #%% Open a tensorflow session
 print("Importing graph.....")
 start = t.time()
@@ -125,7 +126,7 @@ print("took ",t.time()-start," seconds\n")
 print("Set up data....")
 start = t.time()
 train_kwargs = {"normalize_images": True, "augment_images": False, "shuffle_data":False}
-train_image_batch, train_label_batch = inputs('train',train_tfrecord_filename,numImages,1,**train_kwargs)
+train_image_batch, train_label_batch = inputs('test',test_tfrecord_filename,numImages,1,**train_kwargs)
 print("took ",t.time()-start," seconds\n")
 
 print("Assign operations and placeholders......")  
@@ -260,7 +261,7 @@ getAccuracy=graph.get_tensor_by_name("accuracy/accuracy:0")
 getPredictions = graph.get_tensor_by_name("accuracy/ArgMax:0")
 print("took ",t.time()-start," seconds\n")
 #get accuracy and predictions for batch
-#accuracy = sess.run(getAccuracy,feed_dict={x: bottlenecks,y_:tf.one_hot(labels,})
+accuracy = sess.run(getAccuracy,feed_dict={x: bottlenecks,y_:tf.one_hot(labels)})
 predictions = sess.run(getPredictions,feed_dict={x:bottlenecks})
 sess.close()
 tf.reset_default_graph()
