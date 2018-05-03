@@ -63,7 +63,7 @@ def convert_addrs(addrs):
     return addrs.split('test\\')[1].split('_copy')[0]
 
 filename_output = 'calligraphy_CASIA.tfrecords'
-writer = tf.python_io.TFRecordWriter(filename)
+writer = tf.python_io.TFRecordWriter(filename_output)
 
 tfrecord_addrs = [i for i in addrs if int(convert_addrs(i)) in desiredLabels]
 tfrecord_labels = [int(convert_addrs(i)) for i in tfrecord_addrs]
