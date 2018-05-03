@@ -54,7 +54,32 @@ for i in range(len(tuples)):
     example = tf.train.Example(features=tf.train.Features(feature=feature))
     # Serialize to string and write on the file
     writer.write(example.SerializeToString())
-writer.close()        
+writer.close()   
+
+#%% Process the intersection of the calligraphy and CASIA into a tfrecords file
+imagePath = 'C:\\Users\\Sebastian\\Desktop\\MLChinese\\CASIA\\1.0\\savedImages\\test'
+addrs = glob.glob(imagePath+'\*')
+def convert_addrs(addrs):
+    return addrs.split('test\\')[1].split('_copy')[0]
+
+filename_output = 'calligraphy_CASIA.tfrecords'
+writer = tf.python_io.TFRecordWriter(filename)
+
+tfrecord_addrs = [i for i in addrs if int(convert_addrs(i)) in desiredLabels]
+tfrecord_labels = [int(convert_addrs(i)) for i in tfrecord_addrs]
+for i in range(len(tfrecord_addrs)):
+    # Load the image
+    img = Image.open(tfrecord_addrs[i])
+    img = np.array(img)
+    label = tfrecord_labels[i]
+    # Create a feature
+    feature = {'test/label': cTF._int64_feature(label),
+               'test/image': cTF._bytes_feature(tf.compat.as_bytes(img.tostring()))}
+    # Create an example protocol buffer
+    example = tf.train.Example(features=tf.train.Features(feature=feature))
+    # Serialize to string and write on the file
+    writer.write(example.SerializeToString())
+writer.close()
 
 #%%Check if the .gnt file is supposed to be training or test
 def checkTrainTest():
