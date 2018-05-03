@@ -127,7 +127,7 @@ print("took ",t.time()-start," seconds\n")
 
 print("Set up data....")
 start = t.time()
-train_kwargs = {"normalize_images": True, "augment_images": False, "shuffle_data":False}
+train_kwargs = {"normalize_images": True, "augment_images": False, "shuffle_data":True}
 train_image_batch, train_label_batch = inputs('test',test_tfrecord_filename,1000,1,**train_kwargs)
 print("took ",t.time()-start," seconds\n")
 
@@ -263,9 +263,9 @@ getAccuracy=graph.get_tensor_by_name("accuracy/accuracy:0")
 getPredictions = graph.get_tensor_by_name("accuracy/ArgMax:0")
 print("took ",t.time()-start," seconds\n")
 #get accuracy and predictions for batch
-one_hots = sess.run(tf.one_hot(labels,3866))
 accuracyList = []
 for i in range(30):
+    one_hots = sess.run(tf.one_hot(labels,3866))
     accuracy = sess.run(getAccuracy,feed_dict={x: bottlenecks,y_:one_hots})
     accuracyList.append(accuracy)
 predictions = sess.run(getPredictions,feed_dict={x:bottlenecks})
