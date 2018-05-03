@@ -158,8 +158,7 @@ print("took ",t.time()-start," seconds\n")
 
 ##%% extract  feature maps
 images,labels=sess.run([train_image_batch,train_label_batch])
-print(labels)
-print("Max label:{}, min label:{}".format(max(labels),min(labels)))
+
 #layer1Activations=sess.run(conv1Activations,feed_dict={x: images, keep_prob: 1.0})
 #layer1Weights=sess.run(conv1Weights)
 #layer2Activations=sess.run(conv2Activations,feed_dict={x: images, keep_prob: 1.0})
@@ -175,7 +174,9 @@ print("Max label:{}, min label:{}".format(max(labels),min(labels)))
 ##layer6Activations=sess.run(conv6Activations,feed_dict={x: images, keep_prob: 1.0})
 ##layer6Weights=sess.run(conv6Weights)
 
-bottlenecks = sess.run(getBottleneck,feed_dict={x: images, keep_prob: 1.0})
+bottlenecks = sess.run(getBottleneck, feed_dict={x: images, keep_prob: 1.0})
+print(labels)
+print("Max label:{}, min label:{}".format(max(labels),min(labels)))
 
 ##%%process feature maps
 #layer1Activations=removeAndSwapAxes(layer1Activations)
@@ -265,8 +266,8 @@ print("took ",t.time()-start," seconds\n")
 #get accuracy and predictions for batch
 accuracyList = []
 for i in range(30):
-    one_hots = sess.run(tf.one_hot(labels,3866))
-    accuracy = sess.run(getAccuracy,feed_dict={x: bottlenecks,y_:one_hots})
+    accuracy = sess.run(getAccuracy,\
+                        feed_dict={x: bottlenecks,y_:tf.one_hot(labels,3866).eval()})
     accuracyList.append(accuracy)
 predictions = sess.run(getPredictions,feed_dict={x:bottlenecks})
 sess.close()
