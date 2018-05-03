@@ -47,6 +47,7 @@ numImages = 245 #batch size
 test_tfrecord_filename = os.path.join(gitHubRep,"dataHandling")+"/calligraphy_CASIA.tfrecords"
 
 #%% Load in first graph, get the bottlenecks from it
+print("FIRST GRAPH")
 print("Importing graph.....")
 sess = tf.InteractiveSession()
 loadLOGDIR = os.path.join(LOGDIR,relModelPath)
@@ -57,7 +58,6 @@ saver.restore(sess,'./'+originalModelName)
 print("Getting default graph...")
 graph = tf.get_default_graph()
 print("Printing graph operations...")
-print(graph.get_operations())
 x=graph.get_tensor_by_name("images:0")
 y_=graph.get_tensor_by_name("labels:0")
 keep_prob=graph.get_tensor_by_name("dropout/dropout/keep_prob:0")
@@ -79,8 +79,7 @@ tf.reset_default_graph()
 
 
 #%% Load in the second graph, feed in the bottlenecks
-
-
+print("SECOND GRAPH")
 print("Now deploying the full network by first loading the last layer from the transfer learn")
 print("Importing graph.....")
 sess = tf.InteractiveSession()
@@ -93,7 +92,6 @@ saver.restore(sess,'./'+transferModelName)
 print("Getting default graph...")
 graph = tf.get_default_graph()
 print("took ",t.time()-start," seconds\n")
-print(graph.get_operations())
 print("Assign operations and placeholders......")    
 x=graph.get_tensor_by_name("images:0")
 y_=graph.get_tensor_by_name("labels:0")
@@ -104,5 +102,14 @@ for i in range(30):
     accuracy = sess.run(getAccuracy, feed_dict={x: bottlenecks,y_:tf.one_hot(labels,3866).eval()})
     accuracyList.append(accuracy)
     
+
+labels = [i-171 for i in labels]
+# labels are consistent throughout
+# labels and images match
+
+print(len(bottlenecks),len(labels))
+accuracy = sess.run(getAccuracy, feed_dict={x: bottlenecks,y_:tf.one_hot(labels,3866).eval()})
+print("Accuracy: {}".format(accuracy))
+  
 sess.close()
 tf.reset_default_graph()

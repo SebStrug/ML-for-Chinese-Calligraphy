@@ -73,6 +73,7 @@ for i in range(len(tfrecord_addrs)):
     img = Image.open(tfrecord_addrs[i])
     img = np.array(img)
     label = tfrecord_labels[i]
+    label = int(convert_addrs(tfrecord_addrs[i]))
     # Create a feature
     feature = {'test/label': cTF._int64_feature(label),
                'test/image': cTF._bytes_feature(tf.compat.as_bytes(img.tostring()))}
