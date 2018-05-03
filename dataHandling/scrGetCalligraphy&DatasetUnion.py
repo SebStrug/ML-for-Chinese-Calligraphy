@@ -103,6 +103,6 @@ the CASIA dataset
 We want to build a tfrecord containing all samples of images from the CASIA dataset
 that are in this intersection"""
 
-os.chdir('C:\\Users\\Sebastian\\Desktop\\MLChinese\\CASIA\\1.0\\savedImages\\test')
+#os.chdir('C:\\Users\\Sebastian\\Desktop\\MLChinese\\CASIA\\1.0\\savedImages\\test')
 
     
