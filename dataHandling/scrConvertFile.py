@@ -66,12 +66,11 @@ filename_output = 'calligraphy_CASIA.tfrecords'
 writer = tf.python_io.TFRecordWriter(filename_output)
 
 tfrecord_addrs = [i for i in addrs if int(convert_addrs(i)) in desiredLabels]
-tfrecord_labels = [int(convert_addrs(i)) for i in tfrecord_addrs]
 for i in range(len(tfrecord_addrs)):
     # Load the image
     img = Image.open(tfrecord_addrs[i])
     img = np.array(img)
-    label = tfrecord_labels[i]
+    label = int(convert_addrs(tfrecord_addrs[i]))
     # Create a feature
     feature = {'test/label': cTF._int64_feature(label),
                'test/image': cTF._bytes_feature(tf.compat.as_bytes(img.tostring()))}
