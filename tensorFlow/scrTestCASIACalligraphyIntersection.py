@@ -44,7 +44,7 @@ tf.reset_default_graph()
 numImages = 245 #batch size
 
 #test_tfrecord_filename = 'C:\\Users\\Sebastian\\Desktop\\GitHub\\ML-for-Chinese-Calligraphy\\dataHandling\\calligraphy_CASIA.tfrecords'
-test_tfrecord_filename = os.path.join(gitHubRep,"calligraphy_CASIA.tfrecords")
+test_tfrecord_filename = os.path.join(gitHubRep,"dataHandling")+"/calligraphy_CASIA.tfrecords"
 
 #%% Load in first graph, get the bottlenecks from it
 print("Importing graph.....")
