@@ -13,10 +13,12 @@ import scipy as sp
 gitHubRep = os.path.normpath(os.getcwd() + os.sep + os.pardir)# find github path
 #gitHubRep = 'C:/Users/Sebastian/Desktop/GitHub/ML-for-Chinese-Calligraphy'
 #import own functions and classes
-os.chdir(os.path.join(gitHubRep,"ML-for-Chinese-Calligraphy/dataHandling"))
+#os.chdir(os.path.join(gitHubRep,"ML-for-Chinese-Calligraphy/dataHandling"))
+os.chdir('C:\\Users\\Sebastian\\Desktop\\GitHub\\ML-for-Chinese-Calligraphy\\dataHandling')
 from classFileFunctions import fileFunc as fF 
 from classImageFunctions import imageFunc as iF
-os.chdir(os.path.join(gitHubRep,"ML-for-Chinese-Calligraphy/tensorFlow"))
+#os.chdir(os.path.join(gitHubRep,"ML-for-Chinese-Calligraphy/tensorFlow"))
+os.chdir('C:\\Users\\Sebastian\\Desktop\\GitHub\\ML-for-Chinese-Calligraphy\\tensorFlow')
 from InputTFRecord import inputs
 #set other variables
 inputDim = 48
@@ -47,7 +49,7 @@ import PIL.ImageOps
 from PIL import Image, ImageDraw, ImageFont
 
 tf.reset_default_graph()
-numImages = 475 #batch size?
+numImages = 245 #batch size
 
 # Go to the directory where you have the numpy file containing the list of characters
 #os.chdir(gitHubRep)
@@ -104,7 +106,7 @@ def sideBySide(charPrediction, reshapedImage):
 #test_tfrecord_filename = os.path.join(os.path.join(dataPath,relTrainDataPath),'test'+str(numOutputs)+'.tfrecords')
 #train_tfrecord_filename = 'C:\\Users\\Sebastian\\Desktop\\MLChinese\\CASIA\\1.0\\calligraphy.tfrecords'
 #train_tfrecord_filename = os.path.join(os.path.join(dataPath,relTrainDataPath),'calligraphy_greyscaled.tfrecords')
-test_tfrecord_filename
+test_tfrecord_filename = 'C:\\Users\\Sebastian\\Desktop\\GitHub\\ML-for-Chinese-Calligraphy\\dataHandling\\calligraphy_CASIA.tfrecords'
 #%% Open a tensorflow session
 print("Importing graph.....")
 start = t.time()
@@ -126,7 +128,7 @@ print("took ",t.time()-start," seconds\n")
 print("Set up data....")
 start = t.time()
 train_kwargs = {"normalize_images": True, "augment_images": False, "shuffle_data":False}
-train_image_batch, train_label_batch = inputs('test',test_tfrecord_filename,numImages,1,**train_kwargs)
+train_image_batch, train_label_batch = inputs('test',test_tfrecord_filename,1000,1,**train_kwargs)
 print("took ",t.time()-start," seconds\n")
 
 print("Assign operations and placeholders......")  
@@ -154,55 +156,55 @@ getBottleneck = graph.get_tensor_by_name("dropout/dropout/mul:0")
 output = graph.get_tensor_by_name("add:0")
 print("took ",t.time()-start," seconds\n")
 
-#%% extract  feature maps
+##%% extract  feature maps
 images,labels=sess.run([train_image_batch,train_label_batch])
 print(labels)
 print("Max label:{}, min label:{}".format(max(labels),min(labels)))
-layer1Activations=sess.run(conv1Activations,feed_dict={x: images, keep_prob: 1.0})
-layer1Weights=sess.run(conv1Weights)
-layer2Activations=sess.run(conv2Activations,feed_dict={x: images, keep_prob: 1.0})
-layer2Weights=sess.run(conv2Weights)
-
-#layer3Activations=sess.run(conv3Activations,feed_dict={x: images, keep_prob: 1.0})
-#layer3Weights=sess.run(conv3Weights)
-#layer4Activations=sess.run(conv4Activations,feed_dict={x: images, keep_prob: 1.0})
-#layer4Weights=sess.run(conv4Weights)
+#layer1Activations=sess.run(conv1Activations,feed_dict={x: images, keep_prob: 1.0})
+#layer1Weights=sess.run(conv1Weights)
+#layer2Activations=sess.run(conv2Activations,feed_dict={x: images, keep_prob: 1.0})
+#layer2Weights=sess.run(conv2Weights)
 #
-#layer5Activations=sess.run(conv5Activations,feed_dict={x: images, keep_prob: 1.0})
-#layer5Weights=sess.run(conv5Weights)
-#layer6Activations=sess.run(conv6Activations,feed_dict={x: images, keep_prob: 1.0})
-#layer6Weights=sess.run(conv6Weights)
+##layer3Activations=sess.run(conv3Activations,feed_dict={x: images, keep_prob: 1.0})
+##layer3Weights=sess.run(conv3Weights)
+##layer4Activations=sess.run(conv4Activations,feed_dict={x: images, keep_prob: 1.0})
+##layer4Weights=sess.run(conv4Weights)
+##
+##layer5Activations=sess.run(conv5Activations,feed_dict={x: images, keep_prob: 1.0})
+##layer5Weights=sess.run(conv5Weights)
+##layer6Activations=sess.run(conv6Activations,feed_dict={x: images, keep_prob: 1.0})
+##layer6Weights=sess.run(conv6Weights)
 
 bottlenecks = sess.run(getBottleneck,feed_dict={x: images, keep_prob: 1.0})
 
-#%%process feature maps
-layer1Activations=removeAndSwapAxes(layer1Activations)
-layer2Activations=removeAndSwapAxes(layer2Activations)
-
-#layer3Activations = removeAndSwapAxes(layer3Activations)
-#layer4Activations = removeAndSwapAxes(layer4Activations)
+##%%process feature maps
+#layer1Activations=removeAndSwapAxes(layer1Activations)
+#layer2Activations=removeAndSwapAxes(layer2Activations)
 #
-#layer5Activations = removeAndSwapAxes(layer5Activations)
-#layer6Activations = removeAndSwapAxes(layer6Activations)
-
-#save activations, weights, bottlenecks and outputs
-fF.saveNPZ(os.path.join(dataPath,relSavePath),"features_raw_{}".format(numImages)+saveName+".npz",\
-           images=np.reshape(images,(numImages,inputDim,inputDim)),\
-           layer1=layer1Activations,weight1=layer1Weights,\
-           layer2=layer2Activations,weight2=layer2Weights,\
-           
-#           layer3 = layer3Activations, weight3 = layer3Weights, \
-#           layer4 = layer4Activations, weight4 = layer4Weights, \
-           
-           bottlenecks=bottlenecks)
-
-activations_list = [layer1Activations, layer2Activations] #\
-                    #, layer3Activations, layer4Activations \
-                    #, layer5Activations, layer6Activations]
-weights_list = [layer1Weights, layer2Weights]# \
-                   # , layer3Weights, layer4Weights \
-                   # , layer5Weights, layer6Weights]
-
+##layer3Activations = removeAndSwapAxes(layer3Activations)
+##layer4Activations = removeAndSwapAxes(layer4Activations)
+##
+##layer5Activations = removeAndSwapAxes(layer5Activations)
+##layer6Activations = removeAndSwapAxes(layer6Activations)
+#
+##save activations, weights, bottlenecks and outputs
+#fF.saveNPZ(os.path.join(dataPath,relSavePath),"features_raw_{}".format(numImages)+saveName+".npz",\
+#           images=np.reshape(images,(numImages,inputDim,inputDim)),\
+#           layer1=layer1Activations,weight1=layer1Weights,\
+#           layer2=layer2Activations,weight2=layer2Weights,\
+#           
+##           layer3 = layer3Activations, weight3 = layer3Weights, \
+##           layer4 = layer4Activations, weight4 = layer4Weights, \
+#           
+#           bottlenecks=bottlenecks)
+#
+#activations_list = [layer1Activations, layer2Activations] #\
+#                    #, layer3Activations, layer4Activations \
+#                    #, layer5Activations, layer6Activations]
+#weights_list = [layer1Weights, layer2Weights]# \
+#                   # , layer3Weights, layer4Weights \
+#                   # , layer5Weights, layer6Weights]
+#
 #%%find for each feature the image that creaates the highest activation.
 def maximum_activation(layerActivations):
     layerHighest = []
@@ -212,11 +214,11 @@ def maximum_activation(layerActivations):
             layerHighest.append(layerActivations[int(maxIndices[i])][i])
     return layerHighest
 
-for i in activations_list:
-    print("Layer {} activations...".format(activations_list.index(i)))
-    layerHighest = maximum_activation(i)
-    show_activations(layerHighest, len(layerHighest[0]), len(layerHighest), os.path.join(dataPath,relSavePath),\
-                 "layer{}Features.jpg".format(activations_list.index(i)), show=True, save=True)
+#for i in activations_list:
+#    print("Layer {} activations...".format(activations_list.index(i)))
+#    layerHighest = maximum_activation(i)
+#    show_activations(layerHighest, len(layerHighest[0]), len(layerHighest), os.path.join(dataPath,relSavePath),\
+#                 "layer{}Features.jpg".format(activations_list.index(i)), show=True, save=True)
 
 def convert_weight_filters(layerWeights):
     weight_filters = [layerWeights[:,:,:,i] for i in range(layerWeights.shape[3])]
@@ -225,13 +227,13 @@ def convert_weight_filters(layerWeights):
                         in range(layerWeights.shape[3])]
     return weight_upscaled
 
-for i in weights_list:
-    print("Layer {} weights...".format(weights_list.index(i)))
-    weights_upscaled = convert_weight_filters(i)
-    show_activations(weights_upscaled, len(weights_upscaled[0]), len(weights_upscaled),\
-                     os.path.join(dataPath,relSavePath), 'layer{}Weights.jpg'.format(weights_list.index(i)),\
-                     show=True, save=True)
-    
+#for i in weights_list:
+#    print("Layer {} weights...".format(weights_list.index(i)))
+#    weights_upscaled = convert_weight_filters(i)
+#    show_activations(weights_upscaled, len(weights_upscaled[0]), len(weights_upscaled),\
+#                     os.path.join(dataPath,relSavePath), 'layer{}Weights.jpg'.format(weights_list.index(i)),\
+#                     show=True, save=True)
+#    
 sess.close()
 tf.reset_default_graph()
 #%%    
@@ -261,21 +263,25 @@ getAccuracy=graph.get_tensor_by_name("accuracy/accuracy:0")
 getPredictions = graph.get_tensor_by_name("accuracy/ArgMax:0")
 print("took ",t.time()-start," seconds\n")
 #get accuracy and predictions for batch
-accuracy = sess.run(getAccuracy,feed_dict={x: bottlenecks,y_:tf.one_hot(labels)})
+one_hots = sess.run(tf.one_hot(labels,3866))
+accuracyList = []
+for i in range(30):
+    accuracy = sess.run(getAccuracy,feed_dict={x: bottlenecks,y_:one_hots})
+    accuracyList.append(accuracy)
 predictions = sess.run(getPredictions,feed_dict={x:bottlenecks})
 sess.close()
 tf.reset_default_graph()
-charPredictions = []
-for i in range (0,len(predictions)):
-    charPredictions.append((chinese_only[predictions[i]],labels[i]))
-    
-imagesReshape=np.reshape(images,(numImages,inputDim,inputDim))
-fF.saveNPZ(os.path.join(dataPath,relSavePath),"Images_+_predictions_calligraphy"+saveName+".npz",\
-           images=imagesReshape,\
-           predictions=charPredictions)
-for i in range(0,numImages):
-#    plt.imshow(imagesReshape[i],cmap = 'gray')
-#    print(charPredictions[i])
-#    input("Wait for iamge to load and press enter")
-    sideBySide(charPredictions[i], imagesReshape[i])
+#charPredictions = []
+#for i in range (0,len(predictions)):
+#    charPredictions.append((chinese_only[predictions[i]],labels[i]))
+#    
+#imagesReshape=np.reshape(images,(numImages,inputDim,inputDim))
+#fF.saveNPZ(os.path.join(dataPath,relSavePath),"Images_+_predictions_calligraphy"+saveName+".npz",\
+#           images=imagesReshape,\
+#           predictions=charPredictions)
+#for i in range(0,numImages):
+##    plt.imshow(imagesReshape[i],cmap = 'gray')
+##    print(charPredictions[i])
+##    input("Wait for iamge to load and press enter")
+#    sideBySide(charPredictions[i], imagesReshape[i])
     

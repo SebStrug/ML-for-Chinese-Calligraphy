@@ -130,7 +130,7 @@ def inputs(trainType, tfrecord_filename, batch_size, num_epochs,\
     if shuffle_data == True:
         shuffTime = time.time()
         #dataset = dataset.shuffle(1000 + 3 * batch_size) #shuffle the order of the images
-        dataset = dataset.shuffle(buffer_size=10**4)
+        dataset = dataset.shuffle(buffer_size=10**5)
         print("Time taken to shuffle dataset: {}".format(time.time()-shuffTime))
     dataset = dataset.batch(batch_size)
     iterator = dataset.make_one_shot_iterator()
