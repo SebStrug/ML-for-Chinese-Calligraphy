@@ -1,0 +1,19 @@
+Questions
+1. How does the normalisation work
+2. Why does all-conv work so well/have no loss in training time
+3. Do you think this project could be continued next year
+4. What was your favourite part of the project
+5. What question do you wish we asked you
+6. What machine learning techniques did you not explore but wanted to for this project
+>> 7. Why did we choose the layers/filter numbers we did 
+>> 8. What does it mean to have recognised Chinese calligraphy completely
+9. Why did the GAN not work that well
+10. What is the key thing needed to make neural nets work on calligraphy 
+11. Why did more layers not necessarily be more accurate?
+12. Why did we not see Gabor filters
+13. Explain Gabor filters
+14. Explain back-propagation
+15. Are GANs mini-max
+16. How does a non-DC_GAN work? (simple GAN)
+17. How good was tensorflow
+
